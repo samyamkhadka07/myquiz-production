@@ -1,0 +1,1894 @@
+{
+  "source_document": "docs/source/mec_bachelor_cee_syllabus_third_revision_2026.pdf",
+  "sha256": "a22f7f5f571c1623a4cf8b6cb4167aa6a86cf05c85eebc088e84ebe182141bc2",
+  "revision_date": "2026-04-28",
+  "page_numbering": "Printed page; PDF page = printed page + 2",
+  "limitations": [
+    "Group II PCL course-specific content has no detailed breakdown in this source. No inferred PCL topics or subtopics are seeded.",
+    "Unanswered marks are modeled as zero from the single-correct-answer scoring format; historical introduction is superseded by revised program formats.",
+    "Qualification is cohort percentile, not 50 percent score. A personal practice result cannot establish MEC qualification.",
+    "Listed topics retain full source text; unlabelled prose is not converted into invented subtopic hierarchies."
+  ],
+  "groups": [
+    {
+      "code": "I",
+      "name": "MBBS, BDS, BSc Nursing, BSc Midwifery, BASLP, B. Perfusion Technology",
+      "programs": [
+        "MBBS",
+        "BDS",
+        "BSc Nursing",
+        "BSc Midwifery",
+        "BASLP",
+        "B. Perfusion Technology"
+      ],
+      "source_pages": [
+        3,
+        4
+      ],
+      "question_count": 200,
+      "duration_seconds": 10800,
+      "marks_correct": 1,
+      "marks_incorrect": -0.25,
+      "marks_unanswered": 0,
+      "qualification_rule": {
+        "type": "PERCENTILE",
+        "threshold": 50
+      },
+      "cognitive_distribution": {
+        "RECALL": 50,
+        "UNDERSTANDING": 30,
+        "APPLICATION": 20
+      },
+      "allocations": [
+        {
+          "unit_code": "Z1",
+          "subject": "ZOOLOGY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "Z2",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z3",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z4",
+          "subject": "ZOOLOGY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "Z5",
+          "subject": "ZOOLOGY",
+          "question_count": 15
+        },
+        {
+          "unit_code": "Z6",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z7",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "Z8",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B1",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B2",
+          "subject": "BOTANY",
+          "question_count": 9
+        },
+        {
+          "unit_code": "B3",
+          "subject": "BOTANY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "B4",
+          "subject": "BOTANY",
+          "question_count": 5
+        },
+        {
+          "unit_code": "B5",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B6",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "B7",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B8",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B9",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C1",
+          "subject": "CHEMISTRY",
+          "question_count": 17
+        },
+        {
+          "unit_code": "C2",
+          "subject": "CHEMISTRY",
+          "question_count": 10
+        },
+        {
+          "unit_code": "C3",
+          "subject": "CHEMISTRY",
+          "question_count": 17
+        },
+        {
+          "unit_code": "C4",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C5",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "P1",
+          "subject": "PHYSICS",
+          "question_count": 10
+        },
+        {
+          "unit_code": "P2",
+          "subject": "PHYSICS",
+          "question_count": 7
+        },
+        {
+          "unit_code": "P3",
+          "subject": "PHYSICS",
+          "question_count": 8
+        },
+        {
+          "unit_code": "P4",
+          "subject": "PHYSICS",
+          "question_count": 9
+        },
+        {
+          "unit_code": "P5",
+          "subject": "PHYSICS",
+          "question_count": 4
+        },
+        {
+          "unit_code": "P6",
+          "subject": "PHYSICS",
+          "question_count": 12
+        },
+        {
+          "unit_code": "M1",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M2",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M3",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M4",
+          "subject": "MAT",
+          "question_count": 5
+        }
+      ]
+    },
+    {
+      "code": "II",
+      "name": "BAMS, BSc MLT, BSc MIT, BSc Radiotherapy Technology, BPT, B Pharm, B Optometry",
+      "programs": [
+        "BAMS",
+        "BSc MLT",
+        "BSc MIT",
+        "BSc Radiotherapy Technology",
+        "BPT",
+        "B Pharm",
+        "B Optometry"
+      ],
+      "source_pages": [
+        12,
+        13,
+        14
+      ],
+      "question_count": 200,
+      "duration_seconds": 10800,
+      "marks_correct": 1,
+      "marks_incorrect": -0.25,
+      "marks_unanswered": 0,
+      "qualification_rule": {
+        "type": "PERCENTILE",
+        "threshold": 50
+      },
+      "cognitive_distribution": {
+        "RECALL": 50,
+        "UNDERSTANDING": 30,
+        "APPLICATION": 20
+      },
+      "allocations": [
+        {
+          "unit_code": "Z1",
+          "subject": "ZOOLOGY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "Z2",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z3",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z4",
+          "subject": "ZOOLOGY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "Z5",
+          "subject": "ZOOLOGY",
+          "question_count": 15
+        },
+        {
+          "unit_code": "Z6",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z7",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "Z8",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B1",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B2",
+          "subject": "BOTANY",
+          "question_count": 9
+        },
+        {
+          "unit_code": "B3",
+          "subject": "BOTANY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "B4",
+          "subject": "BOTANY",
+          "question_count": 5
+        },
+        {
+          "unit_code": "B5",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B6",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "B7",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B8",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B9",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C1",
+          "subject": "CHEMISTRY",
+          "question_count": 14
+        },
+        {
+          "unit_code": "C2",
+          "subject": "CHEMISTRY",
+          "question_count": 7
+        },
+        {
+          "unit_code": "C3",
+          "subject": "CHEMISTRY",
+          "question_count": 13
+        },
+        {
+          "unit_code": "C4",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C5",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "P1",
+          "subject": "PHYSICS",
+          "question_count": 8
+        },
+        {
+          "unit_code": "P2",
+          "subject": "PHYSICS",
+          "question_count": 6
+        },
+        {
+          "unit_code": "P3",
+          "subject": "PHYSICS",
+          "question_count": 6
+        },
+        {
+          "unit_code": "P4",
+          "subject": "PHYSICS",
+          "question_count": 7
+        },
+        {
+          "unit_code": "P5",
+          "subject": "PHYSICS",
+          "question_count": 3
+        },
+        {
+          "unit_code": "P6",
+          "subject": "PHYSICS",
+          "question_count": 10
+        },
+        {
+          "unit_code": "M1",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M2",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M3",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M4",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "L1",
+          "subject": "PCL",
+          "question_count": 20
+        }
+      ]
+    },
+    {
+      "code": "III",
+      "name": "BPH",
+      "programs": [
+        "BPH"
+      ],
+      "source_pages": [
+        14,
+        15,
+        16
+      ],
+      "question_count": 200,
+      "duration_seconds": 10800,
+      "marks_correct": 1,
+      "marks_incorrect": -0.25,
+      "marks_unanswered": 0,
+      "qualification_rule": {
+        "type": "PERCENTILE",
+        "threshold": 50
+      },
+      "cognitive_distribution": {
+        "RECALL": 50,
+        "UNDERSTANDING": 30,
+        "APPLICATION": 20
+      },
+      "allocations": [
+        {
+          "unit_code": "Z1",
+          "subject": "ZOOLOGY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "Z2",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z3",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z4",
+          "subject": "ZOOLOGY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "Z5",
+          "subject": "ZOOLOGY",
+          "question_count": 15
+        },
+        {
+          "unit_code": "Z6",
+          "subject": "ZOOLOGY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "Z7",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "Z8",
+          "subject": "ZOOLOGY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B1",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B2",
+          "subject": "BOTANY",
+          "question_count": 9
+        },
+        {
+          "unit_code": "B3",
+          "subject": "BOTANY",
+          "question_count": 4
+        },
+        {
+          "unit_code": "B4",
+          "subject": "BOTANY",
+          "question_count": 5
+        },
+        {
+          "unit_code": "B5",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B6",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "B7",
+          "subject": "BOTANY",
+          "question_count": 6
+        },
+        {
+          "unit_code": "B8",
+          "subject": "BOTANY",
+          "question_count": 2
+        },
+        {
+          "unit_code": "B9",
+          "subject": "BOTANY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C1",
+          "subject": "CHEMISTRY",
+          "question_count": 14
+        },
+        {
+          "unit_code": "C2",
+          "subject": "CHEMISTRY",
+          "question_count": 7
+        },
+        {
+          "unit_code": "C3",
+          "subject": "CHEMISTRY",
+          "question_count": 13
+        },
+        {
+          "unit_code": "C4",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "C5",
+          "subject": "CHEMISTRY",
+          "question_count": 3
+        },
+        {
+          "unit_code": "P1",
+          "subject": "PHYSICS",
+          "question_count": 8
+        },
+        {
+          "unit_code": "P2",
+          "subject": "PHYSICS",
+          "question_count": 6
+        },
+        {
+          "unit_code": "P3",
+          "subject": "PHYSICS",
+          "question_count": 6
+        },
+        {
+          "unit_code": "P4",
+          "subject": "PHYSICS",
+          "question_count": 7
+        },
+        {
+          "unit_code": "P5",
+          "subject": "PHYSICS",
+          "question_count": 3
+        },
+        {
+          "unit_code": "P6",
+          "subject": "PHYSICS",
+          "question_count": 10
+        },
+        {
+          "unit_code": "M1",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M2",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M3",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M4",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "H1",
+          "subject": "HEALTH",
+          "question_count": 5
+        },
+        {
+          "unit_code": "H2",
+          "subject": "HEALTH",
+          "question_count": 5
+        },
+        {
+          "unit_code": "H3",
+          "subject": "HEALTH",
+          "question_count": 3
+        },
+        {
+          "unit_code": "H4",
+          "subject": "HEALTH",
+          "question_count": 2
+        },
+        {
+          "unit_code": "H5",
+          "subject": "HEALTH",
+          "question_count": 5
+        }
+      ]
+    },
+    {
+      "code": "IV",
+      "name": "BNS, BMS",
+      "programs": [
+        "BNS",
+        "BMS"
+      ],
+      "source_pages": [
+        16,
+        17
+      ],
+      "question_count": 200,
+      "duration_seconds": 10800,
+      "marks_correct": 1,
+      "marks_incorrect": -0.25,
+      "marks_unanswered": 0,
+      "qualification_rule": {
+        "type": "PERCENTILE",
+        "threshold": 50
+      },
+      "cognitive_distribution": {
+        "RECALL": 50,
+        "UNDERSTANDING": 30,
+        "APPLICATION": 20
+      },
+      "allocations": [
+        {
+          "unit_code": "N1",
+          "subject": "NURSING",
+          "question_count": 25
+        },
+        {
+          "unit_code": "N2",
+          "subject": "NURSING",
+          "question_count": 25
+        },
+        {
+          "unit_code": "N3",
+          "subject": "NURSING",
+          "question_count": 25
+        },
+        {
+          "unit_code": "N4",
+          "subject": "NURSING",
+          "question_count": 25
+        },
+        {
+          "unit_code": "N5",
+          "subject": "NURSING",
+          "question_count": 20
+        },
+        {
+          "unit_code": "N6",
+          "subject": "NURSING",
+          "question_count": 20
+        },
+        {
+          "unit_code": "N7",
+          "subject": "NURSING",
+          "question_count": 10
+        },
+        {
+          "unit_code": "S1",
+          "subject": "NURSING_SCIENCE",
+          "question_count": 5
+        },
+        {
+          "unit_code": "S2",
+          "subject": "NURSING_SCIENCE",
+          "question_count": 5
+        },
+        {
+          "unit_code": "S3",
+          "subject": "NURSING_SCIENCE",
+          "question_count": 6
+        },
+        {
+          "unit_code": "S4",
+          "subject": "NURSING_SCIENCE",
+          "question_count": 7
+        },
+        {
+          "unit_code": "S5",
+          "subject": "NURSING_SCIENCE",
+          "question_count": 7
+        },
+        {
+          "unit_code": "M1",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M2",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M3",
+          "subject": "MAT",
+          "question_count": 5
+        },
+        {
+          "unit_code": "M4",
+          "subject": "MAT",
+          "question_count": 5
+        }
+      ]
+    }
+  ],
+  "units": [
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z1",
+      "name": "Evolutionary Biology",
+      "source_page": 5,
+      "source_text": "Origin of life: Oparin-Haldane theory, Miller–Urey’s experiment; Evidences of evolution: Morphological, Anatomical, Paleontological, Embryological, Biochemical; Theories: Lamarckism, Darwinism, Neo-Darwinism; Human evolution: From Ramapithecus to modern man",
+      "topics": [
+        {
+          "name": "Origin of life",
+          "source_text": "Origin of life: Oparin-Haldane theory, Miller–Urey’s experiment",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Evidences of evolution",
+          "source_text": "Evidences of evolution: Morphological, Anatomical, Paleontological, Embryological, Biochemical",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Theories",
+          "source_text": "Theories: Lamarckism, Darwinism, Neo-Darwinism",
+          "position": 3,
+          "source_page": 5
+        },
+        {
+          "name": "Human evolution",
+          "source_text": "Human evolution: From Ramapithecus to modern man",
+          "position": 4,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z2",
+      "name": "Animal Diversity and Classification",
+      "source_page": 5,
+      "source_text": "Diagnostic features and classification from Protozoa to Chordata",
+      "topics": [
+        {
+          "name": "Animal Diversity and Classification",
+          "source_text": "Diagnostic features and classification from Protozoa to Chordata",
+          "position": 1,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z3",
+      "name": "Animal Tissues and Histology",
+      "source_page": 5,
+      "source_text": "Epithelial, connective, muscular, nervous tissues (Structure, location, function)",
+      "topics": [
+        {
+          "name": "Animal Tissues and Histology",
+          "source_text": "Epithelial, connective, muscular, nervous tissues (Structure, location, function)",
+          "position": 1,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z4",
+      "name": "Study of Selected Animals",
+      "source_page": 5,
+      "source_text": "Plasmodium (Habitat, structure, life cycle, malaria types; Earthworm i.e. Pheretima (Morphology, different body systems and physiology, economic importance; Frog i.e. Rana (Morphology, different body systems and physiology)",
+      "topics": [
+        {
+          "name": "Plasmodium",
+          "source_text": "Plasmodium (Habitat, structure, life cycle, malaria types",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Earthworm i.e. Pheretima",
+          "source_text": "Earthworm i.e. Pheretima (Morphology, different body systems and physiology, economic importance",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Frog i.e. Rana",
+          "source_text": "Frog i.e. Rana (Morphology, different body systems and physiology)",
+          "position": 3,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z5",
+      "name": "Human Biology and Physiology",
+      "source_page": 5,
+      "source_text": "Digestive System: Alimentary canal and digestive glands, physiology of digestion; Respiratory System: Respiratory organs, gas exchange and transport, regulation of respiration, concept of respiratory disorders; Circulatory System: Heart, cardiac cycle and output, heartbeat, arterial and venous system, blood group and pressure, concept of cardiovascular disorders; Excretory System: Excretory organs, urine formation, concept of renal disorders; Nervous System: CNS, PNS and autonomic, nerve impulse; Sense Organs: Eye and Ear; Endocrinology: Glands, hormones and disorders; Reproductive System: Organs, gametogenesis, ovarian and menstrual cycle",
+      "topics": [
+        {
+          "name": "Digestive System",
+          "source_text": "Digestive System: Alimentary canal and digestive glands, physiology of digestion",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Respiratory System",
+          "source_text": "Respiratory System: Respiratory organs, gas exchange and transport, regulation of respiration, concept of respiratory disorders",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Circulatory System",
+          "source_text": "Circulatory System: Heart, cardiac cycle and output, heartbeat, arterial and venous system, blood group and pressure, concept of cardiovascular disorders",
+          "position": 3,
+          "source_page": 5
+        },
+        {
+          "name": "Excretory System",
+          "source_text": "Excretory System: Excretory organs, urine formation, concept of renal disorders",
+          "position": 4,
+          "source_page": 5
+        },
+        {
+          "name": "Nervous System",
+          "source_text": "Nervous System: CNS, PNS and autonomic, nerve impulse",
+          "position": 5,
+          "source_page": 5
+        },
+        {
+          "name": "Sense Organs",
+          "source_text": "Sense Organs: Eye and Ear",
+          "position": 6,
+          "source_page": 5
+        },
+        {
+          "name": "Endocrinology",
+          "source_text": "Endocrinology: Glands, hormones and disorders",
+          "position": 7,
+          "source_page": 5
+        },
+        {
+          "name": "Reproductive System",
+          "source_text": "Reproductive System: Organs, gametogenesis, ovarian and menstrual cycle",
+          "position": 8,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z6",
+      "name": "Microbial diseases and Immunology",
+      "source_page": 5,
+      "source_text": "Diseases: Typhoid, TB, HIV, Cholera, Influenza, Hepatitis, Candidiasis; Immunity: Innate and acquired; antigens and antibodies; Vaccines: Live attenuated, inactivated, toxoid",
+      "topics": [
+        {
+          "name": "Diseases",
+          "source_text": "Diseases: Typhoid, TB, HIV, Cholera, Influenza, Hepatitis, Candidiasis",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Immunity",
+          "source_text": "Immunity: Innate and acquired; antigens and antibodies",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Vaccines",
+          "source_text": "Vaccines: Live attenuated, inactivated, toxoid",
+          "position": 3,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z7",
+      "name": "Medical Technology and Applied Biology",
+      "source_page": 5,
+      "source_text": "Medical technology: Tissue and Organ transplantation, In-Vitro Fertilization (IVF), Amniocentesis, Transgenic animals; Applied microbiology: Dairy/beverage microbes, Sewage and drinking water treatment, Bio-control agents",
+      "topics": [
+        {
+          "name": "Medical technology",
+          "source_text": "Medical technology: Tissue and Organ transplantation, In-Vitro Fertilization (IVF), Amniocentesis, Transgenic animals",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Applied microbiology",
+          "source_text": "Applied microbiology: Dairy/beverage microbes, Sewage and drinking water treatment, Bio-control agents",
+          "position": 2,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "ZOOLOGY",
+      "code": "Z8",
+      "name": "Biota, Environment and Conservation",
+      "source_page": 5,
+      "source_text": "Animal Behavior: Reflex actions, taxis and Migration; Environmental pollution: Air, water and soil pollution, Pesticides; Adaptations: Aquatic, Terrestrial, Volant; Conservation Biology: Biodiversity, Protected areas, Hotspots, Ramsar sites, IUCN categories, Endangered species of Nepal",
+      "topics": [
+        {
+          "name": "Animal Behavior",
+          "source_text": "Animal Behavior: Reflex actions, taxis and Migration",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Environmental pollution",
+          "source_text": "Environmental pollution: Air, water and soil pollution, Pesticides",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Adaptations",
+          "source_text": "Adaptations: Aquatic, Terrestrial, Volant",
+          "position": 3,
+          "source_page": 5
+        },
+        {
+          "name": "Conservation Biology",
+          "source_text": "Conservation Biology: Biodiversity, Protected areas, Hotspots, Ramsar sites, IUCN categories, Endangered species of Nepal",
+          "position": 4,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B1",
+      "name": "Basic Components of Life",
+      "source_page": 5,
+      "source_text": "Structure & biological role of carbohydrates, Structure, types and biological role of carbohydrates, lipids and minerals; Structure, types and biological role of protein & enzymes",
+      "topics": [
+        {
+          "name": "Basic Components of Life",
+          "source_text": "Structure & biological role of carbohydrates, Structure, types and biological role of carbohydrates, lipids and minerals; Structure, types and biological role of protein & enzymes",
+          "position": 1,
+          "source_page": 5
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B2",
+      "name": "Biodiversity",
+      "source_page": 5,
+      "source_text": "Introduction: General concept of classification: 2-Kingdom system, taxonomic hierarchies & binomial nomenclature, 5-Kingdom system, 3 Domain system; Monera & Virus: Structure of bacterial cell, types of bacteria, mode of nutrition in bacteria and Bacterial growth. General Characteristics of Cyanobacteria. Characteristics, structure, chemical composition of viruses, types of viruses; Fungi & Lichens: Characteristic features of: Phycomycetes, Ascomycetes, Basidiomycetes and Deuteromycetes. Structure and reproduction of yeast and Mucor, Introduction and types of lichens; Algae: General introduction, Characteristic features of: Chlorophyceae, Rhodophyceae, Phaeophyceae, Structure & reproduction of Spirogyra; Bryophytes: Characteristic features of: Hepaticopsida (Liverworts), Anthocerotopsida (Hornworts), Bryopsida (Moss). Morphological structure and reproduction of Marchantia; Pteridophytes: Characteristic features of Pteridophytes. Morphological structure and reproduction of Dryopteris; Gymnosperms: Characteristic features of Gymnosperms. Morphological structure and reproduction of Pinus; Angiosperms: Morphology of Root, stem, leaf, inflorescence, flower and fruit; Diagnostic characters, floral formulae and floral diagram of Families: Brassicaceae, Solanaceae, Fabaceae, Liliaceae; Economic Importance: Economic Importance of Virus, Bacteria, Blue-green algae, Fungi, Algae, Bryophytes, Pteridophytes, Gymnosperms and Angiosperms of Nepal; Uses of the selected medicinal plants of Nepal: Azadirachta indica (Neem), Rauwolfia serpentina (Sarpagandha), Ophiocordyceps sinensis (Yarsagumba), Ocimum sanctum (Tulasi), Zingiber officinale (Ginger).",
+      "topics": [
+        {
+          "name": "Introduction",
+          "source_text": "Introduction: General concept of classification: 2-Kingdom system, taxonomic hierarchies & binomial nomenclature, 5-Kingdom system, 3 Domain system",
+          "position": 1,
+          "source_page": 5
+        },
+        {
+          "name": "Monera & Virus",
+          "source_text": "Monera & Virus: Structure of bacterial cell, types of bacteria, mode of nutrition in bacteria and Bacterial growth. General Characteristics of Cyanobacteria. Characteristics, structure, chemical composition of viruses, types of viruses",
+          "position": 2,
+          "source_page": 5
+        },
+        {
+          "name": "Fungi & Lichens",
+          "source_text": "Fungi & Lichens: Characteristic features of: Phycomycetes, Ascomycetes, Basidiomycetes and Deuteromycetes. Structure and reproduction of yeast and Mucor, Introduction and types of lichens",
+          "position": 3,
+          "source_page": 6
+        },
+        {
+          "name": "Algae",
+          "source_text": "Algae: General introduction, Characteristic features of: Chlorophyceae, Rhodophyceae, Phaeophyceae, Structure & reproduction of Spirogyra",
+          "position": 4,
+          "source_page": 6
+        },
+        {
+          "name": "Bryophytes",
+          "source_text": "Bryophytes: Characteristic features of: Hepaticopsida (Liverworts), Anthocerotopsida (Hornworts), Bryopsida (Moss). Morphological structure and reproduction of Marchantia",
+          "position": 5,
+          "source_page": 6
+        },
+        {
+          "name": "Pteridophytes",
+          "source_text": "Pteridophytes: Characteristic features of Pteridophytes. Morphological structure and reproduction of Dryopteris",
+          "position": 6,
+          "source_page": 6
+        },
+        {
+          "name": "Gymnosperms",
+          "source_text": "Gymnosperms: Characteristic features of Gymnosperms. Morphological structure and reproduction of Pinus",
+          "position": 7,
+          "source_page": 6
+        },
+        {
+          "name": "Angiosperms",
+          "source_text": "Angiosperms: Morphology of Root, stem, leaf, inflorescence, flower and fruit; Diagnostic characters, floral formulae and floral diagram of Families: Brassicaceae, Solanaceae, Fabaceae, Liliaceae",
+          "position": 8,
+          "source_page": 6
+        },
+        {
+          "name": "Economic Importance",
+          "source_text": "Economic Importance: Economic Importance of Virus, Bacteria, Blue-green algae, Fungi, Algae, Bryophytes, Pteridophytes, Gymnosperms and Angiosperms of Nepal",
+          "position": 9,
+          "source_page": 6
+        },
+        {
+          "name": "Uses of the selected medicinal plants of Nepal",
+          "source_text": "Uses of the selected medicinal plants of Nepal: Azadirachta indica (Neem), Rauwolfia serpentina (Sarpagandha), Ophiocordyceps sinensis (Yarsagumba), Ocimum sanctum (Tulasi), Zingiber officinale (Ginger).",
+          "position": 10,
+          "source_page": 6
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B3",
+      "name": "Ecology & Vegetation",
+      "source_page": 6,
+      "source_text": "Ecosystem Ecology: Structural and functional aspects of pond and forest ecosystems; biotic interactions; Biogeochemical Cycles & Ecological Imbalances: Carbon and nitrogen cycle, greenhouse effect, acid rain, ozone layer depletion, climate change; Vegetation and adaptation: Forest types of Nepal; biological invasion; ecological succession. Concept of ecological adaptation (Hydrosere & Xerosere).",
+      "topics": [
+        {
+          "name": "Ecosystem Ecology",
+          "source_text": "Ecosystem Ecology: Structural and functional aspects of pond and forest ecosystems; biotic interactions",
+          "position": 1,
+          "source_page": 6
+        },
+        {
+          "name": "Biogeochemical Cycles & Ecological Imbalances",
+          "source_text": "Biogeochemical Cycles & Ecological Imbalances: Carbon and nitrogen cycle, greenhouse effect, acid rain, ozone layer depletion, climate change",
+          "position": 2,
+          "source_page": 6
+        },
+        {
+          "name": "Vegetation and adaptation",
+          "source_text": "Vegetation and adaptation: Forest types of Nepal; biological invasion; ecological succession. Concept of ecological adaptation (Hydrosere & Xerosere).",
+          "position": 3,
+          "source_page": 6
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B4",
+      "name": "Cell Biology",
+      "source_page": 6,
+      "source_text": "Concept of prokaryotic and eukaryotic cells; cell theory; Composition, structure and functions of: Cell wall, cell membrane, mitochondria, chloroplasts, endoplasmic reticulum (ER), Golgi body, lysosome, ribosome, nucleus, chromosomes, cilia and flagella, cell inclusions; Concept of cell cycle; amitosis, mitosis and meiosis; cell division and its significance.",
+      "topics": [
+        {
+          "name": "Cell Biology",
+          "source_text": "Concept of prokaryotic and eukaryotic cells; cell theory; Composition, structure and functions of: Cell wall, cell membrane, mitochondria, chloroplasts, endoplasmic reticulum (ER), Golgi body, lysosome, ribosome, nucleus, chromosomes, cilia and flagella, cell inclusions; Concept of cell cycle; amitosis, mitosis and meiosis; cell division and its significance.",
+          "position": 1,
+          "source_page": 6
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B5",
+      "name": "Genetics",
+      "source_page": 6,
+      "source_text": "Genetic Material: Introduction; composition, structure and functions of DNA and RNA; DNA replication; concept of central dogma; genetic code; Mendelian Genetics: General terminology; laws of inheritance; incomplete dominance; co-dominance. Concept and types of linkage; complete and incomplete linkage; concept and significance of crossing over; Sex-linked Inheritance: Introduction; concepts and patterns of sex-linked inheritance; color blindness in humans; eye color in Drosophila melanogaster; Mutation & Polyploidy: Concept and types (gene and chromosomal mutations); importance of mutation; polyploidy (origin, types and significance); causes and examples of genetic disorders (Down’s syndrome, Turner’s syndrome, Edward’s syndrome, Klinefelter’s syndrome, albinism, hemophilia).",
+      "topics": [
+        {
+          "name": "Genetic Material",
+          "source_text": "Genetic Material: Introduction; composition, structure and functions of DNA and RNA; DNA replication; concept of central dogma; genetic code",
+          "position": 1,
+          "source_page": 6
+        },
+        {
+          "name": "Mendelian Genetics",
+          "source_text": "Mendelian Genetics: General terminology; laws of inheritance; incomplete dominance; co-dominance. Concept and types of linkage; complete and incomplete linkage; concept and significance of crossing over",
+          "position": 2,
+          "source_page": 6
+        },
+        {
+          "name": "Sex-linked Inheritance",
+          "source_text": "Sex-linked Inheritance: Introduction; concepts and patterns of sex-linked inheritance; color blindness in humans; eye color in Drosophila melanogaster",
+          "position": 3,
+          "source_page": 6
+        },
+        {
+          "name": "Mutation & Polyploidy",
+          "source_text": "Mutation & Polyploidy: Concept and types (gene and chromosomal mutations); importance of mutation; polyploidy (origin, types and significance); causes and examples of genetic disorders (Down’s syndrome, Turner’s syndrome, Edward’s syndrome, Klinefelter’s syndrome, albinism, hemophilia).",
+          "position": 4,
+          "source_page": 6
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B6",
+      "name": "Plant Anatomy",
+      "source_page": 6,
+      "source_text": "Concept, characters, classification, structure, and functions of different types of plant tissues; types of vascular bundles; T.S. and L.S.; study of monocot and dicot root, stem, and leaf.",
+      "topics": [
+        {
+          "name": "Plant Anatomy",
+          "source_text": "Concept, characters, classification, structure, and functions of different types of plant tissues; types of vascular bundles; T.S. and L.S.; study of monocot and dicot root, stem, and leaf.",
+          "position": 1,
+          "source_page": 6
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B7",
+      "name": "Plant Physiology",
+      "source_page": 6,
+      "source_text": "Water Relations: Diffusion, diffusion pressure, diffusion pressure deficit, osmosis; concept of diffusion, diffusion pressure, diffusion pressure deficit, osmosis and its types, plasmolysis, osmotic pressure, osmotic potential, water potential, wall potential, turgor pressure and wall pressure. Transpiration, ascent of sap, absorption, imbibition, guttation, wilting; Photosynthesis: Introduction and significance of photosynthesis, photosynthetic pigments, Photosystem I and II, light-dependent reactions, Calvin–Benson cycle (C₃ cycle), Hatch–Slack pathway (C₄ cycle), photorespiration, factors affecting photosynthesis, concept of bacterial photosynthesis; Respiration: Introduction and significance of respiration, types of respiration, mechanism of aerobic and anaerobic respiration, glycolysis, oxidative decarboxylation and Krebs (TCA) cycle, electron transport system and oxidative phosphorylation, anaerobic respiration and its mechanism, factors affecting respiration; Plant Growth: Physiological roles and application of plant growth promotors (auxin, gibberellins and cytokinins), Seed germination and types, seed dormancy.",
+      "topics": [
+        {
+          "name": "Water Relations",
+          "source_text": "Water Relations: Diffusion, diffusion pressure, diffusion pressure deficit, osmosis; concept of diffusion, diffusion pressure, diffusion pressure deficit, osmosis and its types, plasmolysis, osmotic pressure, osmotic potential, water potential, wall potential, turgor pressure and wall pressure. Transpiration, ascent of sap, absorption, imbibition, guttation, wilting",
+          "position": 1,
+          "source_page": 6
+        },
+        {
+          "name": "Photosynthesis",
+          "source_text": "Photosynthesis: Introduction and significance of photosynthesis, photosynthetic pigments, Photosystem I and II, light-dependent reactions, Calvin–Benson cycle (C₃ cycle), Hatch–Slack pathway (C₄ cycle), photorespiration, factors affecting photosynthesis, concept of bacterial photosynthesis",
+          "position": 2,
+          "source_page": 6
+        },
+        {
+          "name": "Respiration",
+          "source_text": "Respiration: Introduction and significance of respiration, types of respiration, mechanism of aerobic and anaerobic respiration, glycolysis, oxidative decarboxylation and Krebs (TCA) cycle, electron transport system and oxidative phosphorylation, anaerobic respiration and its mechanism, factors affecting respiration",
+          "position": 3,
+          "source_page": 7
+        },
+        {
+          "name": "Plant Growth",
+          "source_text": "Plant Growth: Physiological roles and application of plant growth promotors (auxin, gibberellins and cytokinins), Seed germination and types, seed dormancy.",
+          "position": 4,
+          "source_page": 7
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B8",
+      "name": "Developmental Botany",
+      "source_page": 7,
+      "source_text": "Asexual reproduction, sporogenesis and gametogenesis in angiosperms, pollination and its types, fertilization, structure of monocot and dicot embryo, types and functions of endosperms.",
+      "topics": [
+        {
+          "name": "Developmental Botany",
+          "source_text": "Asexual reproduction, sporogenesis and gametogenesis in angiosperms, pollination and its types, fertilization, structure of monocot and dicot embryo, types and functions of endosperms.",
+          "position": 1,
+          "source_page": 7
+        }
+      ]
+    },
+    {
+      "subject": "BOTANY",
+      "code": "B9",
+      "name": "Applied Botany",
+      "source_page": 7,
+      "source_text": "Introduction, concept, types and application of plant tissue culture; Introduction, concept and application of genetic engineering; Biofertilizers, green manures, plant breeding, bio-engineering, food safety and security.",
+      "topics": [
+        {
+          "name": "Applied Botany",
+          "source_text": "Introduction, concept, types and application of plant tissue culture; Introduction, concept and application of genetic engineering; Biofertilizers, green manures, plant breeding, bio-engineering, food safety and security.",
+          "position": 1,
+          "source_page": 7
+        }
+      ]
+    },
+    {
+      "subject": "CHEMISTRY",
+      "code": "C1",
+      "name": "Physical Chemistry",
+      "source_page": 7,
+      "source_text": "Basic Concepts in Chemistry: Atoms, molecules, valency, relative atomic mass and molecular mass, atomic mass unit, radicals, molecular formula, chemical equation, empirical formula, percentage composition. Stoichiometry: Dalton’s atomic theory, Laws of stoichiometry, Avogadro’s law and its applications, mole concept, limiting reactants, percentage yield, related numerical problems; Atomic Structure: Rutherford’s atomic model, Bohr’s atomic model, spectrum of hydrogen atom, de-Broglie’s wave equation, Heisenberg’s uncertainty principles, orbitals, quantum numbers, Aufbau principle, Pauli’s exclusion principle, Hund’s rule of maximum multiplicity, electronic configuration. Classification of Elements and Periodicity: Modern periodic law and table, s, p, d and f block elements, periodicity, isoelectronic species, general periodic trend of periodic properties (atomic size, ionic size, ionization potential, electronegativity, electron affinity, metallic character). Chemical Bonding and Shape of Molecules: Electronic theory of valency, ionic bond, covalent bond and co-ordinate covalent bonds, Lewis dot structure of compounds of s and p block elements, VSEPR theory and shape and geometry of simple molecules, elementary idea of Valence Bond Theory (sigma and pi-bond), hybridization, dipole moment, ionic character in covalent bond, bond length, hydrogen bonding, metallic bond, Vander Waal’s forces. Redox Reaction: Classical and electronic concept of oxidation and reduction, oxidation number, balancing redox reaction by oxidation number counting method and ion-electron method, application of redox reaction. States of Matter: Gas (Kinetic theory of gases, laws of gases, ideal and combined gas equation, deviation of real gas from ideality); Liquid (Vapour pressure, boiling point, surface tension and viscosity, liquid crystal, solution, solubility and solubility curve); Solid (Crystalline and amorphous solids, efflorescence, deliquescence and hygroscopic solids, crystallization, water of crystallization, crystal growth, unit cell, 7-crystal system and 14- Bravais lattices, classification of crystalline solid based on dominant bonds). Chemical Equilibrium: Physical and chemical equilibrium, law of mass action, equilibrium constants, reaction quotient, relationship between Kp and Kc, Le-Chatelier’s principle and its applications. Volumetric Analysis: Volumetric analysis, equivalent weights, expression of concentration of solution in terms of percentage, g/L, normality, molarity, molality, formality, ppm, ppb and mole fraction, primary and secondary standard substances, law of equivalence and normality equation, related numerical problems. Ionic Equilibrium: Arrhenius theory of ionization, Arrhenius, Bronsted-Lowry and Lewis concepts of acid and bases, Ostwald’s dilution law, ionic product of water, pKa, pKb, pH, pOH, common ion effect, solubility and solubility product principle, applications of common ion effect and solubility product principle, acidic and basic buffer solution, types of salts, qualitative aspect of hydrolysis of salt, related numerical problems. Chemical Kinetics: Rate of reactions, equivalent rate expression, rate constant and its unit, order and molecularity, integrated rate law equation for zero and first order reactions and their half-lives and characteristics, collision theory, activation energy, threshold energy, activated complex, factors affecting rate of reactions, homogeneous catalysis, heterogeneous catalysis, enzyme catalysis, related numerical problems. Electrochemistry: Electrolytic cell, qualitative and quantitative aspect of electrolysis, standard electrode potential, standard hydrogen electrode, calomel electrode, electrochemical series and its applications, Galvanic cell and its standard emf, commercial cells, primary and secondary cell, hydrogen-oxygen fuel cell, related numerical problems. Chemical Thermodynamics: Thermodynamic systems, surrounding, open, closed, and isolated system, state of system, state function, internal energy, exothermic and endothermic processes, extensive and intensive properties of system, thermodynamic process, first law of thermodynamics, enthalpy, enthalpy of reaction, enthalpy of solution, enthalpy of formation, enthalpy of combustion, enthalpy of neutralization, enthalpy of fusion, enthalpy of vaporization, Laplace law and Hess`s law, spontaneous and non-spontaneous process, entropy, second law of thermodynamics, Gibb`s free energy and prediction of spontaneity, relation between standard Gibb’s free energy and equilibrium constant, related numerical problems. Nuclear Chemistry: Radioactivity, types of nuclear reactions, radioisotopes, radio-carbon dating.",
+      "topics": [
+        {
+          "name": "Basic Concepts in Chemistry",
+          "source_text": "Basic Concepts in Chemistry: Atoms, molecules, valency, relative atomic mass and molecular mass, atomic mass unit, radicals, molecular formula, chemical equation, empirical formula, percentage composition.",
+          "position": 1,
+          "source_page": 7
+        },
+        {
+          "name": "Stoichiometry",
+          "source_text": "Stoichiometry: Dalton’s atomic theory, Laws of stoichiometry, Avogadro’s law and its applications, mole concept, limiting reactants, percentage yield, related numerical problems",
+          "position": 2,
+          "source_page": 7
+        },
+        {
+          "name": "Atomic Structure",
+          "source_text": "Atomic Structure: Rutherford’s atomic model, Bohr’s atomic model, spectrum of hydrogen atom, de-Broglie’s wave equation, Heisenberg’s uncertainty principles, orbitals, quantum numbers, Aufbau principle, Pauli’s exclusion principle, Hund’s rule of maximum multiplicity, electronic configuration.",
+          "position": 3,
+          "source_page": 7
+        },
+        {
+          "name": "Classification of Elements and Periodicity",
+          "source_text": "Classification of Elements and Periodicity: Modern periodic law and table, s, p, d and f block elements, periodicity, isoelectronic species, general periodic trend of periodic properties (atomic size, ionic size, ionization potential, electronegativity, electron affinity, metallic character).",
+          "position": 4,
+          "source_page": 7
+        },
+        {
+          "name": "Chemical Bonding and Shape of Molecules",
+          "source_text": "Chemical Bonding and Shape of Molecules: Electronic theory of valency, ionic bond, covalent bond and co-ordinate covalent bonds, Lewis dot structure of compounds of s and p block elements, VSEPR theory and shape and geometry of simple molecules, elementary idea of Valence Bond Theory (sigma and pi-bond), hybridization, dipole moment, ionic character in covalent bond, bond length, hydrogen bonding, metallic bond, Vander Waal’s forces.",
+          "position": 5,
+          "source_page": 7
+        },
+        {
+          "name": "Redox Reaction",
+          "source_text": "Redox Reaction: Classical and electronic concept of oxidation and reduction, oxidation number, balancing redox reaction by oxidation number counting method and ion-electron method, application of redox reaction.",
+          "position": 6,
+          "source_page": 7
+        },
+        {
+          "name": "States of Matter",
+          "source_text": "States of Matter: Gas (Kinetic theory of gases, laws of gases, ideal and combined gas equation, deviation of real gas from ideality); Liquid (Vapour pressure, boiling point, surface tension and viscosity, liquid crystal, solution, solubility and solubility curve); Solid (Crystalline and amorphous solids, efflorescence, deliquescence and hygroscopic solids, crystallization, water of crystallization, crystal growth, unit cell, 7-crystal system and 14- Bravais lattices, classification of crystalline solid based on dominant bonds).",
+          "position": 7,
+          "source_page": 7
+        },
+        {
+          "name": "Chemical Equilibrium",
+          "source_text": "Chemical Equilibrium: Physical and chemical equilibrium, law of mass action, equilibrium constants, reaction quotient, relationship between Kp and Kc, Le-Chatelier’s principle and its applications.",
+          "position": 8,
+          "source_page": 7
+        },
+        {
+          "name": "Volumetric Analysis",
+          "source_text": "Volumetric Analysis: Volumetric analysis, equivalent weights, expression of concentration of solution in terms of percentage, g/L, normality, molarity, molality, formality, ppm, ppb and mole fraction, primary and secondary standard substances, law of equivalence and normality equation, related numerical problems.",
+          "position": 9,
+          "source_page": 8
+        },
+        {
+          "name": "Ionic Equilibrium",
+          "source_text": "Ionic Equilibrium: Arrhenius theory of ionization, Arrhenius, Bronsted-Lowry and Lewis concepts of acid and bases, Ostwald’s dilution law, ionic product of water, pKa, pKb, pH, pOH, common ion effect, solubility and solubility product principle, applications of common ion effect and solubility product principle, acidic and basic buffer solution, types of salts, qualitative aspect of hydrolysis of salt, related numerical problems.",
+          "position": 10,
+          "source_page": 8
+        },
+        {
+          "name": "Chemical Kinetics",
+          "source_text": "Chemical Kinetics: Rate of reactions, equivalent rate expression, rate constant and its unit, order and molecularity, integrated rate law equation for zero and first order reactions and their half-lives and characteristics, collision theory, activation energy, threshold energy, activated complex, factors affecting rate of reactions, homogeneous catalysis, heterogeneous catalysis, enzyme catalysis, related numerical problems.",
+          "position": 11,
+          "source_page": 8
+        },
+        {
+          "name": "Electrochemistry",
+          "source_text": "Electrochemistry: Electrolytic cell, qualitative and quantitative aspect of electrolysis, standard electrode potential, standard hydrogen electrode, calomel electrode, electrochemical series and its applications, Galvanic cell and its standard emf, commercial cells, primary and secondary cell, hydrogen-oxygen fuel cell, related numerical problems.",
+          "position": 12,
+          "source_page": 8
+        },
+        {
+          "name": "Chemical Thermodynamics",
+          "source_text": "Chemical Thermodynamics: Thermodynamic systems, surrounding, open, closed, and isolated system, state of system, state function, internal energy, exothermic and endothermic processes, extensive and intensive properties of system, thermodynamic process, first law of thermodynamics, enthalpy, enthalpy of reaction, enthalpy of solution, enthalpy of formation, enthalpy of combustion, enthalpy of neutralization, enthalpy of fusion, enthalpy of vaporization, Laplace law and Hess`s law, spontaneous and non-spontaneous process, entropy, second law of thermodynamics, Gibb`s free energy and prediction of spontaneity, relation between standard Gibb’s free energy and equilibrium constant, related numerical problems.",
+          "position": 13,
+          "source_page": 8
+        },
+        {
+          "name": "Nuclear Chemistry",
+          "source_text": "Nuclear Chemistry: Radioactivity, types of nuclear reactions, radioisotopes, radio-carbon dating.",
+          "position": 14,
+          "source_page": 8
+        }
+      ]
+    },
+    {
+      "subject": "CHEMISTRY",
+      "code": "C2",
+      "name": "Inorganic Chemistry",
+      "source_page": 8,
+      "source_text": "Chemistry of Non-metals: Atomic, molecular, and nascent hydrogen, isotopes of hydrogen, heavy water, types of oxides, preparation, structure and test of ozone. Ozone layer depletion, chemical properties of ammonia, phosphine and nitric acid, general characteristics, preparation, chemical properties and test of chlorine, bromine and iodine, preparation and chemical properties of HCl, HBr and HI, allotropes of carbon, chemical properties of carbon monoxide, chemical properties of hydrogen sulphide, sulphur dioxide, sulphuric acid. Chemistry of Metals: Metallurgical principles (hydrometallurgy, pyrometallurgy, electrometallurgy, ores, gangue, flux, slag, concentration, calcination, roasting, smelting, bessemerization, aluminothermite, electrochemical reduction, poling, electro-refinement, zone refining), general characteristics of alkali and alkaline earth metals and chemical properties of sodium, sodium hydroxide, and sodium carbonate, general characteristics of transition metals (3d series), shape of complex ions ( tetrahedral, square planar and octahedral), crystal field theory of octahedral complex, occurrence, extraction and chemical properties of copper, zinc, mercury, silver and iron from their ores, chemical properties of blue vitriol, white vitriol, calomel, corrosive sublimate, manufacture of steel by basic oxygen method and open hearth process, corrosion of iron. Bio-inorganic Chemistry: Concept of micro and macro nutrients, biological importance of ions of sodium, potassium, magnesium, zinc, copper, cobalt, nickel, iron, chromium and calcium, sodium-potassium and sodium-glucose pump, toxicity due to iron, arsenic, mercury, lead and cadmium.",
+      "topics": [
+        {
+          "name": "Chemistry of Non-metals",
+          "source_text": "Chemistry of Non-metals: Atomic, molecular, and nascent hydrogen, isotopes of hydrogen, heavy water, types of oxides, preparation, structure and test of ozone. Ozone layer depletion, chemical properties of ammonia, phosphine and nitric acid, general characteristics, preparation, chemical properties and test of chlorine, bromine and iodine, preparation and chemical properties of HCl, HBr and HI, allotropes of carbon, chemical properties of carbon monoxide, chemical properties of hydrogen sulphide, sulphur dioxide, sulphuric acid.",
+          "position": 1,
+          "source_page": 8
+        },
+        {
+          "name": "Chemistry of Metals",
+          "source_text": "Chemistry of Metals: Metallurgical principles (hydrometallurgy, pyrometallurgy, electrometallurgy, ores, gangue, flux, slag, concentration, calcination, roasting, smelting, bessemerization, aluminothermite, electrochemical reduction, poling, electro-refinement, zone refining), general characteristics of alkali and alkaline earth metals and chemical properties of sodium, sodium hydroxide, and sodium carbonate, general characteristics of transition metals (3d series), shape of complex ions ( tetrahedral, square planar and octahedral), crystal field theory of octahedral complex, occurrence, extraction and chemical properties of copper, zinc, mercury, silver and iron from their ores, chemical properties of blue vitriol, white vitriol, calomel, corrosive sublimate, manufacture of steel by basic oxygen method and open hearth process, corrosion of iron.",
+          "position": 2,
+          "source_page": 8
+        },
+        {
+          "name": "Bio-inorganic Chemistry",
+          "source_text": "Bio-inorganic Chemistry: Concept of micro and macro nutrients, biological importance of ions of sodium, potassium, magnesium, zinc, copper, cobalt, nickel, iron, chromium and calcium, sodium-potassium and sodium-glucose pump, toxicity due to iron, arsenic, mercury, lead and cadmium.",
+          "position": 3,
+          "source_page": 8
+        }
+      ]
+    },
+    {
+      "subject": "CHEMISTRY",
+      "code": "C3",
+      "name": "Organic Chemistry",
+      "source_page": 9,
+      "source_text": "General Organic Chemistry: Tetra-covalency, catenation of carbon, classification of organic compounds, alkyl and aryl groups, functional groups, homologous series, IUPAC name of aliphatic compounds, isomerism of organic compounds, heterolytic and homolytic bond fission, electrophile, nucleophile, carbocation, carbanion, free radicals, inductive effect, resonance effect. Hydrocarbons: Concept of cracking, pyrolysis, reforming, quality of gasoline, octane number, cetane number and gasoline additive. Isomerism, IUPAC name, general methods of preparation of alkane, alkene and alkyne, chemical properties of ethane, addition reaction of alkene, addition reaction and acidity of alkyne. Aromatic Hydrocarbons: Aromaticity of aromatic hydrocarbons, resonance, preparation and chemical properties of benzene. Haloalkanes and Haloarenes: Nomenclature, isomerism, classification, preparation and properties of monohaloalkanes, concept of SN1 and SN2 mechanisms, preparation and chemical properties of chloroform and chlorobenzene. Alcohols and Phenols: Nomenclature, isomerism, classification, preparation and chemical properties of monohydric alcohols, industrial manufacture of alcohols by oxo-process, hydroboration-oxidation of ethene and fermentation of sugar, types of ethanol (absolute, power, methylated, rectified spirit, alcoholic beverages), preparation and properties of phenol. Ethers: Nomenclature, classification, isomerism, Williamson’s synthesis of ethers, chemical properties of diethyl ether. Aldehydes and Ketones: Nomenclature, isomerism, preparation and chemical properties of aliphatic carbonyl compounds, preparation and properties of benzaldehyde. Carboxylic Acid and its Derivatives: Nomenclature, isomerism, preparation and chemical properties of monocarboxylic acids, preparation, properties and relative reactivity of acid halide, acid anhydride, amides and esters. Nitro-compounds: Nomenclature, isomerism, preparation and chemical properties of nitroalkanes and nitrobenzene. Amine: Nomenclature, classification, isomerism of amines, preparation of primary amines, basicity of amines, separation of primary, secondary and tertiary amines by Hoffmann’s method, preparation and chemical properties of aniline. Organometallic Compounds: General formula and example of organo-lithium, organocopper and organocadmium compounds, metal carbon bonding, preparation and chemical properties of Grignard’s reagent.",
+      "topics": [
+        {
+          "name": "General Organic Chemistry",
+          "source_text": "General Organic Chemistry: Tetra-covalency, catenation of carbon, classification of organic compounds, alkyl and aryl groups, functional groups, homologous series, IUPAC name of aliphatic compounds, isomerism of organic compounds, heterolytic and homolytic bond fission, electrophile, nucleophile, carbocation, carbanion, free radicals, inductive effect, resonance effect.",
+          "position": 1,
+          "source_page": 9
+        },
+        {
+          "name": "Hydrocarbons",
+          "source_text": "Hydrocarbons: Concept of cracking, pyrolysis, reforming, quality of gasoline, octane number, cetane number and gasoline additive. Isomerism, IUPAC name, general methods of preparation of alkane, alkene and alkyne, chemical properties of ethane, addition reaction of alkene, addition reaction and acidity of alkyne.",
+          "position": 2,
+          "source_page": 9
+        },
+        {
+          "name": "Aromatic Hydrocarbons",
+          "source_text": "Aromatic Hydrocarbons: Aromaticity of aromatic hydrocarbons, resonance, preparation and chemical properties of benzene.",
+          "position": 3,
+          "source_page": 9
+        },
+        {
+          "name": "Haloalkanes and Haloarenes",
+          "source_text": "Haloalkanes and Haloarenes: Nomenclature, isomerism, classification, preparation and properties of monohaloalkanes, concept of SN1 and SN2 mechanisms, preparation and chemical properties of chloroform and chlorobenzene.",
+          "position": 4,
+          "source_page": 9
+        },
+        {
+          "name": "Alcohols and Phenols",
+          "source_text": "Alcohols and Phenols: Nomenclature, isomerism, classification, preparation and chemical properties of monohydric alcohols, industrial manufacture of alcohols by oxo-process, hydroboration-oxidation of ethene and fermentation of sugar, types of ethanol (absolute, power, methylated, rectified spirit, alcoholic beverages), preparation and properties of phenol.",
+          "position": 5,
+          "source_page": 9
+        },
+        {
+          "name": "Ethers",
+          "source_text": "Ethers: Nomenclature, classification, isomerism, Williamson’s synthesis of ethers, chemical properties of diethyl ether.",
+          "position": 6,
+          "source_page": 9
+        },
+        {
+          "name": "Aldehydes and Ketones",
+          "source_text": "Aldehydes and Ketones: Nomenclature, isomerism, preparation and chemical properties of aliphatic carbonyl compounds, preparation and properties of benzaldehyde.",
+          "position": 7,
+          "source_page": 9
+        },
+        {
+          "name": "Carboxylic Acid and its Derivatives",
+          "source_text": "Carboxylic Acid and its Derivatives: Nomenclature, isomerism, preparation and chemical properties of monocarboxylic acids, preparation, properties and relative reactivity of acid halide, acid anhydride, amides and esters.",
+          "position": 8,
+          "source_page": 9
+        },
+        {
+          "name": "Nitro-compounds",
+          "source_text": "Nitro-compounds: Nomenclature, isomerism, preparation and chemical properties of nitroalkanes and nitrobenzene.",
+          "position": 9,
+          "source_page": 9
+        },
+        {
+          "name": "Amine",
+          "source_text": "Amine: Nomenclature, classification, isomerism of amines, preparation of primary amines, basicity of amines, separation of primary, secondary and tertiary amines by Hoffmann’s method, preparation and chemical properties of aniline.",
+          "position": 10,
+          "source_page": 9
+        },
+        {
+          "name": "Organometallic Compounds",
+          "source_text": "Organometallic Compounds: General formula and example of organo-lithium, organocopper and organocadmium compounds, metal carbon bonding, preparation and chemical properties of Grignard’s reagent.",
+          "position": 11,
+          "source_page": 9
+        }
+      ]
+    },
+    {
+      "subject": "CHEMISTRY",
+      "code": "C4",
+      "name": "Applied Chemistry",
+      "source_page": 9,
+      "source_text": "Fundamentals of Applied Chemistry and Manufacturing Processes: Chemical industry (importance and production stages), economical production and chemical plant management (cost, cash flow, operation, and design), continuous and batch processing, environmental effect of chemical industry with control measures, cement, paper and pulp, principle of modern manufacture of nitric acid (Ostwald’s process), ammonia (Haber’s process), sulphuric acid (Contact process), caustic soda (Diaphragm cell) , sodium carbonate (Ammonia soda or Solvay process), urea (Ammonium carbamate process). Applications of Non-metals, Metals and Compounds: Hydrogen and its isotopes, oxygen, ozone, heavy water, hydrogen peroxide, nitrogen, ammonia, nitric acid, sulphur, hydrogen sulphide, sulphur dioxide, sulphuric acid, hypo, halogen, halogen acids, carbon, carbon monoxide, phosphorous, phosphine, sodium, caustic soda, washing soda, baking soda, quick lime, slaked lime bleaching powder, plaster of Paris, magnesia, epsom salt, gypsum salt, copper, blue vitriol, black and red oxide of copper, zinc, white vitriol, mercury, calomel, corrosive sublimate, iron, silver chloride and silver nitrate. Alkane, alkene, alkyne, aromatic hydrocarbons, chloroform, alcohol, phenol, aldehydes and ketones, ethers, haloarene, carboxylic acid and its derivatives, nitro-compounds, amines, nitrocompounds, formalin, chloropicrin, chloretone, Grignard’s reagent. Chemistry in Service to Mankind: Polymer, dyes, drugs, pesticides, fertilizer, applications of colloid, osmotic pressure, buffer in daily life, medical and industrial applications of radioisotopes.",
+      "topics": [
+        {
+          "name": "Fundamentals of Applied Chemistry and Manufacturing Processes",
+          "source_text": "Fundamentals of Applied Chemistry and Manufacturing Processes: Chemical industry (importance and production stages), economical production and chemical plant management (cost, cash flow, operation, and design), continuous and batch processing, environmental effect of chemical industry with control measures, cement, paper and pulp, principle of modern manufacture of nitric acid (Ostwald’s process), ammonia (Haber’s process), sulphuric acid (Contact process), caustic soda (Diaphragm cell) , sodium carbonate (Ammonia soda or Solvay process), urea (Ammonium carbamate process).",
+          "position": 1,
+          "source_page": 9
+        },
+        {
+          "name": "Applications of Non-metals, Metals and Compounds",
+          "source_text": "Applications of Non-metals, Metals and Compounds: Hydrogen and its isotopes, oxygen, ozone, heavy water, hydrogen peroxide, nitrogen, ammonia, nitric acid, sulphur, hydrogen sulphide, sulphur dioxide, sulphuric acid, hypo, halogen, halogen acids, carbon, carbon monoxide, phosphorous, phosphine, sodium, caustic soda, washing soda, baking soda, quick lime, slaked lime bleaching powder, plaster of Paris, magnesia, epsom salt, gypsum salt, copper, blue vitriol, black and red oxide of copper, zinc, white vitriol, mercury, calomel, corrosive sublimate, iron, silver chloride and silver nitrate. Alkane, alkene, alkyne, aromatic hydrocarbons, chloroform, alcohol, phenol, aldehydes and ketones, ethers, haloarene, carboxylic acid and its derivatives, nitro-compounds, amines, nitrocompounds, formalin, chloropicrin, chloretone, Grignard’s reagent.",
+          "position": 2,
+          "source_page": 9
+        },
+        {
+          "name": "Chemistry in Service to Mankind",
+          "source_text": "Chemistry in Service to Mankind: Polymer, dyes, drugs, pesticides, fertilizer, applications of colloid, osmotic pressure, buffer in daily life, medical and industrial applications of radioisotopes.",
+          "position": 3,
+          "source_page": 10
+        }
+      ]
+    },
+    {
+      "subject": "CHEMISTRY",
+      "code": "C5",
+      "name": "Analytical Chemistry",
+      "source_page": 10,
+      "source_text": "Chemical Tests: Tests of acid and basic radicals, tests of unsaturation and functional groups of organic compounds, distinction tests of organic compounds, hetero-element detection by Lassaigne’s test, biomolecule tests (fat, protein and carbohydrate). Separation Techniques: Filtration, sublimation, evaporation, precipitation, simple and fractional crystallization, simple fractional and vacuum distillation, paper chromatography, atmolysis. Types of Titration: Concept of acid-base, redox (permanganometric, iodometric and iodimetric) and complexometric titration, selection of indicators in acid base titration.",
+      "topics": [
+        {
+          "name": "Chemical Tests",
+          "source_text": "Chemical Tests: Tests of acid and basic radicals, tests of unsaturation and functional groups of organic compounds, distinction tests of organic compounds, hetero-element detection by Lassaigne’s test, biomolecule tests (fat, protein and carbohydrate).",
+          "position": 1,
+          "source_page": 10
+        },
+        {
+          "name": "Separation Techniques",
+          "source_text": "Separation Techniques: Filtration, sublimation, evaporation, precipitation, simple and fractional crystallization, simple fractional and vacuum distillation, paper chromatography, atmolysis.",
+          "position": 2,
+          "source_page": 10
+        },
+        {
+          "name": "Types of Titration",
+          "source_text": "Types of Titration: Concept of acid-base, redox (permanganometric, iodometric and iodimetric) and complexometric titration, selection of indicators in acid base titration.",
+          "position": 3,
+          "source_page": 10
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P1",
+      "name": "Mechanics",
+      "source_page": 10,
+      "source_text": "Physical quantities, vectors and scalars: Concept and application related to precision, accuracy, significant figures and dimensional analysis; concept, laws and calculations related to vectors and scalars. Kinematics: Concepts, calculations and graphical treatment of physical quantities of linear and projectile motions in presence as well as absence of resistive force. Dynamics: Concepts, laws (including Newton's laws and equilibrium conditions) and application of physical quantities (force, impulse, momentum, torque, work, energy and power) related to linear a motions, collisions and solid friction. Rotational dynamics: Concepts, laws and application of physical quantities (moment of inertia (rigid uniform rod only), radius of gyration, torque, work, energy and power) related to rotational motion. Fluid statics and dynamics: Concepts (pressure, surface tension and energy and capillary action) and laws/principles (Newton, Stokes, Poiseuille, Bernoulli) related to fluids, and their applications. Circular and Periodic motion: Concepts, laws and application of physical quantities (displacement, velocity, acceleration, centripetal force) related to motion in horizontal and vertical circle; concepts, calculations, graphical treatment and application of physical quantities (period, frequency, displacement, amplitude, velocity, acceleration, restoring force, energy) of simple harmonic motion; concept of forced oscillations. Gravity: Definitions, laws, calculations, graphical treatment and application of concepts related to gravitation (force, acceleration, field strength, energy and potential. Elasticity: Concepts related to elasticity of matter (strain, stress, modii of elasticity, Poisson ratio and energy density), their calculations and applications.",
+      "topics": [
+        {
+          "name": "Physical quantities, vectors and scalars",
+          "source_text": "Physical quantities, vectors and scalars: Concept and application related to precision, accuracy, significant figures and dimensional analysis; concept, laws and calculations related to vectors and scalars.",
+          "position": 1,
+          "source_page": 10
+        },
+        {
+          "name": "Kinematics",
+          "source_text": "Kinematics: Concepts, calculations and graphical treatment of physical quantities of linear and projectile motions in presence as well as absence of resistive force.",
+          "position": 2,
+          "source_page": 10
+        },
+        {
+          "name": "Dynamics",
+          "source_text": "Dynamics: Concepts, laws (including Newton's laws and equilibrium conditions) and application of physical quantities (force, impulse, momentum, torque, work, energy and power) related to linear a motions, collisions and solid friction.",
+          "position": 3,
+          "source_page": 10
+        },
+        {
+          "name": "Rotational dynamics",
+          "source_text": "Rotational dynamics: Concepts, laws and application of physical quantities (moment of inertia (rigid uniform rod only), radius of gyration, torque, work, energy and power) related to rotational motion.",
+          "position": 4,
+          "source_page": 10
+        },
+        {
+          "name": "Fluid statics and dynamics",
+          "source_text": "Fluid statics and dynamics: Concepts (pressure, surface tension and energy and capillary action) and laws/principles (Newton, Stokes, Poiseuille, Bernoulli) related to fluids, and their applications.",
+          "position": 5,
+          "source_page": 10
+        },
+        {
+          "name": "Circular and Periodic motion",
+          "source_text": "Circular and Periodic motion: Concepts, laws and application of physical quantities (displacement, velocity, acceleration, centripetal force) related to motion in horizontal and vertical circle; concepts, calculations, graphical treatment and application of physical quantities (period, frequency, displacement, amplitude, velocity, acceleration, restoring force, energy) of simple harmonic motion; concept of forced oscillations.",
+          "position": 6,
+          "source_page": 10
+        },
+        {
+          "name": "Gravity",
+          "source_text": "Gravity: Definitions, laws, calculations, graphical treatment and application of concepts related to gravitation (force, acceleration, field strength, energy and potential.",
+          "position": 7,
+          "source_page": 10
+        },
+        {
+          "name": "Elasticity",
+          "source_text": "Elasticity: Concepts related to elasticity of matter (strain, stress, modii of elasticity, Poisson ratio and energy density), their calculations and applications.",
+          "position": 8,
+          "source_page": 10
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P2",
+      "name": "Heat and thermodynamics",
+      "source_page": 11,
+      "source_text": "Thermal energy, heat, temperature, heat flow and thermometers: Concept of thermal energy, heat and temperature; modes and laws (zeroth law and Stefan Bolzmann) of heat flow; working principle, advantages and limitations of different types of thermometers (liquid in glass, resistance thermometer and radiation thermometer). Thermal expansion: Concept of linear, cubical, superficial, real and apparent expansions, their calculation and applications. Quantity of heat: Concept of heat capacity, specific heat capacity, latent heats and triple point, and their calculations and applications. Ideal gas: Molecular properties of ideal gas and calculations related to pressure, volume, temperature, rms speed, energy. First law of thermodynamics: Concept and calculations related to thermodynamic system and processes (adiabatic, isothermal, isochoric and isobaric); Second law of thermodynamics: Second law and its application in relation to internal combustion heat engines and refrigerator, concept of entropy.",
+      "topics": [
+        {
+          "name": "Thermal energy, heat, temperature, heat flow and thermometers",
+          "source_text": "Thermal energy, heat, temperature, heat flow and thermometers: Concept of thermal energy, heat and temperature; modes and laws (zeroth law and Stefan Bolzmann) of heat flow; working principle, advantages and limitations of different types of thermometers (liquid in glass, resistance thermometer and radiation thermometer).",
+          "position": 1,
+          "source_page": 11
+        },
+        {
+          "name": "Thermal expansion",
+          "source_text": "Thermal expansion: Concept of linear, cubical, superficial, real and apparent expansions, their calculation and applications.",
+          "position": 2,
+          "source_page": 11
+        },
+        {
+          "name": "Quantity of heat",
+          "source_text": "Quantity of heat: Concept of heat capacity, specific heat capacity, latent heats and triple point, and their calculations and applications.",
+          "position": 3,
+          "source_page": 11
+        },
+        {
+          "name": "Ideal gas",
+          "source_text": "Ideal gas: Molecular properties of ideal gas and calculations related to pressure, volume, temperature, rms speed, energy.",
+          "position": 4,
+          "source_page": 11
+        },
+        {
+          "name": "First law of thermodynamics",
+          "source_text": "First law of thermodynamics: Concept and calculations related to thermodynamic system and processes (adiabatic, isothermal, isochoric and isobaric)",
+          "position": 5,
+          "source_page": 11
+        },
+        {
+          "name": "Second law of thermodynamics",
+          "source_text": "Second law of thermodynamics: Second law and its application in relation to internal combustion heat engines and refrigerator, concept of entropy.",
+          "position": 6,
+          "source_page": 11
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P3",
+      "name": "Waves and optics",
+      "source_page": 11,
+      "source_text": "Wave motion: Concept, calculation related to progressive waves, velocity of sound in solid, liquid and gas and factors affecting the velocity. Stationary waves: Concept of stationary waves, calculations and applications in relation to velocity, harmonics and overtones in pipes and strings. Acoustic phenomena: Pressure amplitude and characteristics of waves(intensity, loudness, quality and pitch), concept, calculations and applications of Doppler effect. Reflection, refraction and dispersion: Reflection at curve mirror, refraction at plane surfaces and in lens; concept, calculations and application of dispersion (chromatic aberration, and achromatism);. Interference: Concept, conditions and applications of interference; calculations and applications related to Young's double slit experiment. Diffraction and polarization: Concept and conditions of diffraction, diffraction at a single slit and diffraction grating, resolving power of optical instruments; concept of polarization and Brewster's law.",
+      "topics": [
+        {
+          "name": "Wave motion",
+          "source_text": "Wave motion: Concept, calculation related to progressive waves, velocity of sound in solid, liquid and gas and factors affecting the velocity.",
+          "position": 1,
+          "source_page": 11
+        },
+        {
+          "name": "Stationary waves",
+          "source_text": "Stationary waves: Concept of stationary waves, calculations and applications in relation to velocity, harmonics and overtones in pipes and strings.",
+          "position": 2,
+          "source_page": 11
+        },
+        {
+          "name": "Acoustic phenomena",
+          "source_text": "Acoustic phenomena: Pressure amplitude and characteristics of waves(intensity, loudness, quality and pitch), concept, calculations and applications of Doppler effect.",
+          "position": 3,
+          "source_page": 11
+        },
+        {
+          "name": "Reflection, refraction and dispersion",
+          "source_text": "Reflection, refraction and dispersion: Reflection at curve mirror, refraction at plane surfaces and in lens; concept, calculations and application of dispersion (chromatic aberration, and achromatism);.",
+          "position": 4,
+          "source_page": 11
+        },
+        {
+          "name": "Interference",
+          "source_text": "Interference: Concept, conditions and applications of interference; calculations and applications related to Young's double slit experiment.",
+          "position": 5,
+          "source_page": 11
+        },
+        {
+          "name": "Diffraction and polarization",
+          "source_text": "Diffraction and polarization: Concept and conditions of diffraction, diffraction at a single slit and diffraction grating, resolving power of optical instruments; concept of polarization and Brewster's law.",
+          "position": 6,
+          "source_page": 11
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P4",
+      "name": "Current electricity and magnetism",
+      "source_page": 11,
+      "source_text": "Electrical quantities: Concepts, laws (Ohm's and Joule's) and calculations related to electrical quantities (resistances, emf, pd, energy, power). Electrical circuits: Concepts, laws (including Kirchhoff's laws) and their application related to resistors in different types of combinations, concept and calculations related to Wheatstone Bridge, meter bridge, potentiometer and galvanometer as ammeter and voltmeter. Thermoelectric effect: Concept and application of Seebeck and Peltier effects, concepts and calculations related to thermocouple. Alternating currents: Concept and calculation related to peak and rms values of AC, impedance, power, Q-factor and phase in LRC circuits; rectification using diode bridge. Magnetic properties of materials: Properties (domains, relative permeability, susceptibility and hysteresis) of Dia, para and ferromagnetic materials. Magnetic field: Nature of B-field around straight current carrying conductor, circular coil and long solenoid; concept, calculations and application of effect of uniform B-field on a moving charge and current carrying conductor/ coil, Hall effect. Electromagnetic induction: Principle and calculation related to Faraday’s law and Lenz’s law and their applications in connection to A.C. generator, transformer and formation of eddy current, concept of inductance (self and mutual) and energy stored in an inductor.",
+      "topics": [
+        {
+          "name": "Electrical quantities",
+          "source_text": "Electrical quantities: Concepts, laws (Ohm's and Joule's) and calculations related to electrical quantities (resistances, emf, pd, energy, power).",
+          "position": 1,
+          "source_page": 11
+        },
+        {
+          "name": "Electrical circuits",
+          "source_text": "Electrical circuits: Concepts, laws (including Kirchhoff's laws) and their application related to resistors in different types of combinations, concept and calculations related to Wheatstone Bridge, meter bridge, potentiometer and galvanometer as ammeter and voltmeter.",
+          "position": 2,
+          "source_page": 11
+        },
+        {
+          "name": "Thermoelectric effect",
+          "source_text": "Thermoelectric effect: Concept and application of Seebeck and Peltier effects, concepts and calculations related to thermocouple.",
+          "position": 3,
+          "source_page": 11
+        },
+        {
+          "name": "Alternating currents",
+          "source_text": "Alternating currents: Concept and calculation related to peak and rms values of AC, impedance, power, Q-factor and phase in LRC circuits; rectification using diode bridge.",
+          "position": 4,
+          "source_page": 11
+        },
+        {
+          "name": "Magnetic properties of materials",
+          "source_text": "Magnetic properties of materials: Properties (domains, relative permeability, susceptibility and hysteresis) of Dia, para and ferromagnetic materials.",
+          "position": 5,
+          "source_page": 12
+        },
+        {
+          "name": "Magnetic field",
+          "source_text": "Magnetic field: Nature of B-field around straight current carrying conductor, circular coil and long solenoid; concept, calculations and application of effect of uniform B-field on a moving charge and current carrying conductor/ coil, Hall effect.",
+          "position": 6,
+          "source_page": 12
+        },
+        {
+          "name": "Electromagnetic induction",
+          "source_text": "Electromagnetic induction: Principle and calculation related to Faraday’s law and Lenz’s law and their applications in connection to A.C. generator, transformer and formation of eddy current, concept of inductance (self and mutual) and energy stored in an inductor.",
+          "position": 7,
+          "source_page": 12
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P5",
+      "name": "Electrostatics and capacitors",
+      "source_page": 12,
+      "source_text": "Electric charge and electric field: Electric field due to point charges, concept of electrostatic induction, Coulomb’s law and its applications. Electric field strength, potential and potential energy: Concepts, calculation, graphical analysis, law (Gauss) and related applications. Capacitors: Principle of capacitor; concept, calculation and application of parallel plate capacitor, combinations of capacitors and energy density, effect of dielectric.",
+      "topics": [
+        {
+          "name": "Electric charge and electric field",
+          "source_text": "Electric charge and electric field: Electric field due to point charges, concept of electrostatic induction, Coulomb’s law and its applications.",
+          "position": 1,
+          "source_page": 12
+        },
+        {
+          "name": "Electric field strength, potential and potential energy",
+          "source_text": "Electric field strength, potential and potential energy: Concepts, calculation, graphical analysis, law (Gauss) and related applications.",
+          "position": 2,
+          "source_page": 12
+        },
+        {
+          "name": "Capacitors",
+          "source_text": "Capacitors: Principle of capacitor; concept, calculation and application of parallel plate capacitor, combinations of capacitors and energy density, effect of dielectric.",
+          "position": 3,
+          "source_page": 12
+        }
+      ]
+    },
+    {
+      "subject": "PHYSICS",
+      "code": "P6",
+      "name": "Modern physics",
+      "source_page": 12,
+      "source_text": "Nuclear physics: Nucleus and its properties (charge, size, mass, density); concept and calculations of mass defect, binding energy per nucleon, Einstein’s mass- energy relation; nuclear fusion and fission. Electron: Concept, calculations and applications related to the motion of electron in an electric and magnetic field, Millikan’s oil drop experiment and J.J. Thomson’s experiment. Photon- Concept, laws and calculations related to photon and photo-electric effect. Wave particle duality: Concepts and calculations of Bohr’s theory of hydrogen atom including spectral series, energy levels, De-Broglie wave and uncertainty principle, properties, uses and production of X rays and their calculations; Bragg’s law and applications. Radioactivity: Concept, laws and units of radioactivity, properties of alpha, beta and gamma rays, concept, calculation and applications of half-life, mean life and their relations, carbon dating; medical use of nuclear radiations and health hazard. Solid and semiconductor device: Concept of energy band in solids (metal, semiconductor and insulator); intrinsic and extrinsic semiconductor, p-n diode, biasing of diode, p-n diode as a rectifier; logic gates (AND, OR, NOT, NOR, NAND). Particle physics and recent trends: Concept of particle, antiparticle, leptons and quarks, Higgs boson, nanotechnology, big bang theory, Hubble law.",
+      "topics": [
+        {
+          "name": "Nuclear physics",
+          "source_text": "Nuclear physics: Nucleus and its properties (charge, size, mass, density); concept and calculations of mass defect, binding energy per nucleon, Einstein’s mass- energy relation; nuclear fusion and fission.",
+          "position": 1,
+          "source_page": 12
+        },
+        {
+          "name": "Electron",
+          "source_text": "Electron: Concept, calculations and applications related to the motion of electron in an electric and magnetic field, Millikan’s oil drop experiment and J.J. Thomson’s experiment.",
+          "position": 2,
+          "source_page": 12
+        },
+        {
+          "name": "Photon",
+          "source_text": "Photon- Concept, laws and calculations related to photon and photo-electric effect.",
+          "position": 3,
+          "source_page": 12
+        },
+        {
+          "name": "Wave particle duality",
+          "source_text": "Wave particle duality: Concepts and calculations of Bohr’s theory of hydrogen atom including spectral series, energy levels, De-Broglie wave and uncertainty principle, properties, uses and production of X rays and their calculations; Bragg’s law and applications.",
+          "position": 4,
+          "source_page": 12
+        },
+        {
+          "name": "Radioactivity",
+          "source_text": "Radioactivity: Concept, laws and units of radioactivity, properties of alpha, beta and gamma rays, concept, calculation and applications of half-life, mean life and their relations, carbon dating; medical use of nuclear radiations and health hazard.",
+          "position": 5,
+          "source_page": 12
+        },
+        {
+          "name": "Solid and semiconductor device",
+          "source_text": "Solid and semiconductor device: Concept of energy band in solids (metal, semiconductor and insulator); intrinsic and extrinsic semiconductor, p-n diode, biasing of diode, p-n diode as a rectifier; logic gates (AND, OR, NOT, NOR, NAND).",
+          "position": 6,
+          "source_page": 12
+        },
+        {
+          "name": "Particle physics and recent trends",
+          "source_text": "Particle physics and recent trends: Concept of particle, antiparticle, leptons and quarks, Higgs boson, nanotechnology, big bang theory, Hubble law.",
+          "position": 7,
+          "source_page": 12
+        }
+      ]
+    },
+    {
+      "subject": "MAT",
+      "code": "M1",
+      "name": "Verbal reasoning",
+      "source_page": 4,
+      "source_text": "Verbal reasoning",
+      "topics": []
+    },
+    {
+      "subject": "MAT",
+      "code": "M2",
+      "name": "Numerical reasoning",
+      "source_page": 4,
+      "source_text": "Numerical reasoning",
+      "topics": []
+    },
+    {
+      "subject": "MAT",
+      "code": "M3",
+      "name": "Logical sequencing",
+      "source_page": 4,
+      "source_text": "Logical sequencing",
+      "topics": []
+    },
+    {
+      "subject": "MAT",
+      "code": "M4",
+      "name": "Spatial relation / Abstract reasoning",
+      "source_page": 4,
+      "source_text": "Spatial relation / Abstract reasoning",
+      "topics": []
+    },
+    {
+      "subject": "PCL",
+      "code": "L1",
+      "name": "Contents from PCL/diploma level course of specific subject",
+      "source_page": 14,
+      "source_text": "Contents from PCL/diploma level course of specific subject",
+      "topics": []
+    },
+    {
+      "subject": "HEALTH",
+      "code": "H1",
+      "name": "Determinants of health and illness",
+      "source_page": 16,
+      "source_text": "Determinants of health and illness",
+      "topics": []
+    },
+    {
+      "subject": "HEALTH",
+      "code": "H2",
+      "name": "Communicable diseases including vector borne diseases and zoonotic diseases",
+      "source_page": 16,
+      "source_text": "Communicable diseases including vector borne diseases and zoonotic diseases",
+      "topics": []
+    },
+    {
+      "subject": "HEALTH",
+      "code": "H3",
+      "name": "Non-communicable diseases",
+      "source_page": 16,
+      "source_text": "Non-communicable diseases",
+      "topics": []
+    },
+    {
+      "subject": "HEALTH",
+      "code": "H4",
+      "name": "Water, sanitation and hygiene (WASH)",
+      "source_page": 16,
+      "source_text": "Water, sanitation and hygiene (WASH)",
+      "topics": []
+    },
+    {
+      "subject": "HEALTH",
+      "code": "H5",
+      "name": "Basic concept of biostatistics and epidemiology",
+      "source_page": 16,
+      "source_text": "Basic concept of biostatistics and epidemiology",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N1",
+      "name": "Community health nursing",
+      "source_page": 16,
+      "source_text": "Community health nursing",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N2",
+      "name": "Adults health nursing",
+      "source_page": 16,
+      "source_text": "Adults health nursing",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N3",
+      "name": "Child health nursing",
+      "source_page": 16,
+      "source_text": "Child health nursing",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N4",
+      "name": "Midwifery and gynecological nursing",
+      "source_page": 16,
+      "source_text": "Midwifery and gynecological nursing",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N5",
+      "name": "Fundamental of nursing",
+      "source_page": 16,
+      "source_text": "Fundamental of nursing",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N6",
+      "name": "Leadership and management",
+      "source_page": 16,
+      "source_text": "Leadership and management",
+      "topics": []
+    },
+    {
+      "subject": "NURSING",
+      "code": "N7",
+      "name": "Behavioral science and mental health",
+      "source_page": 16,
+      "source_text": "Behavioral science and mental health",
+      "topics": []
+    },
+    {
+      "subject": "NURSING_SCIENCE",
+      "code": "S1",
+      "name": "Biochemistry",
+      "source_page": 17,
+      "source_text": "Biochemistry",
+      "topics": []
+    },
+    {
+      "subject": "NURSING_SCIENCE",
+      "code": "S2",
+      "name": "Microbiology",
+      "source_page": 17,
+      "source_text": "Microbiology",
+      "topics": []
+    },
+    {
+      "subject": "NURSING_SCIENCE",
+      "code": "S3",
+      "name": "Pharmacology",
+      "source_page": 17,
+      "source_text": "Pharmacology",
+      "topics": []
+    },
+    {
+      "subject": "NURSING_SCIENCE",
+      "code": "S4",
+      "name": "Anatomy",
+      "source_page": 17,
+      "source_text": "Anatomy",
+      "topics": []
+    },
+    {
+      "subject": "NURSING_SCIENCE",
+      "code": "S5",
+      "name": "Physiology",
+      "source_page": 17,
+      "source_text": "Physiology",
+      "topics": []
+    }
+  ]
+}

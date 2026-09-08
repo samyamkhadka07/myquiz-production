@@ -1,0 +1,3 @@
+import { requirePage } from '@/lib/server/auth';
+import { check } from '@/lib/server/data';
+export default async function Page(){const {db,profile}=await requirePage();const [definitions,earned]=await Promise.all([db.from('achievement_definitions').select('*'),db.from('user_achievements').select('*').eq('user_id',profile.id)]);const unlocked=check(earned);return <><h1>Achievements</h1><div className="stats">{check(definitions).map(d=>{const e=unlocked.find(v=>v.code===d.code);return <article key={d.code} className="card"><p className="badge">{e?'Unlocked':'In progress'}</p><h2>{d.name}</h2><p>{d.description}</p>{e&&<time>{new Date(e.unlocked_at).toLocaleDateString()}</time>}</article>;})}</div></>;}

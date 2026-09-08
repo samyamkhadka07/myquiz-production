@@ -1,9 +1,11 @@
+import { withWorkflow } from "workflow/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas", "mammoth"],
   reactStrictMode: true,
-  experimental: { typedRoutes: true },
+  typedRoutes: true,
   async headers() {
     return [{ source: "/(.*)", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
@@ -13,4 +15,4 @@ const nextConfig: NextConfig = {
     ] }];
   }
 };
-export default nextConfig;
+export default withWorkflow(nextConfig);

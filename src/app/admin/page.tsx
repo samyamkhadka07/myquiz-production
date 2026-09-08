@@ -1,0 +1,3 @@
+import { requirePage } from '@/lib/server/auth';
+import { check } from '@/lib/server/data';
+export default async function Page(){const {db}=await requirePage(true);const tables=['questions','contributions','processing_jobs','comment_reports'] as const;const r=await Promise.all(tables.map(t=>db.from(t).select('id',{count:'exact',head:true})));r.forEach(check);return <><h1>Administration</h1><div className="stats">{tables.map((t,i)=><div className="card" key={t}><p>{t.replaceAll('_',' ')}</p><div className="metric">{r[i]?.count??0}</div></div>)}</div><p>Manage the question lifecycle, review contributions and inspect processing failures before publication.</p></>;}

@@ -7,3 +7,4 @@ test-results/
 !.env.example
 *.log
 .vercel/
+/.swc

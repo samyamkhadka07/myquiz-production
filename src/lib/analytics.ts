@@ -1,0 +1,3 @@
+export type Dimension={kind:'subject'|'topic'|'difficulty'|'cognitive';value:string;answered:number;correct:number;mistakes:number;response_ms:number|null};
+export type Dashboard={tests_completed:number;questions_attempted:number;accuracy:number|null;average_score:number|null;best_score:number|null;study_seconds:number;streak:number;xp:number;target_score:number|null;dimensions:Dimension[];trends:{id:string;mode:string;score:number;max_score:number;percentage:number;completed_at:string}[];response_time:{bucket:number;count:number}[]};
+export const numeric=(v:number|null|undefined,suffix='')=>v==null?'—':`${Number(v).toFixed(1).replace(/\.0$/,'')}${suffix}`;

@@ -45,5 +45,5 @@ select b.id,s.id,u.id,v.count from (values
 ('P1',10),('P2',7),('P3',8),('P4',9),('P5',4),('P6',12),
 ('M1',5),('M2',5),('M3',5),('M4',5)) as v(code,count)
 join units u on u.code=v.code join subjects s on s.id=u.subject_id cross join exam_blueprints b join exam_groups g on g.id=b.exam_group_id and g.code='I' where b.version=1;
-do $$ begin if (select sum(question_count) from blueprint_allocations a join exam_blueprints b on b.id=a.blueprint_id join exam_groups g on g.id=b.exam_group_id where g.code='I' and b.version=1) <> 200 then raise exception 'Group I blueprint must total 200'; end if; end $$;
+do $$ begin if (select sum(a.question_count) from blueprint_allocations a join exam_blueprints b on b.id=a.blueprint_id join exam_groups g on g.id=b.exam_group_id where g.code='I' and b.version=1) <> 200 then raise exception 'Group I blueprint must total 200'; end if; end $$;
 commit;
