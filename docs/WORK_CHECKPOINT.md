@@ -2,38 +2,27 @@
 
 ## Last completed task
 
-Completed and locally verified the integrated application slice through the durable contribution/document-processing foundation. The repository now includes complete MEC 2026 seed data, Supabase SSR authentication, protected student/admin routes, controlled question CRUD/lifecycle, server-authoritative attempt selection and scoring, persisted history/review/bookmarks, real analytics and recommendations, FSRS scheduling, community moderation, XP/achievements/leaderboard/entitlements, direct private-storage contribution primitives, bounded document/CSV extraction, atomic processing checkpoints, and optional AI infrastructure.
+Implemented the student contribution uploader/history, published reading room, AI learning activities with offline fallback, admin contribution/download, processing, staged inspection, CSV export, users, moderation, sources and analytics surfaces. Added authorized Meta Page source storage, run history, incremental durable ingestion, secure Cron triggers and performance indexes in migration 0013.
 
-The quiz countdown was corrected to avoid render-time clock impurity. Untyped Supabase results in profile, leaderboard, flashcard, and document-worker paths were narrowed explicitly, and the PDF.js call was aligned with its installed API.
+## Executed gates
 
-## Tests executed
+- Vitest: **33 passed, 0 failed** (20 database/integration/security tests and 13 unit/property/source tests).
+- Migrations: **all 13 executed successfully** against PGlite.
+- TypeScript: passed.
+- ESLint: passed.
+- Next.js production build: passed; 12 static pages and all dynamic routes compiled.
+- Git whitespace: passed.
+- Dependency audit: failed with 16 transitive advisories in the Vercel Workflow dependency tree. The available automatic fix downgrades `workflow` from 4.x to 2.x and is a breaking change, so it was not forced.
 
-- Vitest: **29 passed, 0 failed** across 2 files.
-- PostgreSQL migration execution: **all 12 migrations passed** against PGlite.
-- TypeScript (`tsc --noEmit`): **passed**.
-- ESLint: **passed with 0 errors and 0 warnings**.
-- Next.js production build: **passed**; 10 static pages generated and dynamic routes compiled.
+## Next unfinished work
 
-These are local checks, not Supabase production or browser E2E evidence.
+1. Replace or upgrade the Workflow package when its upstream dependency chain has a non-breaking security fix, then repeat the audit and workflow tests.
+2. Add real browser E2E coverage and complete interactive admin edit/approve/retry controls; current staged, moderation and user screens expose data but several mutations still rely on existing API calls rather than complete page controls.
+3. Perform live Supabase migration/Auth/Storage/RLS tests and Vercel deployment.
+4. Run two-user live isolation, upload, OCR/provider, Meta and production smoke tests.
 
-## Files changed
+## External blockers
 
-- Added migrations `0005_academic_extensions.sql` through `0012_atomic_processing_ai.sql`.
-- Added MEC seed generation/data, auth routes/actions, student/admin routes, dynamic UI components, API dispatcher, analytics, FSRS, CSV/document extraction, durable worker/workflow, and integrated tests.
-- Corrected the original Group I seed migration's ambiguous `question_count` reference.
-- Updated Next/Vercel/configuration and dependency files.
-
-## Next unfinished task
-
-1. Build student contribution/history/reading-material UI and admin contribution, staged-review, processing-monitor, signed-download, and CSV screens.
-2. Add authorized external-source registry and incremental ingestion.
-3. Complete remaining admin users/moderation/analytics UI and AI learning-activity UI.
-4. Add browser E2E and deeper security/property/workflow tests, then run Phase 24–26 gates.
-5. Configure live Supabase and Vercel and conduct two-user production verification when account access is available.
-
-## Current blockers
-
-- Live Supabase and Vercel deployment require authenticated account access and production environment values.
-- External Meta ingestion requires an authorized Page/app and Graph API credentials.
-- AI live behavior requires a configured provider key; core features remain usable without it.
-- Production and browser live verification has not been performed.
+- No authenticated Supabase or Vercel account session and no production keys are available.
+- Live AI and Meta checks require provider credentials.
+- Dependency audit contains unresolved upstream Workflow advisories.

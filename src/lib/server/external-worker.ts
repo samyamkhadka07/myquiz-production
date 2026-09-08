@@ -1,0 +1,13 @@
+import 'server-only';import {createAdminClient} from '@/lib/supabase/admin';import {check} from './data';import {fetchMetaPage} from './meta';import {detectQuestions} from '@/lib/documents/extract';
+type Run={id:string;source_id:string;cursor_before:string|null};type Source={id:string;source_identifier:string;canonical_url:string;label:string;enabled:boolean;authorization_state:string};
+export async function processIngestionRun(runId:string){
+ const db=createAdminClient();const run=check(await db.from('ingestion_runs').select('*').eq('id',runId).single()) as Run;const source=check(await db.from('external_sources').select('*').eq('id',run.source_id).single()) as Source;
+ if(!source.enabled||source.authorization_state!=='AUTHORIZED')throw new Error('SOURCE_NOT_AUTHORIZED');
+ check(await db.from('ingestion_runs').update({status:'RUNNING',started_at:new Date().toISOString()}).eq('id',run.id));
+ try{const page=await fetchMetaPage(source.source_identifier,run.cursor_before??undefined);let staged=0;
+  for(const item of page.items){const provenance={platform:'META',source_id:source.id,page_id:source.source_identifier,post_id:item.id,post_url:item.permalink_url,post_date:item.created_time,retrieval_time:new Date().toISOString()};const inserted=await db.from('external_items').upsert({source_id:source.id,run_id:run.id,external_id:item.id,permalink:item.permalink_url,published_at:item.created_time,content:item.message??'',fingerprint:item.fingerprint,provenance},{onConflict:'source_id,external_id',ignoreDuplicates:true}).select('id').maybeSingle();check(inserted);
+   if(inserted.data&&item.message){const detected=detectQuestions(item.message,true);for(const [index,q] of detected.questions.entries()){check(await db.from('staged_items').upsert({source_key:`meta:${item.id}:${index}`,question_data:{...q.data,source_type:'EXTERNAL',source_url:item.permalink_url,provenance},validation_errors:q.errors},{onConflict:'source_key',ignoreDuplicates:true}));staged++;}}
+  }
+  check(await db.from('external_sources').update({cursor:page.cursor,last_scan_at:new Date().toISOString(),last_success_at:new Date().toISOString(),last_error:null}).eq('id',source.id));check(await db.from('ingestion_runs').update({status:'SUCCEEDED',cursor_after:page.cursor,discovered_count:page.items.length,staged_count:staged,completed_at:new Date().toISOString()}).eq('id',run.id));
+ }catch(error){const code=error instanceof Error?error.message:'INGESTION_FAILED';check(await db.from('external_sources').update({last_scan_at:new Date().toISOString(),last_error:code}).eq('id',source.id));check(await db.from('ingestion_runs').update({status:'FAILED',error:{code},completed_at:new Date().toISOString()}).eq('id',run.id));throw error;}
+}

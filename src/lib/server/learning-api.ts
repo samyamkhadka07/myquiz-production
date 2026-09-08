@@ -3,9 +3,13 @@ import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { uuidSchema,type Profile } from '@/lib/contracts';
 import { check } from './data';
-import { ApiError,admin } from './auth';
+import { ApiError,admin,staff } from './auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { scheduleReview } from '@/lib/flashcards/scheduler';
+import { dispatchJob } from './dispatch';
+import { generateAI } from './ai';
+import {start} from 'workflow/api';
+import {externalIngestionWorkflow} from '@/workflows/documents';
 export async function learningApi(db:SupabaseClient,profile:Profile,path:string[],method:string,body:unknown,url:URL):Promise<{data:unknown}|null>{
  const [resource,id,operation]=path;
  if(resource==='dashboard'&&method==='GET')return {data:check(await db.rpc('get_dashboard'))};
@@ -34,6 +38,52 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
   if(operation==='report'){const p=z.object({reason:z.string().trim().min(3).max(1000)}).strict().parse(body);return {data:check(await db.rpc('report_comment',{p_comment:uuidSchema.parse(id),p_reason:p.reason}))};}
   if(operation==='moderate'){const p=z.object({action:z.enum(['DELETE','HIDE','RESTORE'])}).strict().parse(body);return {data:check(await db.rpc('moderate_comment',{p_comment:uuidSchema.parse(id),p_action:p.action}))};}
   const p=z.object({body:z.string().trim().min(1).max(4000),parent_id:uuidSchema.nullable(),question_id:uuidSchema.nullable()}).strict().parse(body);return {data:check(await db.rpc('write_comment',{p_id:id?uuidSchema.parse(id):null,p_parent:p.parent_id,p_question:p.question_id,p_body:p.body}))};
+ }
+ if(resource==='contributions'){
+  if(method==='GET'){
+   let query=db.from('contributions').select('*,processing_jobs(id,status,last_error,updated_at),processing_artifacts(id,page_number,chunk_index,artifact_type,content,data)').order('created_at',{ascending:false}).limit(100);
+   if(id)query=query.eq('id',uuidSchema.parse(id));return {data:check(await query)};
+  }
+  if(operation==='finalize'){
+   const p=z.object({size:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict().parse(body);const server=createAdminClient();
+   const job=check(await server.rpc('finalize_contribution',{p_id:uuidSchema.parse(id),p_user:profile.id,p_size:p.size})) as string;
+   const runId=await dispatchJob(job);return {data:{job_id:job,run_id:runId}};
+  }
+  const p=z.object({filename:z.string().min(1).max(255).refine(v=>!/[\/\\\x00-\x1f]/.test(v)),mime:z.enum(['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','text/plain','text/csv','image/png','image/jpeg']),size:z.number().int().positive().max(Number.MAX_SAFE_INTEGER),category:z.enum(['QUESTIONS','SOLUTIONS','ANSWER_KEYS','NOTES','ESSAYS','READING','PAST_PAPER','MOCK_TEST']),request_key:uuidSchema}).strict().parse(body);
+  return {data:check(await db.rpc('create_contribution',{p_filename:p.filename,p_mime:p.mime,p_size:p.size,p_category:p.category,p_request:p.request_key}))};
+ }
+ if(resource==='reading'&&method==='GET'){
+  const search=(url.searchParams.get('q')??'').trim();let q=db.from('reading_chunks').select('id,contribution_id,page_number,chunk_index,content,title,created_at').eq('publication_status','PUBLISHED').order('created_at',{ascending:false}).limit(100);
+  if(search)q=q.textSearch('search_vector',search,{type:'websearch'});return {data:check(await q)};
+ }
+ if(resource==='staged'){
+  staff(profile);
+  if(method==='GET')return {data:check(await db.from('staged_items').select('*').order('created_at',{ascending:false}).limit(100))};
+  const p=z.object({action:z.enum(['IMPORT','REJECT']),data:z.record(z.string(),z.unknown()).nullable()}).strict().parse(body);
+  return {data:check(await db.rpc('review_staged_item',{p_id:uuidSchema.parse(id),p_action:p.action,p_data:p.data}))};
+ }
+ if(resource==='processing'){
+  staff(profile);
+  if(method==='GET')return {data:check(await db.from('processing_jobs').select('*,contributions(original_filename,category,uploader_id)').order('created_at',{ascending:false}).limit(100))};
+  if(operation==='retry'){check(await db.rpc('retry_job',{p_id:uuidSchema.parse(id)}));const runId=await dispatchJob(uuidSchema.parse(id));return {data:{run_id:runId}};}
+ }
+ if(resource==='download'&&method==='POST'){
+  staff(profile);const contribution=check(await db.from('contributions').select('id,bucket,object_path').eq('id',uuidSchema.parse(id)).single()) as {id:string;bucket:string;object_path:string};
+  const server=createAdminClient();const signed=check(await server.storage.from(contribution.bucket).createSignedUrl(contribution.object_path,120));
+  check(await server.from('audit_events').insert({actor_id:profile.id,action:'ORIGINAL_DOWNLOADED',target_type:'contribution',target_id:contribution.id}));
+  return {data:{url:signed.signedUrl,expires_in:120}};
+ }
+ if(resource==='sources'){
+  staff(profile);
+  if(method==='GET')return {data:check(await db.from('external_sources').select('*,ingestion_runs(*)').order('created_at',{ascending:false}).limit(100))};
+  if(operation==='scan'){const run=check(await db.rpc('queue_ingestion',{p_source:uuidSchema.parse(id)})) as string;const workflow=await start(externalIngestionWorkflow,[run]);return {data:{run_id:run,workflow_run_id:workflow.runId}};}
+  admin(profile);const p=z.object({platform:z.literal('META'),source_type:z.literal('PAGE'),source_identifier:z.string().min(1).max(200),canonical_url:z.url(),label:z.string().min(1).max(200),enabled:z.boolean(),authorization_state:z.enum(['UNVERIFIED','AUTHORIZED','REVOKED','ERROR'])}).strict().parse(body);
+  return {data:check(await db.rpc('save_external_source',{p_id:id?uuidSchema.parse(id):null,p_data:p}))};
+ }
+ if(resource==='learning'&&method==='POST'){
+  const p=z.object({activity:z.enum(['EXPLAIN_DIFFERENTLY','RAPID_RECALL','MISTAKE_CORRECTION','MATCHING','CLASSIFICATION']),text:z.string().min(1).max(12000)}).strict().parse(body);
+  const instructions={EXPLAIN_DIFFERENTLY:'Explain this verified study content in simpler language. Do not change any stated answer key.',RAPID_RECALL:'Create five brief recall prompts from only the supplied verified content.',MISTAKE_CORRECTION:'Help the learner identify and correct the mistake using only the supplied content.',MATCHING:'Create a compact matching activity from only the supplied verified content.',CLASSIFICATION:'Create a compact classification activity from only the supplied verified content.'}[p.activity];
+  try{return {data:{text:await generateAI({instructions,text:p.text,userId:profile.id,purpose:p.activity}),ai:true}};}catch{return {data:{text:'AI assistance is temporarily unavailable. Continue with the verified explanation and review the related flashcard.',ai:false}};}
  }
  if(resource==='users'){
   admin(profile);

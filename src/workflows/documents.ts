@@ -7,6 +7,14 @@ export async function documentWorkflow(jobId:string){
  }
  await continueDocument(jobId);
 }
+export async function externalIngestionWorkflow(runId:string){
+ 'use workflow';
+ await externalStep(runId);
+}
+async function externalStep(runId:string){
+ 'use step';
+ const {processIngestionRun}=await import('@/lib/server/external-worker');return processIngestionRun(runId);
+}
 async function documentStep(jobId:string){
  'use step';
  const {processOne}=await import('@/lib/server/document-worker');return processOne(jobId);

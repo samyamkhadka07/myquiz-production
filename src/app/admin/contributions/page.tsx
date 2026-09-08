@@ -1,0 +1,2 @@
+import {requirePage} from '@/lib/server/auth';import {check} from '@/lib/server/data';import {AdminContributions} from '@/components/admin-contributions';
+export default async function Page(){const {db}=await requirePage(true);const rows=check(await db.from('contributions').select('*').order('created_at',{ascending:false}).limit(100));return <><h1>Contributions</h1><p>Inspect processing failures and recover exact originals through audited, short-lived links.</p><AdminContributions initial={rows}/></>;}

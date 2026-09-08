@@ -1,9 +1,5 @@
 # Vercel deployment
 
-1. Create a clean Supabase project and apply migrations in order.
-2. Configure Auth redirect URLs for local, Preview and Production origins; disable any unneeded providers.
-3. Link this repository to Vercel and set public Supabase URL/anon key plus server-only service role, cron secret and optional provider secrets separately for Preview/Production.
-4. Deploy Preview, execute migrations against the intended environment, run smoke/security tests, then promote a pinned commit.
-5. Verify Cron authorization, direct/resumable uploads, private originals, signed staff downloads and bounded job checkpoints from production logs.
+Required production values are `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, and optional AI/Meta values. Apply all 13 migrations, configure Auth redirects and confirm the private contributions bucket before deploying.
 
-Never expose the service-role key, reuse production secrets in untrusted previews, or mark deployment live-verified before two-user isolation and critical flows are exercised.
+Both Cron routes require `Authorization: Bearer <CRON_SECRET>`. After deployment, test Auth, two-user isolation, scoring, TUS upload/finalization, Workflow checkpoints, signed download, CSV, AI fallback and authorized ingestion. No production deployment has yet been performed.

@@ -8,3 +8,4 @@ test-results/
 *.log
 .vercel/
 /.swc
+*.tsbuildinfo

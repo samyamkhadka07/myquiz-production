@@ -1,3 +1,3 @@
 # Agent handoff
 
-Read `WORK_CHECKPOINT.md`, then inspect Git status and the phase matrix. Continue from the first unfinished dependency; do not recreate the project or introduce Cloudflare/TiDB/MySQL/Express. The supplied 2026 MEC PDF is authoritative. Preserve one Supabase migration lineage and truthful evidence flags. Run the foundation tests immediately; run the full npm gates as soon as registry/dependencies are available.
+Start from the latest Git commit and read `WORK_CHECKPOINT.md` plus the phase matrix. Do not restart or create another migration lineage. The next hard gates are resolving the Workflow dependency advisories, completing browser/admin mutation E2E, and then live Supabase/Vercel setup and two-user verification. Never mark live verification from local UI or PGlite evidence.

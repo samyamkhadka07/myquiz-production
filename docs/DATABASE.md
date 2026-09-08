@@ -1,5 +1,5 @@
 # Database
 
-`supabase/migrations` is the sole migration lineage. Migration 0001 creates identity, entitlements, versioned academic taxonomy and blueprints with RLS. Migration 0002 creates canonical questions, contributions, attempts and bookmarks with ownership policies. Migration 0003 seeds the exact Group I allocation from syllabus page 4 and fails if the allocation does not total 200.
+Migrations 0001–0013 define profiles/roles/entitlements, MEC taxonomy and blueprints, canonical questions, immutable attempts, bookmarks, analytics/progression, FSRS, community, contributions/private-object metadata, processing artifacts/checkpoints, reading chunks, staged items, AI usage, external sources/items/runs and performance indexes.
 
-The browser uses the anonymous key and RLS. The service-role key is reserved for narrowly scoped server orchestration and must never reach client code. Later migrations must be append-only once applied to production.
+Every user or staff data table has RLS. Security-definer functions use fixed search paths and validate identity/role. Correct-answer storage is not granted to students. External sources accept only authorized Meta Pages and preserve post/media/retrieval provenance.

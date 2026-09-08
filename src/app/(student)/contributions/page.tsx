@@ -1,0 +1,2 @@
+import {requirePage} from '@/lib/server/auth';import {check} from '@/lib/server/data';import {ContributionUpload} from '@/components/contribution-upload';
+export default async function Page(){const {db,profile}=await requirePage();const rows=check(await db.from('contributions').select('*').eq('uploader_id',profile.id).order('created_at',{ascending:false}).limit(100));return <><h1>Contribute materials</h1><p>Share MEC preparation materials for staff review. Extracted questions never publish automatically.</p><ContributionUpload initial={rows}/></>;}

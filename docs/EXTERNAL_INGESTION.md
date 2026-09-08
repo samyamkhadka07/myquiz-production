@@ -1,5 +1,5 @@
 # Authorized external ingestion
 
-Only official provider APIs and explicitly authorized sources are allowed. Meta ingestion is limited to approved Page access through Graph API; no scraping, session reuse, private-group bypass, anti-bot circumvention or rate-limit evasion.
+Migration 0013 adds admin-managed Meta Page sources, authorization state, cursor, timestamps, errors, runs and deduplicated items. Authenticated Cron queues enabled/authorized sources. A bounded Workflow step calls Graph API, advances the cursor, preserves post provenance, fingerprints content and stages detected questions for human review. No scraping or private-group access exists.
 
-Vercel Cron authenticates a short trigger that creates incremental jobs from each source cursor. Bounded workers fetch, deduplicate and checkpoint content. Every normalized question retains platform, source/Page ID, post ID/URL/date, media identity, page/image and retrieval time before entering staging.
+Live Meta verification requires an approved Page token.

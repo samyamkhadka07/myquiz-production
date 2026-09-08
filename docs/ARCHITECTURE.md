@@ -1,9 +1,9 @@
 # Architecture
 
-- Runtime: Next.js App Router on Vercel; no persistent server process.
-- Database: Supabase PostgreSQL is the only application database.
-- Identity: Supabase Auth with SSR cookie handling; authorization is enforced in PostgreSQL RLS and server routes.
-- Files: private Supabase Storage; large uploads go directly/resumably from browser to Storage and never traverse a Vercel request body.
-- Async work: idempotent PostgreSQL job records processed in bounded steps by authenticated Vercel Cron triggers. Long OCR/AI workloads require an external compute provider behind the job interface; Vercel functions only orchestrate bounded work.
-- Realtime: limited to contribution/processing status and selected community events.
-- Migrations: `supabase/migrations` is the only authoritative lineage.
+- Next.js App Router runs on Vercel without a persistent server.
+- Supabase PostgreSQL is the only application database; Supabase Auth supplies identity and RLS enforces ownership.
+- Browser uploads use TUS directly to private Supabase Storage. Originals do not cross a Vercel function body.
+- Vercel Workflow runs bounded, retryable document and external-ingestion steps; PostgreSQL stores checkpoints and partial artifacts.
+- Vercel Cron only authenticates and queues bounded work.
+- AI and Meta are server-only adapters with explicit unavailable/error behavior.
+- `supabase/migrations` is the sole migration lineage.
