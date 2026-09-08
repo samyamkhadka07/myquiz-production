@@ -13,6 +13,7 @@ Implemented the student contribution uploader/history, published reading room, A
 - Next.js production build: passed; 12 static pages and all dynamic routes compiled.
 - Git whitespace: passed.
 - Dependency audit: failed with 16 transitive advisories in the Vercel Workflow dependency tree. The available automatic fix downgrades `workflow` from 4.x to 2.x and is a breaking change, so it was not forced.
+- Cloud-browser local E2E: attempted, but the managed browser blocked `http://localhost:3000` with `ERR_BLOCKED_BY_CLIENT`; no E2E test is counted.
 
 ## Next unfinished work
 
