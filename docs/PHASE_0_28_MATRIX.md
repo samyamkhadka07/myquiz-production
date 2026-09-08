@@ -8,10 +8,10 @@
 | 13 | OCR/document/reading | Yes | Yes | Partial | No | bounded worker, staged/reading UI; provider/live files pending |
 | 14 | CSV | Yes | Yes | Yes | No | canonical parser/export tests and admin export |
 | 15 | AI | Yes | Yes | Partial | No | adapter, logging, fallback and activities; live key pending |
-| 16 | Authorized external ingestion | Yes | Yes | Partial | No | 0013, Graph adapter, Cron/Workflow/admin UI; live token pending |
+| 16 | Authorized external ingestion | Yes | Yes | Partial | No | 0013, Graph adapter, bounded Cron/PostgreSQL jobs/admin UI; live token pending |
 | 17–23 | Complete student/admin integration | Yes | Partial | Partial | No | routes compile; some admin mutations and E2E remain |
-| 24 | Security gate | Yes | Partial | Partial | No | executable isolation/tampering tests; live audit pending |
+| 24 | Security gate | Yes | Partial | Partial | No | npm audit 0; isolation/tampering tests pass; live RLS audit pending |
 | 25 | Performance gate | Yes | Partial | Partial | No | targeted indexes in 0013; production query measurement pending |
-| 26 | Complete testing | Yes | No | Partial | No | 33 tests pass; browser/live suites incomplete |
+| 26 | Complete testing | Yes | No | Partial | No | 33 Vitest tests and 14 migrations pass; Playwright 0 passed/3 infrastructure failures (missing Chromium) |
 | 27 | Vercel deployment | Yes | No | No | No | local production build passes; accounts unavailable |
 | 28 | Final audit | Yes | No | No | No | implementation and live gates remain |

@@ -8,8 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { scheduleReview } from '@/lib/flashcards/scheduler';
 import { dispatchJob } from './dispatch';
 import { generateAI } from './ai';
-import {start} from 'workflow/api';
-import {externalIngestionWorkflow} from '@/workflows/documents';
+import {processIngestionRun} from './external-worker';
 export async function learningApi(db:SupabaseClient,profile:Profile,path:string[],method:string,body:unknown,url:URL):Promise<{data:unknown}|null>{
  const [resource,id,operation]=path;
  if(resource==='dashboard'&&method==='GET')return {data:check(await db.rpc('get_dashboard'))};
@@ -59,7 +58,7 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
  if(resource==='staged'){
   staff(profile);
   if(method==='GET')return {data:check(await db.from('staged_items').select('*').order('created_at',{ascending:false}).limit(100))};
-  const p=z.object({action:z.enum(['IMPORT','REJECT']),data:z.record(z.string(),z.unknown()).nullable()}).strict().parse(body);
+  const p=z.object({action:z.enum(['IMPORT','REJECT','NEEDS_REVISION']),data:z.record(z.string(),z.unknown()).nullable()}).strict().parse(body);
   return {data:check(await db.rpc('review_staged_item',{p_id:uuidSchema.parse(id),p_action:p.action,p_data:p.data}))};
  }
  if(resource==='processing'){
@@ -67,6 +66,8 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
   if(method==='GET')return {data:check(await db.from('processing_jobs').select('*,contributions(original_filename,category,uploader_id)').order('created_at',{ascending:false}).limit(100))};
   if(operation==='retry'){check(await db.rpc('retry_job',{p_id:uuidSchema.parse(id)}));const runId=await dispatchJob(uuidSchema.parse(id));return {data:{run_id:runId}};}
  }
+ if(resource==='reports'){staff(profile);const p=z.object({action:z.enum(['DISMISS','HIDE','DELETE'])}).strict().parse(body);return {data:check(await db.rpc('resolve_report',{p_id:uuidSchema.parse(id),p_action:p.action}))};}
+ if(resource==='contribution-review'){staff(profile);const p=z.object({action:z.enum(['APPROVE','REJECT','NEEDS_REVISION'])}).strict().parse(body);return {data:check(await db.rpc('review_contribution',{p_id:uuidSchema.parse(id),p_action:p.action}))};}
  if(resource==='download'&&method==='POST'){
   staff(profile);const contribution=check(await db.from('contributions').select('id,bucket,object_path').eq('id',uuidSchema.parse(id)).single()) as {id:string;bucket:string;object_path:string};
   const server=createAdminClient();const signed=check(await server.storage.from(contribution.bucket).createSignedUrl(contribution.object_path,120));
@@ -76,7 +77,7 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
  if(resource==='sources'){
   staff(profile);
   if(method==='GET')return {data:check(await db.from('external_sources').select('*,ingestion_runs(*)').order('created_at',{ascending:false}).limit(100))};
-  if(operation==='scan'){const run=check(await db.rpc('queue_ingestion',{p_source:uuidSchema.parse(id)})) as string;const workflow=await start(externalIngestionWorkflow,[run]);return {data:{run_id:run,workflow_run_id:workflow.runId}};}
+  if(operation==='scan'){const run=check(await db.rpc('queue_ingestion',{p_source:uuidSchema.parse(id)})) as string;await processIngestionRun(run);return {data:{run_id:run}};}
   admin(profile);const p=z.object({platform:z.literal('META'),source_type:z.literal('PAGE'),source_identifier:z.string().min(1).max(200),canonical_url:z.url(),label:z.string().min(1).max(200),enabled:z.boolean(),authorization_state:z.enum(['UNVERIFIED','AUTHORIZED','REVOKED','ERROR'])}).strict().parse(body);
   return {data:check(await db.rpc('save_external_source',{p_id:id?uuidSchema.parse(id):null,p_data:p}))};
  }

@@ -4,4 +4,4 @@ All mutation routes use authenticated Supabase identity, Zod validation, CSRF-sa
 
 Contribution upload follows create-metadata → authorized direct/resumable Storage upload → finalize/checksum → enqueue. The complete binary never crosses a Vercel function body. Admin download resolves the trusted object path from PostgreSQL, authorizes staff, emits an audit record, then returns a short-lived signed URL.
 
-Staff endpoints expose staged review, processing retry, canonical CSV export, user access, moderation, authorized external sources and manual ingestion. Cron endpoints require a server-only bearer secret and only enqueue bounded Workflow work.
+Staff endpoints expose staged editing/import/rejection/revision, processing retry, canonical CSV export, user access, report resolution, contribution review, authorized sources and manual ingestion. Cron endpoints require a server-only bearer secret and execute bounded checkpointed work.

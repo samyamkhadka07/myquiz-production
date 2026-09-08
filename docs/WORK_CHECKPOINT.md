@@ -7,18 +7,18 @@ Implemented the student contribution uploader/history, published reading room, A
 ## Executed gates
 
 - Vitest: **33 passed, 0 failed** (20 database/integration/security tests and 13 unit/property/source tests).
-- Migrations: **all 13 executed successfully** against PGlite.
+- Migrations: **all 14 executed successfully** against PGlite.
 - TypeScript: passed.
 - ESLint: passed.
 - Next.js production build: passed; 12 static pages and all dynamic routes compiled.
 - Git whitespace: passed.
-- Dependency audit: failed with 16 transitive advisories in the Vercel Workflow dependency tree. The available automatic fix downgrades `workflow` from 4.x to 2.x and is a breaking change, so it was not forced.
-- Cloud-browser local E2E: attempted, but the managed browser blocked `http://localhost:3000` with `ERR_BLOCKED_BY_CLIENT`; no E2E test is counted.
+- Dependency audit: **0 vulnerabilities** after replacing the Workflow SDK with PostgreSQL leases/checkpoints and bounded Vercel Cron execution.
+- Browser E2E: 3 Playwright cases were discovered and attempted; **0 passed, 3 failed before browser launch** because the Chromium binary was unavailable. Repeated browser-CDN downloads timed out. These are infrastructure failures, not passing E2E evidence.
 
 ## Next unfinished work
 
-1. Replace or upgrade the Workflow package when its upstream dependency chain has a non-breaking security fix, then repeat the audit and workflow tests.
-2. Add real browser E2E coverage and complete interactive admin edit/approve/retry controls; current staged, moderation and user screens expose data but several mutations still rely on existing API calls rather than complete page controls.
+1. Install Playwright Chromium and rerun the prepared 3-case suite, then expand it against a disposable/live Supabase environment.
+2. Complete live account-backed verification.
 3. Perform live Supabase migration/Auth/Storage/RLS tests and Vercel deployment.
 4. Run two-user live isolation, upload, OCR/provider, Meta and production smoke tests.
 
@@ -26,4 +26,3 @@ Implemented the student contribution uploader/history, published reading room, A
 
 - No authenticated Supabase or Vercel account session and no production keys are available.
 - Live AI and Meta checks require provider credentials.
-- Dependency audit contains unresolved upstream Workflow advisories.
