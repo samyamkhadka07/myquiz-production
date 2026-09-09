@@ -2,27 +2,37 @@
 
 ## Last completed task
 
-Implemented the student contribution uploader/history, published reading room, AI learning activities with offline fallback, admin contribution/download, processing, staged inspection, CSV export, users, moderation, sources and analytics surfaces. Added authorized Meta Page source storage, run history, incremental durable ingestion, secure Cron triggers and performance indexes in migration 0013.
+Completed a live Supabase identity/RLS verification run against project `pfrmuxkescvstqwwbgsv` and the deployed application at `https://myquiz-production.vercel.app`. The run discovered that the production database was missing the identity RPCs and execute revocations from migration 0007 even though the earlier lineage had been reported applied. Migration 0015 now repairs that state idempotently; its equivalent statements were applied to the live database and verified before the isolation tests continued.
+
+Three controlled identities were used: two default-role students and one account promoted to ADMIN only through trusted database administration. No existing user role was changed. The controlled question/attempt data proved server-authoritative selection and scoring: Student A received `1.00` for a correct answer and Student B received `-0.25` for an incorrect answer. History records, bookmarks, flashcards, contribution metadata and a community comment persisted in PostgreSQL.
+
+Live RLS results were symmetric for Student A and Student B: own attempt/contribution/bookmark/flashcard rows were visible (`1` each) and the other student's rows were invisible (`0` each). Profile and entitlement visibility was likewise `1` own / `0` other. Cross-user `get_attempt` calls returned `Attempt not found`; direct score mutation, direct role mutation and direct answer-key reads were denied. Student self-promotion through `set_user_access` returned `Admin access required`. Anonymous table access was denied. The Admin identity could see both controlled attempts/contributions and the controlled published question without changing their ownership.
+
+Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eligible_idx` (0.144 ms execution on the controlled dataset) and the FSRS due query used `flashcards_due_idx` (0.256 ms). The attempt-history query completed in 0.432 ms. These are small controlled-dataset measurements, not load-test claims.
 
 ## Executed gates
 
 - Vitest: **33 passed, 0 failed** (20 database/integration/security tests and 13 unit/property/source tests).
-- Migrations: **all 14 executed successfully** against PGlite.
+- Migrations: **all 15 executed successfully** against PGlite after adding the live security repair.
 - TypeScript: passed.
 - ESLint: passed.
 - Next.js production build: passed; 12 static pages and all dynamic routes compiled.
 - Git whitespace: passed.
 - Dependency audit: **0 vulnerabilities** after replacing the Workflow SDK with PostgreSQL leases/checkpoints and bounded Vercel Cron execution.
-- Browser E2E: 3 Playwright cases were discovered and attempted; **0 passed, 3 failed before browser launch** because the Chromium binary was unavailable. Repeated browser-CDN downloads timed out. These are infrastructure failures, not passing E2E evidence.
+- Browser E2E: the packaged Playwright run remains **0 passed, 3 infrastructure failures** because the local Chromium binary is unavailable. Separately, seven browser checks executed against Production and passed after correcting the landing assertion: landing, login form, registration form, and anonymous redirects for dashboard, admin, contributions and reading.
+- Production secret exposure check: eight client JavaScript bundles were inspected; neither privileged variable name nor a service-role/JWT-like secret pattern was present. Both Cron endpoints returned HTTP 401 without the bearer secret.
 
 ## Next unfinished work
 
-1. Install Playwright Chromium and rerun the prepared 3-case suite, then expand it against a disposable/live Supabase environment.
-2. Complete live account-backed verification.
-3. Perform live Supabase migration/Auth/Storage/RLS tests and Vercel deployment.
-4. Run two-user live isolation, upload, OCR/provider, Meta and production smoke tests.
+1. Run credential-backed browser flows for Student A, Student B and Admin; the generated temporary passwords were intentionally not persisted and were unavailable after the browser session reset.
+2. Upload an actual object through the student TUS flow and verify private Storage plus the signed-download route. Only contribution metadata/RLS was verified in this run.
+3. Execute the packaged Playwright suite when a compatible local browser is available.
+4. Deploy the repository's final migration/documentation commit; the current Production deployment predates migration 0015, although the equivalent database repair is live.
+5. Verify optional live AI and authorized Meta providers when credentials are available.
 
 ## External blockers
 
-- No authenticated Supabase or Vercel account session and no production keys are available.
+- Supabase and the Production deployment are reachable, but no reusable application-session credentials were retained for the temporary identities. This blocks credential-backed browser CRUD, real TUS upload and signed-download verification.
+- A local Playwright Chromium executable is still unavailable.
 - Live AI and Meta checks require provider credentials.
+- Temporary verification identities/data must be deleted after the required action-time confirmation.

@@ -1,4 +1,4 @@
 import {test,expect} from '@playwright/test';
-test('landing exposes real entry points',async({page})=>{await page.goto('/');await expect(page.getByRole('heading',{name:/MEC preparation/i})).toBeVisible();await expect(page.getByRole('link',{name:/sign in/i})).toBeVisible();await expect(page.getByRole('link',{name:/create/i})).toBeVisible();});
+test('landing exposes real entry points',async({page})=>{await page.goto('/');await expect(page.getByRole('heading',{name:/MEC CEE preparation/i})).toBeVisible();await expect(page.getByRole('link',{name:/sign in/i})).toBeVisible();await expect(page.getByRole('link',{name:/create/i})).toBeVisible();});
 test('authentication forms are accessible',async({page})=>{await page.goto('/login');await expect(page.getByLabel(/email/i)).toBeVisible();await expect(page.getByLabel(/password/i)).toBeVisible();await page.goto('/register');await expect(page.getByRole('button',{name:/create/i})).toBeVisible();});
 test('protected student and admin pages redirect anonymously',async({page})=>{for(const path of ['/dashboard','/admin','/contributions','/reading']){await page.goto(path);await expect(page).toHaveURL(/\/login/);}});

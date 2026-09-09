@@ -6,4 +6,4 @@
 - Vercel routes execute one bounded unit; PostgreSQL stores leases, checkpoints, retries, partial artifacts and dead-letter state.
 - Vercel Cron authenticates and picks up bounded database jobs without a permanent worker.
 - AI and Meta are server-only adapters with explicit unavailable/error behavior.
-- `supabase/migrations` is the sole migration lineage.
+- `supabase/migrations` is the sole migration lineage. Migration 0015 is an idempotent drift repair for environments where the 0007 identity/security statements were not fully applied.
