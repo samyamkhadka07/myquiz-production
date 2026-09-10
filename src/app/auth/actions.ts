@@ -21,7 +21,8 @@ export async function authenticate(_state:AuthState,form:FormData):Promise<AuthS
   }
   if(mode==='register'){
    credentials.parse({email,password});const name=z.string().trim().min(1).max(80).parse(form.get('display_name'));
-   const r=await db.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:`${getEnv().NEXT_PUBLIC_APP_URL}/auth/callback`}});
+   const requestedAccountType=z.enum(['STUDENT','ADMIN']).parse(form.get('account_type'));
+   const r=await db.auth.signUp({email,password,options:{data:{display_name:name,requested_account_type:requestedAccountType},emailRedirectTo:`${getEnv().NEXT_PUBLIC_APP_URL}/auth/callback`}});
    if(r.error)return {message:'Registration could not be completed. Check your details or try password recovery.'};
    if(!r.data.session)return {message:'Check your email to confirm your account, then sign in.',success:true};
   }else if(mode==='login'){
@@ -29,6 +30,8 @@ export async function authenticate(_state:AuthState,form:FormData):Promise<AuthS
    const r=await db.auth.signInWithPassword({email,password});if(r.error)return {message:'Unable to sign in. Check your email, password and email confirmation.'};
   }else return {message:'Invalid authentication request.'};
  }catch(error){return {message:error instanceof z.ZodError?'Check your details. New passwords must contain at least 12 characters.':'Sign-in is temporarily unavailable. Please try again.'};}
+ const {data:{user}}=await (await createClient()).auth.getUser();
+ if(user){const db=await createClient();const request=await db.from('admin_role_requests').select('status').eq('user_id',user.id).maybeSingle();if(request.data?.status==='PENDING')redirect('/dashboard?admin_request=pending');if(request.data?.status==='REJECTED')redirect('/dashboard?admin_request=rejected');}
  redirect('/dashboard');
 }
 export async function logout(){const db=await createClient();await db.auth.signOut();redirect('/login');}

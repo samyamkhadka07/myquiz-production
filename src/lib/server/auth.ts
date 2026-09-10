@@ -12,8 +12,17 @@ export async function identity() {
  return {db,user,profile:result.data as Profile};
 }
 export async function requirePage(staff=false){
- try {const ctx=await identity();if(staff&&ctx.profile.role==='STUDENT')redirect('/dashboard');return ctx;}
+ try {
+  const ctx=await identity();
+  if(staff&&!['MODERATOR','ADMIN','SUPER_ADMIN'].includes(ctx.profile.role)){
+   const request=await ctx.db.from('admin_role_requests').select('status').eq('user_id',ctx.profile.id).maybeSingle();
+   const status=request.data?.status==='REJECTED'?'rejected':request.data?.status==='PENDING'?'pending':'required';
+   redirect(`/dashboard?admin_request=${status}`);
+  }
+  return ctx;
+ }
  catch(error){if(error instanceof ApiError&&error.status===401)redirect('/login');throw error;}
 }
-export function staff(profile:Profile){if(!['ADMIN','MODERATOR'].includes(profile.role))throw new ApiError(403,'FORBIDDEN','Staff access required.');}
-export function admin(profile:Profile){if(profile.role!=='ADMIN')throw new ApiError(403,'FORBIDDEN','Admin access required.');}
+export function staff(profile:Profile){if(!['ADMIN','MODERATOR','SUPER_ADMIN'].includes(profile.role))throw new ApiError(403,'FORBIDDEN','Staff access required.');}
+export function admin(profile:Profile){if(!['ADMIN','SUPER_ADMIN'].includes(profile.role))throw new ApiError(403,'FORBIDDEN','Admin access required.');}
+export function superAdmin(profile:Profile){if(profile.role!=='SUPER_ADMIN')throw new ApiError(403,'FORBIDDEN','Super Admin approval is required.');}

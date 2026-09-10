@@ -14,7 +14,7 @@ export const questionSchema=z.object({
  provenance:z.record(z.string(),z.json()).default({})
 }).strict().refine(q=>new Set([q.option_a,q.option_b,q.option_c,q.option_d].map(v=>v.toLowerCase())).size===4,{message:'Options must be distinct'});
 export type QuestionInput=z.infer<typeof questionSchema>;
-export type Role='STUDENT'|'MODERATOR'|'ADMIN';
+export type Role='STUDENT'|'MODERATOR'|'ADMIN'|'SUPER_ADMIN';
 export type Profile={id:string;display_name:string;role:Role;target_score:number|null;timezone:string;exam_program_id:string|null};
 export type AcademicRow={id:string;name:string;code?:string;subject_id?:string;unit_id?:string;exam_group_id?:string;source_text?:string};
 export type Taxonomy={programs:AcademicRow[];groups:AcademicRow[];subjects:AcademicRow[];units:AcademicRow[];topics:AcademicRow[];blueprints:Blueprint[];allocations:{blueprint_id:string;unit_id:string;subject_id:string;question_count:number}[]};

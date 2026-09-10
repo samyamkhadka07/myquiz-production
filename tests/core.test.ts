@@ -21,3 +21,7 @@ describe('deterministic recommendations',()=>{
  it('prioritizes weak, slow, overdue material',()=>{const base={topicId:"fixture",attempts:20,avgResponseMs:0,daysSincePractice:0,overdueCards:0};expect(priorityScore({...base,accuracy:.2,avgResponseMs:90000,daysSincePractice:20,overdueCards:10})).toBeGreaterThan(priorityScore({...base,accuracy:.95}));});
  it('clamps inaccurate inputs and remains finite',()=>fc.assert(fc.property(fc.integer({min:0,max:300}),n=>{const score=priorityScore({topicId:"fixture",accuracy:n/100,attempts:n,avgResponseMs:n*1000,daysSincePractice:n,overdueCards:n});expect(score).toBeGreaterThanOrEqual(0);expect(score).toBeLessThanOrEqual(1);} )));
 });
+describe('admin access request UI contract',()=>{
+ it('offers Student and approval-gated Admin registration choices',()=>{const source=fs.readFileSync('src/components/auth-form.tsx','utf8');expect(source).toContain('Admin (approval required)');expect(source).toContain('Super Admin approves your request');});
+ it('does not hard-code a personal Gmail identity into application source',()=>{for(const file of ['src/app/auth/actions.ts','src/lib/server/auth.ts','supabase/migrations/0016_super_admin_approval.sql'])expect(fs.readFileSync(file,'utf8')).not.toMatch(/@gmail\.com/i);});
+});

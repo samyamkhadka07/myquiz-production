@@ -1,5 +1,11 @@
 # Work checkpoint
 
+## 2026-09-10 Admin approval update
+
+Registration now offers Student and Admin-request account types. Admin selection is stored only as a pending request; the Auth trigger still creates every public registrant as STUDENT. Migration 0016 adds RLS-protected requests, a SUPER_ADMIN-only approve/reject RPC, and tightens all ordinary role changes so ADMIN cannot grant ADMIN or MODERATOR access. Pending and rejected users retain student access and receive a clear dashboard message when signing in or attempting `/admin`.
+
+Migration 0016 was applied successfully to the live Supabase project. The user-designated existing account was promoted to `SUPER_ADMIN` through trusted database administration after explicit action-time confirmation; the query returned `SUPER_ADMIN`. No other role was modified, and no personal email or credential was committed. Local verification after this change: **37 Vitest passed, 0 failed; 16 migrations passed; TypeScript passed; ESLint passed; production build passed; npm production audit found 0 vulnerabilities; Git whitespace passed.** Deployment and browser verification of this new UI remain pending until the new commit is deployed.
+
 ## Last completed task
 
 Completed a live Supabase identity/RLS verification run against project `pfrmuxkescvstqwwbgsv` and the deployed application at `https://myquiz-production.vercel.app`. The run discovered that the production database was missing the identity RPCs and execute revocations from migration 0007 even though the earlier lineage had been reported applied. Migration 0015 now repairs that state idempotently; its equivalent statements were applied to the live database and verified before the isolation tests continued.
@@ -14,8 +20,8 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 
 ## Executed gates
 
-- Vitest: **33 passed, 0 failed** (20 database/integration/security tests and 13 unit/property/source tests).
-- Migrations: **all 15 executed successfully** against PGlite after adding the live security repair.
+- Vitest: **37 passed, 0 failed** (22 database/integration/security tests and 15 unit/property/source tests).
+- Migrations: **all 16 executed successfully** against PGlite, including the Admin approval migration.
 - TypeScript: passed.
 - ESLint: passed.
 - Next.js production build: passed; 12 static pages and all dynamic routes compiled.
@@ -29,7 +35,7 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 1. Run credential-backed browser flows for Student A, Student B and Admin; the generated temporary passwords were intentionally not persisted and were unavailable after the browser session reset.
 2. Upload an actual object through the student TUS flow and verify private Storage plus the signed-download route. Only contribution metadata/RLS was verified in this run.
 3. Execute the packaged Playwright suite when a compatible local browser is available.
-4. Deploy the repository's final migration/documentation commit; the current Production deployment predates migration 0015, although the equivalent database repair is live.
+4. Deploy the repository's Admin approval implementation and verify registration choice, pending/rejected messaging and SUPER_ADMIN review UI in Production.
 5. Verify optional live AI and authorized Meta providers when credentials are available.
 
 ## External blockers

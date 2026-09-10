@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { uuidSchema,type Profile } from '@/lib/contracts';
 import { check } from './data';
-import { ApiError,admin,staff } from './auth';
+import { ApiError,admin,staff,superAdmin } from './auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { scheduleReview } from '@/lib/flashcards/scheduler';
 import { dispatchJob } from './dispatch';
@@ -90,8 +90,16 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
   admin(profile);
   if(method==='GET')return {data:check(await db.from('profiles').select('id,display_name,role,created_at,entitlements(tier,ends_at)').order('created_at',{ascending:false}).limit(100))};
   if(method!=='PATCH')throw new ApiError(405,'METHOD_NOT_ALLOWED','Unsupported user operation.');
+  superAdmin(profile);
   const p=z.object({role:z.enum(['STUDENT','MODERATOR','ADMIN']),tier:z.enum(['FREE','PREMIUM']),ends_at:z.iso.datetime().nullable()}).strict().parse(body);
   return {data:check(await db.rpc('set_user_access',{p_user:uuidSchema.parse(id),p_role:p.role,p_tier:p.tier,p_ends:p.ends_at}))};
+ }
+ if(resource==='admin-requests'){
+  superAdmin(profile);
+  if(method==='GET')return {data:check(await db.from('admin_role_requests').select('id,user_id,status,requested_at,reviewed_at,decision_note,profiles!admin_role_requests_user_id_fkey(display_name,role)').order('requested_at',{ascending:false}).limit(100))};
+  if(method!=='PATCH')throw new ApiError(405,'METHOD_NOT_ALLOWED','Unsupported admin-request operation.');
+  const p=z.object({decision:z.enum(['APPROVE','REJECT']),note:z.string().trim().max(1000).nullable()}).strict().parse(body);
+  return {data:check(await db.rpc('review_admin_request',{p_request:uuidSchema.parse(id),p_decision:p.decision,p_note:p.note}))};
  }
  return null;
 }

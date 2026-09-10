@@ -5,11 +5,12 @@ import type { PGlite } from '@electric-sql/pglite';
 // @ts-expect-error JavaScript test harness intentionally excluded from application types.
 import { database,asUser } from './database.mjs';
 let db:PGlite;let program:string;let subject:string;let unit:string;let question:string;let attempt:string;
-const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333';
+const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333',superAdmin='66666666-6666-4666-8666-666666666666',requester='77777777-7777-4777-8777-777777777777';
 const as=(id:string,query:string,params:unknown[]=[])=>asUser(db,id,query,params) as Promise<{rows:Record<string,unknown>[]} >;
 beforeAll(async()=>{
- db=await database();await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'student-a@test.invalid','{\"role\":\"ADMIN\"}'),($2,'student-b@test.invalid','{}'),($3,'admin@test.invalid','{}')",[a,b,admin]);
+ db=await database();await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'student-a@test.invalid','{\"role\":\"ADMIN\"}'),($2,'student-b@test.invalid','{}'),($3,'admin@test.invalid','{}'),($4,'super-admin@test.invalid','{}'),($5,'requester@test.invalid','{\"requested_account_type\":\"ADMIN\",\"role\":\"SUPER_ADMIN\"}')",[a,b,admin,superAdmin,requester]);
  await db.query("update profiles set role='ADMIN' where id=$1",[admin]);
+ await db.query("update profiles set role='SUPER_ADMIN' where id=$1",[superAdmin]);
  program=(await db.query<{id:string}>("select id from exam_programs where code='MBBS'")).rows[0]!.id;
  const row=(await db.query<{id:string;subject_id:string}>("select id,subject_id from units where code='Z1'")).rows[0]!;unit=row.id;subject=row.subject_id;
 });
@@ -17,7 +18,9 @@ afterAll(async()=>{await db?.close();});
 describe.sequential('migration, lifecycle, quiz and isolation evidence',()=>{
  it('runs all migrations, then re-seeds without duplicating academic records',async()=>{const before=(await db.query('select count(*) from topics')).rows;await db.exec(fs.readFileSync('supabase/migrations/0006_mec_complete_seed.sql','utf8'));expect((await db.query('select count(*) from topics')).rows).toEqual(before);expect((await db.query('select count(*)::int n from exam_programs')).rows[0]).toEqual({n:16});});
  it('ignores role metadata on registration',async()=>expect((await as(a,'select role from profiles where id=auth.uid()')).rows[0]?.role).toBe('STUDENT'));
+ it('records an Admin choice as a pending request without granting the role',async()=>{expect((await as(requester,'select role from profiles where id=auth.uid()')).rows[0]?.role).toBe('STUDENT');expect((await as(requester,'select status from admin_role_requests where user_id=auth.uid()')).rows[0]?.status).toBe('PENDING');expect((await as(a,'select * from admin_role_requests')).rows).toHaveLength(0);});
  it('blocks direct self promotion and admin RPC abuse',async()=>{await expect(as(a,"update profiles set role='ADMIN' where id=auth.uid()")).rejects.toThrow();await expect(as(a,"select set_user_access($1,'ADMIN','PREMIUM',null)",[a])).rejects.toThrow();});
+ it('allows only a Super Admin to approve an Admin request',async()=>{const request=(await as(requester,'select id from admin_role_requests where user_id=auth.uid()')).rows[0]!.id;await expect(as(admin,"select review_admin_request($1,'APPROVE',null)",[request])).rejects.toThrow(/Super Admin/);await expect(as(admin,"select set_user_access($1,'ADMIN','FREE',null)",[b])).rejects.toThrow(/Super Admin/);await as(superAdmin,"select review_admin_request($1,'APPROVE','Verified fixture request')",[request]);expect((await as(requester,'select role from profiles where id=auth.uid()')).rows[0]?.role).toBe('ADMIN');expect((await as(superAdmin,'select status,reviewed_by from admin_role_requests where id=$1',[request])).rows[0]).toEqual({status:'APPROVED',reviewed_by:superAdmin});await expect(as(superAdmin,"select review_admin_request($1,'APPROVE',null)",[request])).rejects.toThrow(/already reviewed/);});
  it('blocks anonymous access to protected operations',async()=>{await db.exec('set role anon');try{await expect(db.query("select start_attempt($1,'TOPIC',1,null,null,gen_random_uuid())",[program])).rejects.toThrow();await expect(db.query('select * from attempt_question_keys')).rejects.toThrow();}finally{await db.exec('reset role');}});
  it('creates and persists a staged canonical question',async()=>{
  const p={question_text:'TEST FIXTURE: select the first symbol.',option_a:'Alpha',option_b:'Beta',option_c:'Gamma',option_d:'Delta',correct_answer:'A',explanation:'Fixture explanation.',option_explanations:{A:'First',B:'Second',C:'Third',D:'Fourth'},subject_id:subject,unit_id:unit,difficulty:'EASY',cognitive_level:'RECALL',source_type:'MANUAL'};
