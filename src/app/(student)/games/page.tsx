@@ -1,2 +1,2 @@
-import {requirePage} from '@/lib/server/auth';import {LearningActivities} from '@/components/learning-activities';
-export default async function Page(){await requirePage();return <><h1>Learning activities</h1><p>Use verified content for recall, correction, matching and classification. Core quizzes remain available when AI is offline.</p><LearningActivities/></>;}
+import {requirePage} from '@/lib/server/auth';import {check} from '@/lib/server/data';import {InteractiveGames} from '@/components/interactive-games';
+export default async function Page(){const {db,profile}=await requirePage();const history=check(await db.from('learning_game_sessions').select('id,mode,status,correct_count,question_count,started_at').eq('user_id',profile.id).order('started_at',{ascending:false}).limit(10));return <InteractiveGames history={history}/>;}

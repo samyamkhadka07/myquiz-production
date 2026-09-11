@@ -1,0 +1,1 @@
+export default function Loading(){return <section className="card" role="status" aria-live="polite"><p className="eyebrow">Administration</p><h1>Loading workspace…</h1><p>Fetching the latest authorized operational data.</p></section>}

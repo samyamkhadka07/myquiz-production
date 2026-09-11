@@ -11,6 +11,27 @@ import { generateAI } from './ai';
 import {processIngestionRun} from './external-worker';
 export async function learningApi(db:SupabaseClient,profile:Profile,path:string[],method:string,body:unknown,url:URL):Promise<{data:unknown}|null>{
  const [resource,id,operation]=path;
+ if(resource==='admin-profile'&&method==='PATCH'){
+  staff(profile);const p=z.object({display_name:z.string().trim().min(1).max(80),timezone:z.string().trim().min(1).max(100)}).strict().parse(body);
+  return {data:check(await db.rpc('update_admin_profile',{p_name:p.display_name,p_timezone:p.timezone}))};
+ }
+ if(resource==='learning-games'){
+  if(method==='GET')return {data:check(await db.from('learning_game_sessions').select('*').eq('user_id',profile.id).order('started_at',{ascending:false}).limit(20))};
+  if(operation==='answer'){
+   const p=z.object({question_id:uuidSchema,answer:z.enum(['A','B','C','D']),rating:z.enum(['KNEW_IT','ALMOST','DIDNT_KNOW']).nullable(),response_ms:z.number().int().min(0).max(3600000)}).strict().parse(body);
+   return {data:check(await db.rpc('answer_learning_game',{p_session:uuidSchema.parse(id),p_question:p.question_id,p_answer:p.answer,p_rating:p.rating,p_response_ms:p.response_ms}))};
+  }
+  const p=z.object({mode:z.enum(['RAPID_FIRE','RAPID_RECALL','MISTAKE_RESCUE','ACCURACY','DAILY_CHALLENGE']),count:z.number().int().min(1).max(20)}).strict().parse(body);
+  return {data:check(await db.rpc('start_learning_game',{p_mode:p.mode,p_count:p.count}))};
+ }
+ if(resource==='study-plan'&&method==='PATCH'){
+  const p=z.object({completed:z.boolean()}).strict().parse(body);return {data:check(await db.rpc('set_study_plan_item',{p_id:uuidSchema.parse(id),p_completed:p.completed}))};
+ }
+ if(resource==='reading-materials'){
+  staff(profile);
+  if(method==='GET')return {data:check(await db.from('reading_chunks').select('*,contributions(original_filename,category,review_state,object_path)').order('created_at',{ascending:false}).limit(100))};
+  const p=z.object({publish:z.boolean()}).strict().parse(body);return {data:check(await db.rpc('review_reading',{p_contribution:uuidSchema.parse(id),p_publish:p.publish}))};
+ }
  if(resource==='dashboard'&&method==='GET')return {data:check(await db.rpc('get_dashboard'))};
  if(resource==='leaderboard'){
   if(method==='GET')return {data:check(await db.rpc('leaderboard'))};

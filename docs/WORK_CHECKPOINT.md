@@ -55,3 +55,13 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 - Supabase and the Production deployment are reachable, but no reusable application-session credentials were retained for the temporary identities. This blocks credential-backed browser CRUD, real TUS upload and signed-download verification.
 - A local Playwright Chromium executable is still unavailable.
 - Live AI and Meta checks require provider credentials.
+# 2026-09-11 Admin separation and student engagement checkpoint
+
+- Pre-change Admin route/component/data-source audit completed; duplicate and merged navigation routes were identified in source.
+- Dedicated Admin routes added for verification, publication, blueprints, mnemonics, reading materials, duplicates, reports, ingestion runs and AI usage.
+- Admin Profile is now separate from Student Profile and accepts only display name/timezone; role and protected Super Admin status are read-only.
+- Migration `0017_admin_engagement.sql` adds RLS-protected learning-game sessions/items, persisted daily plan items and narrowly scoped RPCs.
+- Student Overview now derives next-best action, daily plan, mastery and trend guidance from the learner’s actual state.
+- Mistake Center and five persistent learning modes were added; learning sessions are explicitly isolated from official test scoring.
+- Local verification at this checkpoint: TypeScript PASS, ESLint PASS, Vitest 49 PASS / 0 FAIL, 17 migrations PASS, Production build PASS.
+- Production migration/deployment and final browser audit remain required before either new acceptance status can be marked PASS.
