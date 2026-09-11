@@ -6,7 +6,11 @@ The local application now resolves the authoritative database role after login, 
 
 `AdminShell` is separate from `AppShell`. It identifies MYQUIZ ADMINISTRATION, shows role-authorized management navigation, and exposes Super-Admin-only Users & Roles, Admin Requests / Approvals and Audit / Activity pages. Direct route checks protect Super-Admin-only pages and Admin-only taxonomy, CSV, source and analytics pages. User enumeration and access changes now both require SUPER_ADMIN in the API. The Admin dashboard derives all displayed totals from PostgreSQL queries; it contains no fixed production metrics.
 
-Local verification for this change: **43 Vitest passed, 0 failed** (24 database/integration/security and 19 unit/property/source), all **16 migrations passed**, TypeScript passed, ESLint passed, production build passed, npm production audit found 0 vulnerabilities, secret scan passed and Git whitespace passed. Migration 0016 was already applied live; no new migration was required. Deployment of this role-shell revision and credential-backed production role journeys remain pending.
+Local verification for this change: **43 Vitest passed, 0 failed** (24 database/integration/security and 19 unit/property/source), all **16 migrations passed**, TypeScript passed, ESLint passed, production build passed, npm production audit found 0 vulnerabilities, secret scan passed and Git whitespace passed. Migration 0016 was already applied live; no new migration was required.
+
+The role-shell revision was deployed to Production as Vercel deployment `dpl_42JQRi6848iZecy5oukG6QFNTAYS` at **2026-09-11 02:03:07 UTC**. The deployment was created from clean local commit `e07abb32d57ab35b1d7b780270dee5bf053e1371` and Vercel reported it Ready and Current on `https://myquiz-production.vercel.app`. Fresh Production checks confirmed the Student/Admin registration choices, anonymous redirects from `/dashboard`, `/admin`, `/admin/users` and `/admin/admin-requests`, Student login to the Student shell, and the designated `SUPER_ADMIN` login to the dedicated Administration shell. Direct `/dashboard` access by the Super Admin redirects to `/admin`; `/admin/users`, `/admin/admin-requests` and `/admin/audit` load with the Administration navigation and no Student navigation. The live Admin dashboard returned PostgreSQL-backed metrics, and the Users page rendered the permanent Super Admin as protected.
+
+During verification, a read-only production query found that the earlier reported bootstrap had not persisted: zero profiles held `SUPER_ADMIN`. After explicit action-time confirmation, trusted database administration updated only the designated existing Auth identity. The verification query returned exactly one matching designated `SUPER_ADMIN`. No other profile role was changed.
 
 ## 2026-09-10 Admin approval update
 
@@ -43,7 +47,7 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 1. Run credential-backed browser flows for Student A, Student B and Admin; the generated temporary passwords were intentionally not persisted and were unavailable after the browser session reset.
 2. Upload an actual object through the student TUS flow and verify private Storage plus the signed-download route. Only contribution metadata/RLS was verified in this run.
 3. Execute the packaged Playwright suite when a compatible local browser is available.
-4. Deploy the repository's Admin approval implementation and verify registration choice, pending/rejected messaging and SUPER_ADMIN review UI in Production.
+4. Live-verify the pending, rejected and approved-ADMIN journeys with controlled accounts; the registration choice and Super Admin review UI are deployed, but those state transitions were not executed in this browser run.
 5. Verify optional live AI and authorized Meta providers when credentials are available.
 
 ## External blockers

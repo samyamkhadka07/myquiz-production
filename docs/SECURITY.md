@@ -12,7 +12,7 @@ A live Supabase run found and repaired a migration-lineage drift: production lac
 
 The three controlled verification identities and every tagged test record were removed after explicit confirmation. The post-cleanup audit returned zero matching auth users, profiles, private learning records, contributions, Storage objects and tagged questions.
 
-Actual private Storage object upload, signed URL authorization/expiry, authenticated browser IDOR/XSS, and client-bundle secret inspection against a deployment containing the newest commit remain release gates.
+Production now runs the separate Admin shell and server-authoritative role routing. A designated `SUPER_ADMIN` session was live-verified on `/admin`, `/admin/users`, `/admin/admin-requests` and `/admin/audit`; `/dashboard` redirected it back to `/admin`, the Student navigation was absent, and the permanent Super Admin rendered as protected. A normal Student session rendered only the Student shell. Controlled pending/rejected/ordinary-ADMIN browser journeys, actual private Storage object upload, signed URL authorization/expiry and authenticated browser IDOR/XSS remain release gates.
 
 The current Production deployment's eight discovered client JavaScript bundles were scanned without printing bundle contents: no `SUPABASE_SERVICE_ROLE_KEY` or `CRON_SECRET` variable names, service-role key pattern, or JWT-like secret pattern was found. Both Cron endpoints returned HTTP 401 when called without authorization. This does not replace credential-backed positive-path Cron or signed-download verification.
 
