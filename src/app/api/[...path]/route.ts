@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZodError,z } from 'zod';
-import { identity,staff,ApiError } from '@/lib/server/auth';
+import { identity,staff,admin,ApiError } from '@/lib/server/auth';
 import { check,taxonomy } from '@/lib/server/data';
 import { answerSchema,questionSchema,uuidSchema } from '@/lib/contracts';
 import { learningApi } from '@/lib/server/learning-api';
@@ -13,7 +13,7 @@ async function handle(request:Request,{params}:{params:Promise<{path:string[]}>}
   if(method!=='GET'&&request.headers.get('origin')!==url.origin)throw new ApiError(403,'ORIGIN_REJECTED','This request must come from MyQuiz.');
   const {db,profile}=await identity();
   if(resource==='csv'&&id==='export'&&method==='GET'){
-   staff(profile);const questions=check(await db.from('questions').select('*').order('created_at').limit(10000));const csv=exportCsv(questions as never,await taxonomy());
+   admin(profile);const questions=check(await db.from('questions').select('*').order('created_at').limit(10000));const csv=exportCsv(questions as never,await taxonomy());
    return new NextResponse(csv,{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="myquiz-questions.csv"','Cache-Control':'private, no-store'}});
   }
   const body=method==='GET'?{}:await request.json();

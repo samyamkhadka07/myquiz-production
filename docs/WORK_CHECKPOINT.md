@@ -1,5 +1,13 @@
 # Work checkpoint
 
+## 2026-09-11 role-based application-shell fix
+
+The local application now resolves the authoritative database role after login, email confirmation and authenticated visits to `/`. STUDENT accounts land at `/dashboard`; MODERATOR, ADMIN and SUPER_ADMIN land at `/admin`. Pending and rejected Admin requests remain STUDENT and receive explicit non-authorization messages. The student route-group layout now rejects staff roles back to `/admin`, so the former student-first shell is no longer the default administration experience.
+
+`AdminShell` is separate from `AppShell`. It identifies MYQUIZ ADMINISTRATION, shows role-authorized management navigation, and exposes Super-Admin-only Users & Roles, Admin Requests / Approvals and Audit / Activity pages. Direct route checks protect Super-Admin-only pages and Admin-only taxonomy, CSV, source and analytics pages. User enumeration and access changes now both require SUPER_ADMIN in the API. The Admin dashboard derives all displayed totals from PostgreSQL queries; it contains no fixed production metrics.
+
+Local verification for this change: **43 Vitest passed, 0 failed** (24 database/integration/security and 19 unit/property/source), all **16 migrations passed**, TypeScript passed, ESLint passed, production build passed, npm production audit found 0 vulnerabilities, secret scan passed and Git whitespace passed. Migration 0016 was already applied live; no new migration was required. Deployment of this role-shell revision and credential-backed production role journeys remain pending.
+
 ## 2026-09-10 Admin approval update
 
 Registration now offers Student and Admin-request account types. Admin selection is stored only as a pending request; the Auth trigger still creates every public registrant as STUDENT. Migration 0016 adds RLS-protected requests, a SUPER_ADMIN-only approve/reject RPC, and tightens all ordinary role changes so ADMIN cannot grant ADMIN or MODERATOR access. Pending and rejected users retain student access and receive a clear dashboard message when signing in or attempting `/admin`.
@@ -20,7 +28,7 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 
 ## Executed gates
 
-- Vitest: **37 passed, 0 failed** (22 database/integration/security tests and 15 unit/property/source tests).
+- Vitest: **43 passed, 0 failed** (24 database/integration/security tests and 19 unit/property/source tests).
 - Migrations: **all 16 executed successfully** against PGlite, including the Admin approval migration.
 - TypeScript: passed.
 - ESLint: passed.

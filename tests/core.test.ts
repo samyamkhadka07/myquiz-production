@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import fc from 'fast-check';
 import { scoreResponses } from '@/lib/quiz/scoring';
 import { priorityScore } from '@/lib/recommendations/deterministic';
+import { isStaffRole,roleHome } from '@/lib/auth/role-routing';
 import academic from '../data/mec-2026.json';
 describe('production scoring',()=>{
  it('scores mixed answers with blueprint policy',()=>expect(scoreResponses([{selected:'A',correct:'A'},{selected:'B',correct:'A'},{selected:null,correct:'A'}],{correct:1,incorrect:-.25,unanswered:0})).toEqual({correct:1,incorrect:1,unanswered:1,score:.75,maximum:3}));
@@ -24,4 +25,8 @@ describe('deterministic recommendations',()=>{
 describe('admin access request UI contract',()=>{
  it('offers Student and approval-gated Admin registration choices',()=>{const source=fs.readFileSync('src/components/auth-form.tsx','utf8');expect(source).toContain('Admin (approval required)');expect(source).toContain('Super Admin approves your request');});
  it('does not hard-code a personal Gmail identity into application source',()=>{for(const file of ['src/app/auth/actions.ts','src/lib/server/auth.ts','supabase/migrations/0016_super_admin_approval.sql'])expect(fs.readFileSync(file,'utf8')).not.toMatch(/@gmail\.com/i);});
+ it('routes every authoritative staff role to the administration app',()=>{expect(roleHome('ADMIN')).toBe('/admin');expect(roleHome('SUPER_ADMIN')).toBe('/admin');expect(roleHome('MODERATOR')).toBe('/admin');expect(isStaffRole('STUDENT')).toBe(false);});
+ it('keeps pending and rejected requests non-privileged with explicit status',()=>{expect(roleHome('STUDENT','PENDING')).toBe('/dashboard?admin_request=pending');expect(roleHome('STUDENT','REJECTED')).toBe('/dashboard?admin_request=rejected');expect(roleHome('STUDENT')).toBe('/dashboard');});
+ it('uses distinct student and administration shells',()=>{const student=fs.readFileSync('src/components/app-shell.tsx','utf8');const administration=fs.readFileSync('src/components/admin-shell.tsx','utf8');expect(student).toContain('Student navigation');expect(student).not.toContain('Administration</Link>');expect(administration).toContain('ADMINISTRATION');expect(administration).toContain('Admin Requests / Approvals');expect(administration).not.toContain('Tests & practice');});
+ it('resolves post-login routing from database roles rather than submitted form roles',()=>{const source=fs.readFileSync('src/app/auth/actions.ts','utf8');expect(source).toContain("from('profiles').select('role')");expect(source).toContain('roleHome(');expect(source).not.toContain("form.get('role')");});
 });

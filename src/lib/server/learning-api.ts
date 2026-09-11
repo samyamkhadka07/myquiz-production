@@ -87,10 +87,9 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
   try{return {data:{text:await generateAI({instructions,text:p.text,userId:profile.id,purpose:p.activity}),ai:true}};}catch{return {data:{text:'AI assistance is temporarily unavailable. Continue with the verified explanation and review the related flashcard.',ai:false}};}
  }
  if(resource==='users'){
-  admin(profile);
+  superAdmin(profile);
   if(method==='GET')return {data:check(await db.from('profiles').select('id,display_name,role,created_at,entitlements(tier,ends_at)').order('created_at',{ascending:false}).limit(100))};
   if(method!=='PATCH')throw new ApiError(405,'METHOD_NOT_ALLOWED','Unsupported user operation.');
-  superAdmin(profile);
   const p=z.object({role:z.enum(['STUDENT','MODERATOR','ADMIN']),tier:z.enum(['FREE','PREMIUM']),ends_at:z.iso.datetime().nullable()}).strict().parse(body);
   return {data:check(await db.rpc('set_user_access',{p_user:uuidSchema.parse(id),p_role:p.role,p_tier:p.tier,p_ends:p.ends_at}))};
  }

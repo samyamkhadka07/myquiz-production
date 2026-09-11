@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getEnv } from '@/lib/env';
+import { roleHome,type AdminRequestStatus } from '@/lib/auth/role-routing';
+import type { Role } from '@/lib/contracts';
 export type AuthState={message:string;success?:boolean};
 const credentials=z.object({email:z.email(),password:z.string().min(12).max(128)});
 export async function authenticate(_state:AuthState,form:FormData):Promise<AuthState>{
@@ -30,8 +32,8 @@ export async function authenticate(_state:AuthState,form:FormData):Promise<AuthS
    const r=await db.auth.signInWithPassword({email,password});if(r.error)return {message:'Unable to sign in. Check your email, password and email confirmation.'};
   }else return {message:'Invalid authentication request.'};
  }catch(error){return {message:error instanceof z.ZodError?'Check your details. New passwords must contain at least 12 characters.':'Sign-in is temporarily unavailable. Please try again.'};}
- const {data:{user}}=await (await createClient()).auth.getUser();
- if(user){const db=await createClient();const request=await db.from('admin_role_requests').select('status').eq('user_id',user.id).maybeSingle();if(request.data?.status==='PENDING')redirect('/dashboard?admin_request=pending');if(request.data?.status==='REJECTED')redirect('/dashboard?admin_request=rejected');}
+ const db=await createClient();const {data:{user}}=await db.auth.getUser();
+ if(user){const [profile,request]=await Promise.all([db.from('profiles').select('role').eq('id',user.id).single(),db.from('admin_role_requests').select('status').eq('user_id',user.id).maybeSingle()]);if(profile.data)redirect(roleHome(profile.data.role as Role,(request.data?.status??null) as AdminRequestStatus));}
  redirect('/dashboard');
 }
 export async function logout(){const db=await createClient();await db.auth.signOut();redirect('/login');}
