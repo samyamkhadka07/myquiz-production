@@ -1,7 +1,8 @@
 name: One-time MyQuiz production sync
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -13,9 +14,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Push verified main branch
+      - name: Push verified branch without temporary workflow
         env:
           MYQUIZ_SYNC_TOKEN: ${{ secrets.MYQUIZ_SYNC_TOKEN }}
         run: |
+          git config user.name "MyQuiz Sync"
+          git config user.email "actions@users.noreply.github.com"
           git remote add production "https://x-access-token:${MYQUIZ_SYNC_TOKEN}@github.com/samyamkhadka07/myquiz-production.git"
-          git push production main:main
+          git rm .github/workflows/sync-myquiz-production.yml
+          git commit -m "Sync verified MyQuiz production tree"
+          git push production HEAD:main
