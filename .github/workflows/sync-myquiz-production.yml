@@ -1,0 +1,21 @@
+name: One-time MyQuiz production sync
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push verified main branch
+        env:
+          MYQUIZ_SYNC_TOKEN: ${{ secrets.MYQUIZ_SYNC_TOKEN }}
+        run: |
+          git remote add production "https://x-access-token:${MYQUIZ_SYNC_TOKEN}@github.com/samyamkhadka07/myquiz-production.git"
+          git push production main:main
