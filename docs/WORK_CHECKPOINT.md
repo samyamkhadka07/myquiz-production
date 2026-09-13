@@ -65,3 +65,13 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 - Mistake Center and five persistent learning modes were added; learning sessions are explicitly isolated from official test scoring.
 - Local verification at this checkpoint: TypeScript PASS, ESLint PASS, Vitest 49 PASS / 0 FAIL, 17 migrations PASS, Production build PASS.
 - Production migration/deployment and final browser audit remain required before either new acceptance status can be marked PASS.
+# 2026-09-13 Ashar ingestion and workflow repair checkpoint
+
+- Red-Chrome production audit confirmed migration `0017_admin_engagement.sql` is already present (`learning_game_sessions` and `update_admin_profile` exist).
+- Production retains exactly one `SUPER_ADMIN`.
+- The Ashar PDF contribution is approved and retained, but its durable job is `READY` at the `INSPECT` checkpoint. It has produced 0 staged and 0 canonical questions.
+- Production currently contains 1 canonical/published question. The 755 other pending staged rows are unrelated to the Ashar contribution and visibly include corrupt OCR, so they were not published.
+- Migration `0018_staged_publish_premium.sql` adds an audited staged `IMPORT_VERIFY` / `IMPORT_PUBLISH` path with existing database lifecycle validation and Premium enforcement for Premium game modes.
+- The Admin processing page now exposes a server-authorized bounded `run`/resume action and shows durable checkpoints, lease state, errors, and artifacts.
+- The Student shell now shows the entitlement tier and Premium availability; Premium game controls are visibly locked for Free users and enforced in both the API and PostgreSQL.
+- Local gate: TypeScript PASS, ESLint PASS, Vitest 51/51 PASS, production build PASS after replacing a corrupt local `.next` cache, production dependency audit 0 vulnerabilities.
