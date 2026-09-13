@@ -22,6 +22,7 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
    return {data:check(await db.rpc('answer_learning_game',{p_session:uuidSchema.parse(id),p_question:p.question_id,p_answer:p.answer,p_rating:p.rating,p_response_ms:p.response_ms}))};
   }
   const p=z.object({mode:z.enum(['RAPID_FIRE','RAPID_RECALL','MISTAKE_RESCUE','ACCURACY','DAILY_CHALLENGE']),count:z.number().int().min(1).max(20)}).strict().parse(body);
+  if(['MISTAKE_RESCUE','DAILY_CHALLENGE'].includes(p.mode)&&!check(await db.rpc('has_premium')))throw new ApiError(403,'PREMIUM_REQUIRED','This learning mode requires an active Premium entitlement.');
   return {data:check(await db.rpc('start_learning_game',{p_mode:p.mode,p_count:p.count}))};
  }
  if(resource==='study-plan'&&method==='PATCH'){
@@ -79,12 +80,13 @@ export async function learningApi(db:SupabaseClient,profile:Profile,path:string[
  if(resource==='staged'){
   staff(profile);
   if(method==='GET')return {data:check(await db.from('staged_items').select('*').order('created_at',{ascending:false}).limit(100))};
-  const p=z.object({action:z.enum(['IMPORT','REJECT','NEEDS_REVISION']),data:z.record(z.string(),z.unknown()).nullable()}).strict().parse(body);
+  const p=z.object({action:z.enum(['IMPORT','IMPORT_VERIFY','IMPORT_PUBLISH','REJECT','NEEDS_REVISION']),data:z.record(z.string(),z.unknown()).nullable()}).strict().parse(body);
   return {data:check(await db.rpc('review_staged_item',{p_id:uuidSchema.parse(id),p_action:p.action,p_data:p.data}))};
  }
  if(resource==='processing'){
   staff(profile);
   if(method==='GET')return {data:check(await db.from('processing_jobs').select('*,contributions(original_filename,category,uploader_id)').order('created_at',{ascending:false}).limit(100))};
+  if(operation==='run'){const runId=await dispatchJob(uuidSchema.parse(id));return {data:{run_id:runId}};}
   if(operation==='retry'){check(await db.rpc('retry_job',{p_id:uuidSchema.parse(id)}));const runId=await dispatchJob(uuidSchema.parse(id));return {data:{run_id:runId}};}
  }
  if(resource==='reports'){staff(profile);const p=z.object({action:z.enum(['DISMISS','HIDE','DELETE'])}).strict().parse(body);return {data:check(await db.rpc('resolve_report',{p_id:uuidSchema.parse(id),p_action:p.action}))};}
