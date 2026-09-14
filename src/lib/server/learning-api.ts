@@ -253,6 +253,113 @@ export async function learningApi(
       ),
     };
   }
+  if (resource === "question-media" && method === "GET") {
+    const question = uuidSchema.parse(id);
+    const links = check(
+      await db
+        .from("question_media_links")
+        .select(
+          "media_id,position,alt_text,caption,media_assets(bucket,object_path,mime_type,original_filename)",
+        )
+        .eq("question_id", question)
+        .order("position"),
+    ) as Array<Record<string, unknown>>;
+    const server = createAdminClient();
+    const items = await Promise.all(
+      links.map(async (link) => {
+        const asset = link.media_assets as unknown as {
+          bucket: string;
+          object_path: string;
+          mime_type: string;
+          original_filename: string;
+        };
+        const signed = check(
+          await server.storage.from(asset.bucket).createSignedUrl(asset.object_path, 300),
+        );
+        return {
+          id: link.media_id,
+          position: link.position,
+          alt_text: link.alt_text,
+          caption: link.caption,
+          mime_type: asset.mime_type,
+          filename: asset.original_filename,
+          url: signed.signedUrl,
+          expires_in: 300,
+        };
+      }),
+    );
+    return { data: items };
+  }
+  if (resource === "media") {
+    staff(profile);
+    if (method === "GET")
+      return {
+        data: check(
+          await db
+            .from("media_assets")
+            .select("*,question_media_links(question_id)")
+            .order("created_at", { ascending: false })
+            .limit(100),
+        ),
+      };
+    if (operation === "finalize") {
+      const server = createAdminClient();
+      check(
+        await server.rpc("finalize_media_asset", {
+          p_id: uuidSchema.parse(id),
+          p_user: profile.id,
+        }),
+      );
+      return { data: true };
+    }
+    if (operation === "link") {
+      const p = z
+        .object({
+          question_id: uuidSchema,
+          position: z.number().int().min(0).max(20),
+          alt_text: z.string().trim().min(3).max(500),
+          caption: z.string().trim().max(1000).nullable(),
+        })
+        .strict()
+        .parse(body);
+      return {
+        data: check(
+          await db.rpc("set_question_media", {
+            p_question: p.question_id,
+            p_media: uuidSchema.parse(id),
+            p_position: p.position,
+            p_alt: p.alt_text,
+            p_caption: p.caption,
+          }),
+        ),
+      };
+    }
+    const p = z
+      .object({
+        filename: z
+          .string()
+          .min(1)
+          .max(255)
+          .refine((v) => !/[\/\\\x00-\x1f]/.test(v)),
+        mime: z.enum(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]),
+        size: z.number().int().positive().max(20971520),
+        alt_text: z.string().trim().min(3).max(500),
+        request_key: uuidSchema,
+      })
+      .strict()
+      .parse(body);
+    return {
+      data: check(
+        await db.rpc("create_media_asset", {
+          p_filename: p.filename,
+          p_mime: p.mime,
+          p_size: p.size,
+          p_alt: p.alt_text,
+          p_request: p.request_key,
+        }),
+      ),
+    };
+  }
   if (resource === "contributions") {
     if (method === "GET") {
       let query = db
@@ -423,14 +530,12 @@ export async function learningApi(
       await server.storage.from(contribution.bucket).createSignedUrl(contribution.object_path, 120),
     );
     check(
-      await server
-        .from("audit_events")
-        .insert({
-          actor_id: profile.id,
-          action: "ORIGINAL_DOWNLOADED",
-          target_type: "contribution",
-          target_id: contribution.id,
-        }),
+      await server.from("audit_events").insert({
+        actor_id: profile.id,
+        action: "ORIGINAL_DOWNLOADED",
+        target_type: "contribution",
+        target_id: contribution.id,
+      }),
     );
     return { data: { url: signed.signedUrl, expires_in: 120 } };
   }

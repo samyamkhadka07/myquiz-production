@@ -1,29 +1,394 @@
-'use client';
-import Link from 'next/link';import type {Route} from 'next';import {useEffect,useMemo,useState} from 'react';import {api} from '@/lib/client-api';
-type Mode='RAPID_FIRE'|'RAPID_RECALL'|'MISTAKE_RESCUE'|'ACCURACY'|'DAILY_CHALLENGE';
-type Item={question_id:string;position:number;snapshot:{question_text:string;option_a:string;option_b:string;option_c:string;option_d:string;difficulty:string;topic_id:string|null}};
-type Session={id:string;mode:Mode;question_count:number;items:Item[]};
-type Result={correct:boolean;correct_answer:string;explanation:string;completed:boolean;completed_count:number;correct_count:number};
-type HubMode={mode?:Mode;title:string;purpose:string;count?:number;premium?:boolean;href?:string;skill:string};
-const modes:HubMode[]=[
- {mode:'RAPID_FIRE',title:'Rapid Fire',purpose:'Ten quick retrieval questions with immediate feedback and an accuracy-first combo.',count:10,skill:'Retrieval speed'},
- {href:'/flashcards',title:'Flashcard Sprint',purpose:'Clear today’s due FSRS cards with Again, Hard, Good and Easy ratings.',skill:'Long-term memory'},
- {mode:'MISTAKE_RESCUE',title:'Mistake Rescue',purpose:'Revisit questions you previously missed and repair the underlying concept.',count:8,premium:true,skill:'Misconception repair'},
- {mode:'RAPID_FIRE',title:'Speed Challenge',purpose:'A paced session that trains fast recognition without changing official test scores.',count:15,skill:'Accurate pacing'},
- {mode:'RAPID_RECALL',title:'Memory Match',purpose:'Recall the concept first, reveal the choices, then rate how well you knew it.',count:8,skill:'Active recall'},
- {href:'/tests',title:'Adaptive Challenge',purpose:'Start a question session guided by your current weak-topic priorities.',premium:true,skill:'Personalized practice'},
- {mode:'DAILY_CHALLENGE',title:'Daily Challenge',purpose:'A short verified question mix that records today’s learning activity.',count:10,premium:true,skill:'Daily consistency'},
- {href:'/recommendations',title:'Weekly Challenge',purpose:'Complete the week’s recommended practice, mistake and flashcard goals.',skill:'Study consistency'},
- {mode:'ACCURACY',title:'Accuracy Mode',purpose:'Untimed, low-pressure practice focused on careful correctness.',count:10,skill:'Careful reasoning'},
+"use client";
+import Link from "next/link";
+import type { Route } from "next";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/client-api";
+import { QuestionMedia } from "@/components/question-media";
+type Mode = "RAPID_FIRE" | "RAPID_RECALL" | "MISTAKE_RESCUE" | "ACCURACY" | "DAILY_CHALLENGE";
+type Item = {
+  question_id: string;
+  position: number;
+  snapshot: {
+    question_text: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+    difficulty: string;
+    topic_id: string | null;
+  };
+};
+type Session = { id: string; mode: Mode; question_count: number; items: Item[] };
+type Result = {
+  correct: boolean;
+  correct_answer: string;
+  explanation: string;
+  completed: boolean;
+  completed_count: number;
+  correct_count: number;
+};
+type HubMode = {
+  mode?: Mode;
+  title: string;
+  purpose: string;
+  count?: number;
+  premium?: boolean;
+  href?: string;
+  skill: string;
+};
+const modes: HubMode[] = [
+  {
+    mode: "RAPID_FIRE",
+    title: "Rapid Fire",
+    purpose: "Ten quick retrieval questions with immediate feedback and an accuracy-first combo.",
+    count: 10,
+    skill: "Retrieval speed",
+  },
+  {
+    href: "/flashcards",
+    title: "Flashcard Sprint",
+    purpose: "Clear today’s due FSRS cards with Again, Hard, Good and Easy ratings.",
+    skill: "Long-term memory",
+  },
+  {
+    mode: "MISTAKE_RESCUE",
+    title: "Mistake Rescue",
+    purpose: "Revisit questions you previously missed and repair the underlying concept.",
+    count: 8,
+    premium: true,
+    skill: "Misconception repair",
+  },
+  {
+    mode: "RAPID_FIRE",
+    title: "Speed Challenge",
+    purpose: "A paced session that trains fast recognition without changing official test scores.",
+    count: 15,
+    skill: "Accurate pacing",
+  },
+  {
+    mode: "RAPID_RECALL",
+    title: "Memory Match",
+    purpose: "Recall the concept first, reveal the choices, then rate how well you knew it.",
+    count: 8,
+    skill: "Active recall",
+  },
+  {
+    href: "/tests",
+    title: "Adaptive Challenge",
+    purpose: "Start a question session guided by your current weak-topic priorities.",
+    premium: true,
+    skill: "Personalized practice",
+  },
+  {
+    mode: "DAILY_CHALLENGE",
+    title: "Daily Challenge",
+    purpose: "A short verified question mix that records today’s learning activity.",
+    count: 10,
+    premium: true,
+    skill: "Daily consistency",
+  },
+  {
+    href: "/recommendations",
+    title: "Weekly Challenge",
+    purpose: "Complete the week’s recommended practice, mistake and flashcard goals.",
+    skill: "Study consistency",
+  },
+  {
+    mode: "ACCURACY",
+    title: "Accuracy Mode",
+    purpose: "Untimed, low-pressure practice focused on careful correctness.",
+    count: 10,
+    skill: "Careful reasoning",
+  },
 ];
-export function InteractiveGames({history,tier}:{history:Array<{id:string;mode:string;status:string;correct_count:number;question_count:number;started_at:string}>;tier:'FREE'|'PREMIUM'}){
- const [session,setSession]=useState<Session|null>(null),[index,setIndex]=useState(0),[selected,setSelected]=useState(''),[result,setResult]=useState<Result|null>(null),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[revealed,setRevealed]=useState(false),[rating,setRating]=useState<'KNEW_IT'|'ALMOST'|'DIDNT_KNOW'|null>(null),[started,setStarted]=useState(0),[seconds,setSeconds]=useState(20);
- const item=session?.items[index];const timed=session?.mode==='RAPID_FIRE';
- useEffect(()=>{if(!timed||!item||result)return;const timer=setInterval(()=>setSeconds(s=>Math.max(0,s-1)),1000);return()=>clearInterval(timer)},[timed,item,result]);
- const combo=useMemo(()=>result?.correct?result.correct_count:0,[result]);
- async function start(mode:Mode,count:number,eventTime:number){setBusy(true);setMessage('');try{const data=await api<Session>('learning-games','POST',{mode,count});setSession(data);setIndex(0);setSelected('');setResult(null);setRevealed(mode!=='RAPID_RECALL');setRating(null);setSeconds(20);setStarted(eventTime);}catch(error){setMessage((error as Error).message);}finally{setBusy(false)}}
- async function answer(eventTime:number){if(!session||!item||!selected)return;setBusy(true);try{const data=await api<Result>(`learning-games/${session.id}/answer`,'POST',{question_id:item.question_id,answer:selected,rating,response_ms:Math.max(0,Math.round(eventTime-started))});setResult(data);}catch(error){setMessage((error as Error).message);}finally{setBusy(false)}}
- function next(eventTime:number){if(!session)return;if(index+1>=session.items.length){setSession(null);setMessage(`Session complete. ${result?.correct_count??0} of ${session.question_count} correct; the result was saved separately from official tests.`);return}setIndex(i=>i+1);setSelected('');setResult(null);setRating(null);setRevealed(session.mode!=='RAPID_RECALL');setSeconds(20);setStarted(eventTime)}
- if(session&&item)return <section className="game-stage card"><div className="top"><div><p className="eyebrow">Interactive learning session</p><h1>{modes.find(m=>m.mode===session.mode)?.title??session.mode.replaceAll('_',' ')}</h1><p className="muted">Question {index+1} of {session.question_count}</p></div>{timed&&<div className={`timer ${seconds<=5?'timer-warning':''}`} aria-live="polite">{seconds}s</div>}</div><div className="game-progress"><i style={{width:`${100*(index+(result?1:0))/session.question_count}%`}}/></div><h2>{item.snapshot.question_text}</h2>{session.mode==='RAPID_RECALL'&&!revealed?<section className="recall-prompt"><p>Pause and recall the answer before revealing the options.</p><button className="button" onClick={()=>setRevealed(true)}>Reveal answer choices</button></section>:<fieldset className="options" disabled={!!result}>{(['A','B','C','D'] as const).map(key=><label className={`option ${selected===key?'selected':''}`} key={key}><input type="radio" name="game-answer" value={key} checked={selected===key} onChange={()=>setSelected(key)}/><strong>{key}</strong> {item.snapshot[`option_${key.toLowerCase()}` as 'option_a']}</label>)}</fieldset>}{session.mode==='RAPID_RECALL'&&revealed&&!result&&<div className="confidence-picker" aria-label="Recall confidence"><p>How well did you know it?</p>{([['KNEW_IT','Knew it'],['ALMOST','Almost'],['DIDNT_KNOW',"Didn't know"]] as const).map(([value,label])=><button type="button" className={`button ${rating===value?'':'secondary'}`} key={value} onClick={()=>setRating(value)}>{label}</button>)}</div>}{!result&&revealed&&<button className="button section" disabled={!selected||busy||(session.mode==='RAPID_RECALL'&&!rating)} onClick={event=>void answer(event.timeStamp)}>{busy?'Checking…':'Check answer'}</button>}{result&&<section className={result.correct?'game-feedback correct-feedback':'game-feedback wrong-feedback'}><span className="pill">{result.correct?'Concept retrieved':'Learning opportunity'}</span><h2>{result.correct?'Correct — keep the reasoning':'Not yet — repair it now'}</h2><p><strong>Correct answer: {result.correct_answer}.</strong> {result.explanation}</p><p>{timed&&result.correct?`Accuracy combo: ${combo}. Correctness still matters more than speed.`:'This learning-game result does not change an official MEC test score. It only updates your learning progress.'}</p><button className="button" onClick={event=>next(event.timeStamp)}>{result.completed?'View session summary':'Next question'}</button></section>}</section>;
- return <><section className="student-page-header"><div><p className="eyebrow">Interactive retrieval practice · {tier}</p><h1>Learning games</h1><p>Choose the interaction that matches what you need today. Every completed activity feeds the existing learning record, while official MEC test scores remain separate.</p></div><Link href="/recommendations" className="button secondary">Use my study plan</Link></section><div className="game-grid">{modes.map((m,i)=>{const locked=!!m.premium&&tier!=='PREMIUM';return <article className="card game-card" key={`${m.title}-${i}`}><div className="game-card-top"><span className="game-number">{String(i+1).padStart(2,'0')}</span><span className={`pill ${m.premium?'premium-pill':''}`}>{m.premium?'Premium':'Included'}</span></div><p className="eyebrow">{m.skill}</p><h2>{m.title}</h2><p>{m.purpose}</p>{locked?<button className="button" disabled>Premium required</button>:m.href?<Link className="button" href={m.href as Route}>Start {m.title}</Link>:<button className="button" disabled={busy} onClick={event=>void start(m.mode!,m.count!,event.timeStamp)}>Start {m.title}</button>}</article>})}</div><p role="status" className={message.includes('complete')?'success':message?'error':''}>{message}</p><section className="card section"><div className="top"><div><p className="eyebrow">Saved practice history</p><h2>Recent game sessions</h2></div><strong>{history.length} recorded</strong></div>{history.length?<div className="table-wrap"><table><thead><tr><th>Mode</th><th>Result</th><th>Accuracy</th><th>Status</th><th>Date</th></tr></thead><tbody>{history.map(h=><tr key={h.id}><td>{h.mode.replaceAll('_',' ')}</td><td>{h.correct_count} / {h.question_count}</td><td>{Math.round(100*h.correct_count/Math.max(1,h.question_count))}%</td><td><span className="pill">{h.status}</span></td><td>{new Date(h.started_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>:<div className="empty-state"><h3>Your first game is ready</h3><p>Complete a mode to begin your retrieval-practice history.</p></div>}</section></>;
+export function InteractiveGames({
+  history,
+  tier,
+}: {
+  history: Array<{
+    id: string;
+    mode: string;
+    status: string;
+    correct_count: number;
+    question_count: number;
+    started_at: string;
+  }>;
+  tier: "FREE" | "PREMIUM";
+}) {
+  const [session, setSession] = useState<Session | null>(null),
+    [index, setIndex] = useState(0),
+    [selected, setSelected] = useState(""),
+    [result, setResult] = useState<Result | null>(null),
+    [message, setMessage] = useState(""),
+    [busy, setBusy] = useState(false),
+    [revealed, setRevealed] = useState(false),
+    [rating, setRating] = useState<"KNEW_IT" | "ALMOST" | "DIDNT_KNOW" | null>(null),
+    [started, setStarted] = useState(0),
+    [seconds, setSeconds] = useState(20);
+  const item = session?.items[index];
+  const timed = session?.mode === "RAPID_FIRE";
+  useEffect(() => {
+    if (!timed || !item || result) return;
+    const timer = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [timed, item, result]);
+  const combo = useMemo(() => (result?.correct ? result.correct_count : 0), [result]);
+  async function start(mode: Mode, count: number, eventTime: number) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const data = await api<Session>("learning-games", "POST", { mode, count });
+      setSession(data);
+      setIndex(0);
+      setSelected("");
+      setResult(null);
+      setRevealed(mode !== "RAPID_RECALL");
+      setRating(null);
+      setSeconds(20);
+      setStarted(eventTime);
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function answer(eventTime: number) {
+    if (!session || !item || !selected) return;
+    setBusy(true);
+    try {
+      const data = await api<Result>(`learning-games/${session.id}/answer`, "POST", {
+        question_id: item.question_id,
+        answer: selected,
+        rating,
+        response_ms: Math.max(0, Math.round(eventTime - started)),
+      });
+      setResult(data);
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  function next(eventTime: number) {
+    if (!session) return;
+    if (index + 1 >= session.items.length) {
+      setSession(null);
+      setMessage(
+        `Session complete. ${result?.correct_count ?? 0} of ${session.question_count} correct; the result was saved separately from official tests.`,
+      );
+      return;
+    }
+    setIndex((i) => i + 1);
+    setSelected("");
+    setResult(null);
+    setRating(null);
+    setRevealed(session.mode !== "RAPID_RECALL");
+    setSeconds(20);
+    setStarted(eventTime);
+  }
+  if (session && item)
+    return (
+      <section className="game-stage card">
+        <div className="top">
+          <div>
+            <p className="eyebrow">Interactive learning session</p>
+            <h1>
+              {modes.find((m) => m.mode === session.mode)?.title ??
+                session.mode.replaceAll("_", " ")}
+            </h1>
+            <p className="muted">
+              Question {index + 1} of {session.question_count}
+            </p>
+          </div>
+          {timed && (
+            <div className={`timer ${seconds <= 5 ? "timer-warning" : ""}`} aria-live="polite">
+              {seconds}s
+            </div>
+          )}
+        </div>
+        <div className="game-progress">
+          <i style={{ width: `${(100 * (index + (result ? 1 : 0))) / session.question_count}%` }} />
+        </div>
+        <h2>{item.snapshot.question_text}</h2>
+        <QuestionMedia questionId={item.question_id} />
+        {session.mode === "RAPID_RECALL" && !revealed ? (
+          <section className="recall-prompt">
+            <p>Pause and recall the answer before revealing the options.</p>
+            <button className="button" onClick={() => setRevealed(true)}>
+              Reveal answer choices
+            </button>
+          </section>
+        ) : (
+          <fieldset className="options" disabled={!!result}>
+            {(["A", "B", "C", "D"] as const).map((key) => (
+              <label className={`option ${selected === key ? "selected" : ""}`} key={key}>
+                <input
+                  type="radio"
+                  name="game-answer"
+                  value={key}
+                  checked={selected === key}
+                  onChange={() => setSelected(key)}
+                />
+                <strong>{key}</strong> {item.snapshot[`option_${key.toLowerCase()}` as "option_a"]}
+              </label>
+            ))}
+          </fieldset>
+        )}
+        {session.mode === "RAPID_RECALL" && revealed && !result && (
+          <div className="confidence-picker" aria-label="Recall confidence">
+            <p>How well did you know it?</p>
+            {(
+              [
+                ["KNEW_IT", "Knew it"],
+                ["ALMOST", "Almost"],
+                ["DIDNT_KNOW", "Didn't know"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                type="button"
+                className={`button ${rating === value ? "" : "secondary"}`}
+                key={value}
+                onClick={() => setRating(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {!result && revealed && (
+          <button
+            className="button section"
+            disabled={!selected || busy || (session.mode === "RAPID_RECALL" && !rating)}
+            onClick={(event) => void answer(event.timeStamp)}
+          >
+            {busy ? "Checking…" : "Check answer"}
+          </button>
+        )}
+        {result && (
+          <section
+            className={
+              result.correct ? "game-feedback correct-feedback" : "game-feedback wrong-feedback"
+            }
+          >
+            <span className="pill">
+              {result.correct ? "Concept retrieved" : "Learning opportunity"}
+            </span>
+            <h2>{result.correct ? "Correct — keep the reasoning" : "Not yet — repair it now"}</h2>
+            <p>
+              <strong>Correct answer: {result.correct_answer}.</strong> {result.explanation}
+            </p>
+            <p>
+              {timed && result.correct
+                ? `Accuracy combo: ${combo}. Correctness still matters more than speed.`
+                : "This learning-game result does not change an official MEC test score. It only updates your learning progress."}
+            </p>
+            <button className="button" onClick={(event) => next(event.timeStamp)}>
+              {result.completed ? "View session summary" : "Next question"}
+            </button>
+          </section>
+        )}
+      </section>
+    );
+  return (
+    <>
+      <section className="student-page-header">
+        <div>
+          <p className="eyebrow">Interactive retrieval practice · {tier}</p>
+          <h1>Learning games</h1>
+          <p>
+            Choose the interaction that matches what you need today. Every completed activity feeds
+            the existing learning record, while official MEC test scores remain separate.
+          </p>
+        </div>
+        <Link href="/recommendations" className="button secondary">
+          Use my study plan
+        </Link>
+      </section>
+      <div className="game-grid">
+        {modes.map((m, i) => {
+          const locked = !!m.premium && tier !== "PREMIUM";
+          return (
+            <article className="card game-card" key={`${m.title}-${i}`}>
+              <div className="game-card-top">
+                <span className="game-number">{String(i + 1).padStart(2, "0")}</span>
+                <span className={`pill ${m.premium ? "premium-pill" : ""}`}>
+                  {m.premium ? "Premium" : "Included"}
+                </span>
+              </div>
+              <p className="eyebrow">{m.skill}</p>
+              <h2>{m.title}</h2>
+              <p>{m.purpose}</p>
+              {locked ? (
+                <button className="button" disabled>
+                  Premium required
+                </button>
+              ) : m.href ? (
+                <Link className="button" href={m.href as Route}>
+                  Start {m.title}
+                </Link>
+              ) : (
+                <button
+                  className="button"
+                  disabled={busy}
+                  onClick={(event) => void start(m.mode!, m.count!, event.timeStamp)}
+                >
+                  Start {m.title}
+                </button>
+              )}
+            </article>
+          );
+        })}
+      </div>
+      <p
+        role="status"
+        className={message.includes("complete") ? "success" : message ? "error" : ""}
+      >
+        {message}
+      </p>
+      <section className="card section">
+        <div className="top">
+          <div>
+            <p className="eyebrow">Saved practice history</p>
+            <h2>Recent game sessions</h2>
+          </div>
+          <strong>{history.length} recorded</strong>
+        </div>
+        {history.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th>Result</th>
+                  <th>Accuracy</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h) => (
+                  <tr key={h.id}>
+                    <td>{h.mode.replaceAll("_", " ")}</td>
+                    <td>
+                      {h.correct_count} / {h.question_count}
+                    </td>
+                    <td>{Math.round((100 * h.correct_count) / Math.max(1, h.question_count))}%</td>
+                    <td>
+                      <span className="pill">{h.status}</span>
+                    </td>
+                    <td>{new Date(h.started_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <h3>Your first game is ready</h3>
+            <p>Complete a mode to begin your retrieval-practice history.</p>
+          </div>
+        )}
+      </section>
+    </>
+  );
 }

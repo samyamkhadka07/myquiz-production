@@ -203,4 +203,21 @@ describe("functional separation and engagement contracts", () => {
     expect(source).toContain("ContributionUpload");
     expect(source).toContain("Recent staged import results");
   });
+  it("stores reusable question media privately and renders it across learning surfaces", () => {
+    const migration = fs.readFileSync("supabase/migrations/0019_question_media.sql", "utf8");
+    expect(migration).toContain("create table public.media_assets");
+    expect(migration).toContain("create table public.question_media_links");
+    expect(migration).toContain("values('question-media','question-media',false");
+    expect(migration).toContain("perform require_staff()");
+    expect(migration).toContain("publication_status='DRAFT'");
+    const uploader = fs.readFileSync("src/components/media-library.tsx", "utf8");
+    expect(uploader).toContain("/storage/v1/upload/resumable");
+    expect(uploader).toContain('bucketName: "question-media"');
+    for (const file of [
+      "src/components/quiz.tsx",
+      "src/components/review.tsx",
+      "src/components/interactive-games.tsx",
+      "src/app/(student)/bookmarks/page.tsx",
+    ]) expect(fs.readFileSync(file, "utf8")).toContain("QuestionMedia");
+  });
 });

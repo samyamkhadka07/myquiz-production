@@ -2,13 +2,29 @@
 import { useState } from "react";
 import { api } from "@/lib/client-api";
 import type { AttemptDetail } from "@/lib/contracts";
+import { QuestionMedia } from "@/components/question-media";
 export function Review({ detail, saved }: { detail: AttemptDetail; saved: string[] }) {
   const [filter, setFilter] = useState("ALL");
   const [bookmarks, setBookmarks] = useState(new Set(saved));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [alternate, setAlternate] = useState<Record<string, string>>({});
-  async function assist(questionId:string,activity:"EXPLAIN_DIFFERENTLY"|"EXPLAIN_DEEPER"|"GENERATE_MNEMONIC"|"SIMILAR_QUESTION",text:string){setBusy(questionId);setError("");try{const response=await api<{text:string}>("learning","POST",{activity,text});setAlternate(value=>({...value,[questionId]:response.text}));}catch(error){setError((error as Error).message);}finally{setBusy("")}}
+  async function assist(
+    questionId: string,
+    activity: "EXPLAIN_DIFFERENTLY" | "EXPLAIN_DEEPER" | "GENERATE_MNEMONIC" | "SIMILAR_QUESTION",
+    text: string,
+  ) {
+    setBusy(questionId);
+    setError("");
+    try {
+      const response = await api<{ text: string }>("learning", "POST", { activity, text });
+      setAlternate((value) => ({ ...value, [questionId]: response.text }));
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
   async function bookmark(id: string) {
     setBusy(id);
     try {
@@ -85,6 +101,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                 </button>
               </div>
               <h3>{q.snapshot.question_text}</h3>
+              <QuestionMedia questionId={q.question_id} />
               <div className="answer-summary">
                 <div>
                   <span>Your answer</span>
@@ -204,9 +221,45 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                 >
                   Explain differently
                 </button>
-                <button className="button secondary" disabled={busy===q.question_id} onClick={()=>void assist(q.question_id,"EXPLAIN_DEEPER",`Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`)}>Explain deeper</button>
-                <button className="button secondary" disabled={busy===q.question_id} onClick={()=>void assist(q.question_id,"GENERATE_MNEMONIC",`Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`)}>Generate mnemonic</button>
-                <button className="button secondary" disabled={busy===q.question_id} onClick={()=>void assist(q.question_id,"SIMILAR_QUESTION",`Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`)}>Related practice question</button>
+                <button
+                  className="button secondary"
+                  disabled={busy === q.question_id}
+                  onClick={() =>
+                    void assist(
+                      q.question_id,
+                      "EXPLAIN_DEEPER",
+                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
+                    )
+                  }
+                >
+                  Explain deeper
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={busy === q.question_id}
+                  onClick={() =>
+                    void assist(
+                      q.question_id,
+                      "GENERATE_MNEMONIC",
+                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
+                    )
+                  }
+                >
+                  Generate mnemonic
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={busy === q.question_id}
+                  onClick={() =>
+                    void assist(
+                      q.question_id,
+                      "SIMILAR_QUESTION",
+                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
+                    )
+                  }
+                >
+                  Related practice question
+                </button>
                 <a className="button" href="/tests">
                   Practice this concept
                 </a>
