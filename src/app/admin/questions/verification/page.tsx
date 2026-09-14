@@ -1,2 +1,25 @@
-import {requirePage} from '@/lib/server/auth';import {check,taxonomy} from '@/lib/server/data';import {QuestionEditor} from '@/components/question-editor';
-export default async function Page(){const {db}=await requirePage(true);const [t,rows]=await Promise.all([taxonomy(),db.from('questions').select('*').in('lifecycle',['PENDING_REVIEW','VALIDATION_REQUIRED']).order('created_at',{ascending:true}).limit(50)]);return <><p className="eyebrow">Academic content · deliberate review</p><h1>Question verification queue</h1><p>Review answer keys, every option explanation, taxonomy, provenance and extraction confidence. Nothing here is student-visible until separately published.</p><QuestionEditor taxonomy={t} initial={check(rows)}/></>}
+import { requirePage } from "@/lib/server/auth";
+import { check } from "@/lib/server/data";
+import { QuestionReviewQueue } from "@/components/question-review-queue";
+export default async function Page() {
+  const { db } = await requirePage(true);
+  const rows = check(
+    await db
+      .from("questions")
+      .select("*")
+      .in("lifecycle", ["PENDING_REVIEW", "VALIDATION_REQUIRED"])
+      .order("created_at", { ascending: true })
+      .limit(100),
+  );
+  return (
+    <>
+      <p className="eyebrow">Academic content · deliberate review</p>
+      <h1>Question verification queue</h1>
+      <p>
+        Inspect the answer, solution, every distractor explanation and source evidence. Verification
+        is disabled while academic warnings remain.
+      </p>
+      <QuestionReviewQueue initial={rows} mode="verification" />
+    </>
+  );
+}
