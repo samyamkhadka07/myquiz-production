@@ -1321,6 +1321,9 @@ summary {
 .achievement-grid {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
+.mode-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}.mode-card{display:grid;gap:.35rem;text-align:left;padding:1rem;border:1px solid var(--line);border-radius:14px;background:white;color:var(--ink);cursor:pointer}.mode-card small{color:var(--muted)}.mode-card:hover,.mode-card.active{border-color:var(--teal);background:#edf9f7;box-shadow:0 10px 24px rgba(8,127,140,.1)}.access-card{display:flex;justify-content:space-between;align-items:center;gap:1rem}.access-card h2{margin:.7rem 0 .25rem}.access-card p{margin:0}.premium-access{color:white;background:radial-gradient(circle at 90% 0,rgba(243,182,31,.25),transparent 12rem),linear-gradient(135deg,#071f2d,#0b5361)}.premium-access .tier-badge{display:inline-flex}.premium-access p,.premium-access small{color:#d2e7ed}
+@media(max-width:760px){.mode-strip{grid-template-columns:1fr 1fr}.access-card{align-items:flex-start;flex-direction:column}}
+@media(max-width:480px){.mode-strip{grid-template-columns:1fr}}
 .achievement-card {
   display: grid;
   gap: 0.65rem;
