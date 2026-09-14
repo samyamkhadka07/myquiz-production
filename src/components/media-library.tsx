@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Upload } from "tus-js-client";
 import { api } from "@/lib/client-api";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +13,7 @@ type Asset = {
   default_alt_text: string;
   status: string;
   created_at: string;
+  preview_url?: string;
   question_media_links?: { question_id: string }[];
 };
 const accepted = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -19,7 +21,8 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
   const [rows, setRows] = useState(initial),
     [busy, setBusy] = useState(false),
     [progress, setProgress] = useState<number | null>(null),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [query, setQuery] = useState("");
   const current = useRef<Upload | null>(null);
   async function refresh() {
     setRows(await api<Asset[]>("media"));
@@ -99,6 +102,29 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
       setBusy(false);
     }
   }
+  async function remove(asset: Asset) {
+    if (asset.question_media_links?.length) {
+      setMessage("Remove this media from its linked questions before deleting it.");
+      return;
+    }
+    if (!window.confirm(`Permanently delete ${asset.original_filename}? This cannot be undone.`))
+      return;
+    setBusy(true);
+    try {
+      await api(`media/${asset.id}`, "DELETE");
+      setMessage("Unused media deleted from private storage.");
+      await refresh();
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const visible = rows.filter((asset) =>
+    `${asset.original_filename} ${asset.default_alt_text}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
   return (
     <>
       <form
@@ -163,9 +189,28 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
       >
         {message}
       </p>
+      <label className="media-search">
+        Search media
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Filename or academic description"
+        />
+      </label>
       <div className="media-library-grid">
-        {rows.map((asset) => (
+        {visible.map((asset) => (
           <article className="card media-record" key={asset.id}>
+            {asset.preview_url && (
+              <Image
+                className="media-preview"
+                src={asset.preview_url}
+                alt={asset.default_alt_text}
+                width={560}
+                height={360}
+                unoptimized
+              />
+            )}
             <div className="top">
               <div>
                 <h2>{asset.original_filename}</h2>
@@ -177,6 +222,13 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
             </div>
             <p>{asset.default_alt_text}</p>
             <p className="muted">Linked to {asset.question_media_links?.length ?? 0} question(s)</p>
+            <button
+              className="button secondary"
+              disabled={busy || Boolean(asset.question_media_links?.length)}
+              onClick={() => void remove(asset)}
+            >
+              Delete unused media
+            </button>
             <details>
               <summary>Link to a canonical question</summary>
               <form
@@ -216,10 +268,14 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
           </article>
         ))}
       </div>
-      {!rows.length && (
+      {!visible.length && (
         <section className="card empty-state">
-          <h2>No reusable media yet</h2>
-          <p>Upload the first diagram, graph, table or scanned snippet.</p>
+          <h2>{rows.length ? "No media matches this search" : "No reusable media yet"}</h2>
+          <p>
+            {rows.length
+              ? "Try a different filename or description."
+              : "Upload the first diagram, graph, table or scanned snippet."}
+          </p>
         </section>
       )}
     </>

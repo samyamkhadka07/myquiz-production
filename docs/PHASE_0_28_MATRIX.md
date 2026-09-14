@@ -1,5 +1,7 @@
 # Phase 0–28 evidence matrix
 
+> 2026-09-14 continuation: local migration lineage now contains `0001`–`0022`. Migrations `0020`–`0022` add question version restore, OCR/DOCX media preservation, first-login onboarding, target-aware adaptation and unseen-first selection. Local evidence is 59/59 Vitest plus a successful production build. Only `0019` is currently confirmed live from this continuation; `0020`–`0022` and the corresponding application commit still require deployment and live verification, so no incomplete phase is promoted to complete by this note.
+
 | Phase | Requirement | Designed | Implemented | Tested | Live verified | Evidence / blocker |
 |---|---|---:|---:|---:|---:|---|
 | 0–5 | Foundation, schema, MEC, auth, questions, quiz | Yes | Yes | Yes | Partial | Migrations 0001–0008, 0015 and 0016; 0016 Admin requests are locally tested and live-applied; live Admin publish, two authoritative attempts, `1.00`/`-0.25` scoring and cross-user IDOR denial; credential-backed browser quiz pending |

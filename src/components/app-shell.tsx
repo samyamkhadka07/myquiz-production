@@ -1,9 +1,81 @@
-import Link from 'next/link';
-import type { Profile } from '@/lib/contracts';
-import { logout } from '@/app/auth/actions';
-import { SideNavigation,type SideNavigationItem } from '@/components/side-navigation';
-const navigation=[['Overview','/dashboard'],['Tests & practice','/tests'],['Mistake Center','/mistakes'],['History','/history'],['Bookmarks','/bookmarks'],['Flashcards','/flashcards'],['Study plan','/recommendations'],['Leaderboard','/leaderboard'],['Achievements','/achievements'],['Learning games','/games'],['Community','/community'],['Contributions','/contributions'],['Reading room','/reading'],['Profile','/profile']] as const;
-export function AppShell({profile,entitlement,children}:{profile:Profile;entitlement:{tier:'FREE'|'PREMIUM';ends_at:string|null};children:React.ReactNode}){
- const links:SideNavigationItem[]=navigation.map(([name,path])=>({kind:'link',label:name,href:path,note:entitlement.tier==='FREE'&&['Study plan','Leaderboard','Learning games'].includes(name)?'Premium options':undefined}));
- return <div className="shell"><aside className="side"><Link href="/dashboard" className="brand">MY<span>QUIZ</span></Link><p className="side-caption">MEC CEE preparation</p><div className="account-line side-account"><span>{profile.display_name}</span><span className="tier-badge">{entitlement.tier}</span></div><SideNavigation items={links} label="Student navigation"/>{entitlement.tier==='PREMIUM'?<section className="side-card premium-card"><strong>Premium active</strong><p>Adaptive recommendations, complete leaderboards and Premium learning modes are enabled.</p></section>:<section className="side-card"><strong>MyQuiz Premium</strong><p>Your Free account includes core practice. Premium access is granted securely by an authorized administrator.</p><Link href="/profile" className="side-link">View access status</Link></section>}<form action={logout}><button className="button side-signout">Sign out</button></form></aside><main className="main" id="main-content">{children}</main></div>;
+import Link from "next/link";
+import type { Profile } from "@/lib/contracts";
+import { logout } from "@/app/auth/actions";
+import { SideNavigation, type SideNavigationItem } from "@/components/side-navigation";
+const navigation = [
+  ["Overview", "/dashboard"],
+  ["Search", "/search"],
+  ["Tests & practice", "/tests"],
+  ["Mistake Center", "/mistakes"],
+  ["History", "/history"],
+  ["Bookmarks", "/bookmarks"],
+  ["Flashcards", "/flashcards"],
+  ["Study plan", "/recommendations"],
+  ["Leaderboard", "/leaderboard"],
+  ["Achievements", "/achievements"],
+  ["Learning games", "/games"],
+  ["Community", "/community"],
+  ["Contributions", "/contributions"],
+  ["Reading room", "/reading"],
+  ["Profile", "/profile"],
+] as const;
+export function AppShell({
+  profile,
+  entitlement,
+  children,
+}: {
+  profile: Profile;
+  entitlement: { tier: "FREE" | "PREMIUM"; ends_at: string | null };
+  children: React.ReactNode;
+}) {
+  const links: SideNavigationItem[] = navigation.map(([name, path]) => ({
+    kind: "link",
+    label: name,
+    href: path,
+    note:
+      entitlement.tier === "FREE" && ["Study plan", "Leaderboard", "Learning games"].includes(name)
+        ? "Premium options"
+        : undefined,
+  }));
+  return (
+    <div className="shell">
+      <aside className="side">
+        <Link href="/dashboard" className="brand">
+          MY<span>QUIZ</span>
+        </Link>
+        <p className="side-caption">MEC CEE preparation</p>
+        <div className="account-line side-account">
+          <span>{profile.display_name}</span>
+          <span className="tier-badge">{entitlement.tier}</span>
+        </div>
+        <SideNavigation items={links} label="Student navigation" />
+        {entitlement.tier === "PREMIUM" ? (
+          <section className="side-card premium-card">
+            <strong>Premium active</strong>
+            <p>
+              Adaptive recommendations, complete leaderboards and Premium learning modes are
+              enabled.
+            </p>
+          </section>
+        ) : (
+          <section className="side-card">
+            <strong>MyQuiz Premium</strong>
+            <p>
+              Your Free account includes core practice. Premium access is granted securely by an
+              authorized administrator.
+            </p>
+            <Link href="/profile" className="side-link">
+              View access status
+            </Link>
+          </section>
+        )}
+        <form action={logout}>
+          <button className="button side-signout">Sign out</button>
+        </form>
+      </aside>
+      <main className="main" id="main-content">
+        {children}
+      </main>
+    </div>
+  );
 }

@@ -1,5 +1,17 @@
 # Work checkpoint
 
+## 2026-09-14 Phase 2 content integrity and personalization checkpoint
+
+Production schema parity was checked in the authenticated Supabase dashboard for project `pfrmuxkescvstqwwbgsv`. Migrations `0017` and `0018` were already present. Migration `0019_question_media.sql` was applied once and validated: both media tables, the private `question-media` bucket, all three media RPCs, four table RLS policies and the Storage insert policy exist. The Vercel deployment still predates this continuation and must not be described as repository-parity evidence until the verified commit is deployed.
+
+The current continuation adds migrations `0020`–`0022`. Migration `0020` adds auditable question snapshots, media snapshots, safe restore-to-staging, extracted-media provenance and automatic media linking during staged import. Migration `0021` adds persisted first-login onboarding for MEC program, target score and self-assessed focus subjects. Migration `0022` makes non-full adaptive selection prefer unseen questions before avoidable repetition and then uses persisted accuracy, mistakes, target-score difficulty and initial weak-subject signals.
+
+The document worker now preserves OCR-rendered PDF pages and image contributions in private reusable media. For image-based DOCX files it enumerates embedded images, normalizes one image per durable step, stores the source page, and sends it through the existing vision adapter. A non-mutating inspection of the supplied authoritative Ashar/Baisakh DOCX found exactly **151 embedded JPEG images**. This closes the prior raw-text-only DOCX failure mode. If the AI provider is unavailable, the original image remains preserved and the job moves to honest review/error state; OCR output is never fabricated.
+
+Student additions include persisted three-step onboarding and authorization-scoped global search across published questions, syllabus entities, published Reading Room content and the current Student's own flashcards. Media Library now returns short-lived previews and permits deletion only for unreferenced assets after an explicit UI confirmation. Question Management exposes version history and restores previous content only to `STAGED / UNVERIFIED / DRAFT`.
+
+Current local verification: **59 Vitest passed, 0 failed** (**32 database/integration/security**, **27 unit/property/source**); all **22 migrations** execute successfully in PGlite; TypeScript PASS; ESLint PASS; production build PASS. Production application/deployment verification for migrations `0020`–`0022`, browser onboarding, media upload, OCR execution, version restore and adaptive/no-repeat behavior remains required. Phase 2 is therefore still **INCOMPLETE**.
+
 ## 2026-09-14 production sync and Ashar workflow verification
 
 The authoritative repository and deployed Production revision are now aligned at commit `6fc2d7c23a1921cf64c428742c19c4a5c6edebff`. GitHub repository `samyamkhadka07/myquiz-production` is the Vercel source of truth. Repository `samyamkhadka07/questions_mec` contains a byte-identical project/source tree, including the retained Ashar PDF and DOCX, as a secondary working copy. The temporary cross-repository workflow, repository secret and fine-grained GitHub token used for the one-time sync were removed and verified absent.

@@ -146,7 +146,7 @@ describe("admin access request UI contract", () => {
   });
   it("resolves post-login routing from database roles rather than submitted form roles", () => {
     const source = fs.readFileSync("src/app/auth/actions.ts", "utf8");
-    expect(source).toContain("from('profiles').select('role')");
+    expect(source).toContain('from("profiles").select("role,onboarding_completed_at")');
     expect(source).toContain("roleHome(");
     expect(source).not.toContain("form.get('role')");
   });
@@ -166,9 +166,13 @@ describe("functional separation and engagement contracts", () => {
       "/admin/ai-usage",
     ])
       expect(source).toContain(route);
-    expect(source).toMatch(/label:\s*["']Reading Materials["'],\s*href:\s*["']\/admin\/reading-materials["']/);
+    expect(source).toMatch(
+      /label:\s*["']Reading Materials["'],\s*href:\s*["']\/admin\/reading-materials["']/,
+    );
     expect(source).toMatch(/label:\s*["']Reports["'],\s*href:\s*["']\/admin\/reports["']/);
-    expect(source).toMatch(/label:\s*["']AI Review \/ Usage["'],\s*href:\s*["']\/admin\/ai-usage["']/);
+    expect(source).toMatch(
+      /label:\s*["']AI Review \/ Usage["'],\s*href:\s*["']\/admin\/ai-usage["']/,
+    );
   });
   it("keeps Student preparation fields out of Admin Profile", () => {
     const page = fs.readFileSync("src/components/admin-profile-form.tsx", "utf8");
@@ -218,6 +222,24 @@ describe("functional separation and engagement contracts", () => {
       "src/components/review.tsx",
       "src/components/interactive-games.tsx",
       "src/app/(student)/bookmarks/page.tsx",
-    ]) expect(fs.readFileSync(file, "utf8")).toContain("QuestionMedia");
+    ])
+      expect(fs.readFileSync(file, "utf8")).toContain("QuestionMedia");
+  });
+  it("preserves auditable question versions and requires re-review after restore", () => {
+    const migration = fs.readFileSync("supabase/migrations/0020_question_versions.sql", "utf8");
+    expect(migration).toContain("create table public.question_versions");
+    expect(migration).toContain("create trigger question_capture_version");
+    expect(migration).toContain("create function public.restore_question_version");
+    expect(migration).toContain("lifecycle='STAGED'");
+    expect(migration).toContain("verification_status='UNVERIFIED'");
+    expect(migration).toContain("QUESTION_VERSION_RESTORED");
+  });
+  it("routes incomplete student profiles through persisted onboarding", () => {
+    expect(roleHome("STUDENT", null, false)).toBe("/onboarding");
+    expect(roleHome("STUDENT", null, true)).toBe("/dashboard");
+    expect(roleHome("SUPER_ADMIN", null, false)).toBe("/admin");
+    const migration = fs.readFileSync("supabase/migrations/0021_student_onboarding.sql", "utf8");
+    expect(migration).toContain("complete_student_onboarding");
+    expect(migration).toContain("onboarding_completed_at=now()");
   });
 });
