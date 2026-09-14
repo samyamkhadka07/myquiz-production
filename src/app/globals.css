@@ -1340,3 +1340,4 @@ summary {
 .achievement-card small {
   color: var(--muted);
 }
+.processing-list{display:grid;gap:1rem}.processing-record{display:grid;gap:.8rem}.processing-record h2{margin:.45rem 0 0;font-size:1.15rem}.processing-record .game-progress{margin:.2rem 0}.staged-record>summary{line-height:1.5}.staged-record>.metadata-row{margin-top:1rem}.staged-review-form{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line)}.staged-option{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1rem;border-radius:14px;background:#f6fafb}.staged-option textarea{min-height:72px}@media(max-width:640px){.staged-option{grid-template-columns:1fr}}
