@@ -22,6 +22,15 @@
 
 The 755 existing staged rows are not linked to the Ashar contribution and include visibly corrupted OCR. They must not be represented as verified Ashar questions or bulk-published.
 
+## Deployment follow-up (2026-09-14)
+
+- Migration `0018_staged_publish_premium.sql` is live in Supabase Production.
+- Vercel deployment `dpl_HgqoCdWsxmnokReNEX52VkNzfTLj` serves exact commit `6fc2d7c23a1921cf64c428742c19c4a5c6edebff`.
+- Red-Chrome verification shows the Ashar job retained as `READY` at `EXTRACT`, page 1, offset 0, with no error and no artifacts.
+- The live staged workspace currently reports no staged rows. This supersedes the earlier 755-row observation for current UI state; no deletion or publication was performed during this verification.
+- The canonical question-management screen still visibly contains only the pre-existing published SI-unit question. Ashar remains unimported and unpublished.
+- The live Admin processing page exposes the bounded `run` action, and the staged page is wired for the lifecycle controls once academically complete candidates exist.
+
 ## Safe ingestion rule
 
 1. Extract every image with page provenance.

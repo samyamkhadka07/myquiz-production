@@ -1,5 +1,19 @@
 # Work checkpoint
 
+## 2026-09-14 production sync and Ashar workflow verification
+
+The authoritative repository and deployed Production revision are now aligned at commit `6fc2d7c23a1921cf64c428742c19c4a5c6edebff`. GitHub repository `samyamkhadka07/myquiz-production` is the Vercel source of truth. Repository `samyamkhadka07/questions_mec` contains a byte-identical project/source tree, including the retained Ashar PDF and DOCX, as a secondary working copy. The temporary cross-repository workflow, repository secret and fine-grained GitHub token used for the one-time sync were removed and verified absent.
+
+Supabase migration `0018_staged_publish_premium.sql` was applied once to Production after confirming migration `0017` was already present. Live validation confirmed the staged import/verify/publish RPC path, PostgreSQL Premium enforcement and exactly one protected permanent `SUPER_ADMIN`.
+
+Vercel deployment `dpl_HgqoCdWsxmnokReNEX52VkNzfTLj` is Ready, Latest, Production and Current for exact commit `6fc2d7c23a1921cf64c428742c19c4a5c6edebff` at `https://myquiz-production.vercel.app`. Build logs show a successful Next.js production build. Fresh runtime evidence contained no Warning, Error or Fatal entries for the inspected Admin routes. Homepage returned 200, anonymous `/dashboard` redirected to `/login`, and unauthenticated document-processing Cron returned 401.
+
+Red-Chrome verification confirmed the dedicated Administration shell and purpose-specific processing/staged controls. The retained Ashar job is currently `READY` at checkpoint `EXTRACT`, page 1, offset 0, with zero attempts, no lease, no error and no artifacts. The staged page currently reports no staged rows. The canonical question bank still visibly contains only the existing published SI-unit question; no Ashar question has been claimed as imported, verified or published.
+
+The Ashar source has been extracted locally into 151 page images and OCR transcribed with orientation repair, but bulk publication remains academically unsafe. Each question must still be paired with its printed solution, OCR-corrected, mapped to taxonomy, supplied with correct-answer and option-by-option explanations, duplicate-checked and reviewed. Unreadable or diagram-dependent questions must remain `NEEDS_REVISION`. Do not replace this review with guessed answers or automatically publish OCR output.
+
+Current local gate for the deployed change: TypeScript PASS, ESLint PASS, Vitest 51/51 PASS, production build PASS, production dependency audit 0 vulnerabilities, secret scan PASS and Git whitespace PASS.
+
 ## 2026-09-11 role-based application-shell fix
 
 The local application now resolves the authoritative database role after login, email confirmation and authenticated visits to `/`. STUDENT accounts land at `/dashboard`; MODERATOR, ADMIN and SUPER_ADMIN land at `/admin`. Pending and rejected Admin requests remain STUDENT and receive explicit non-authorization messages. The student route-group layout now rejects staff roles back to `/admin`, so the former student-first shell is no longer the default administration experience.
@@ -55,7 +69,7 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 - Supabase and the Production deployment are reachable, but no reusable application-session credentials were retained for the temporary identities. This blocks credential-backed browser CRUD, real TUS upload and signed-download verification.
 - A local Playwright Chromium executable is still unavailable.
 - Live AI and Meta checks require provider credentials.
-# 2026-09-11 Admin separation and student engagement checkpoint
+## 2026-09-11 Admin separation and student engagement checkpoint
 
 - Pre-change Admin route/component/data-source audit completed; duplicate and merged navigation routes were identified in source.
 - Dedicated Admin routes added for verification, publication, blueprints, mnemonics, reading materials, duplicates, reports, ingestion runs and AI usage.
@@ -65,7 +79,7 @@ Live PostgreSQL plans confirmed the eligible-question lookup used `questions_eli
 - Mistake Center and five persistent learning modes were added; learning sessions are explicitly isolated from official test scoring.
 - Local verification at this checkpoint: TypeScript PASS, ESLint PASS, Vitest 49 PASS / 0 FAIL, 17 migrations PASS, Production build PASS.
 - Production migration/deployment and final browser audit remain required before either new acceptance status can be marked PASS.
-# 2026-09-13 Ashar ingestion and workflow repair checkpoint
+## 2026-09-13 Ashar ingestion and workflow repair checkpoint
 
 - Red-Chrome production audit confirmed migration `0017_admin_engagement.sql` is already present (`learning_game_sessions` and `update_admin_profile` exist).
 - Production retains exactly one `SUPER_ADMIN`.
