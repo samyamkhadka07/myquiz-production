@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import type { Route } from 'next';
 import { logout } from '@/app/auth/actions';
 import type { Profile,Role } from '@/lib/contracts';
+import { SideNavigation,type SideNavigationItem } from '@/components/side-navigation';
 
 type AdminLink={label:string;href:string;roles:Role[]};
 const allStaff:Role[]=['MODERATOR','ADMIN','SUPER_ADMIN'];
@@ -41,5 +41,6 @@ const navigation:AdminLink[]=[
 
 export function AdminShell({profile,children}:{profile:Profile;children:React.ReactNode}){
  const links=navigation.filter(item=>item.roles.includes(profile.role));
- return <div className="shell admin-shell"><aside className="side admin-side"><Link href="/admin" className="brand">MY<span>QUIZ</span></Link><p className="admin-title">ADMINISTRATION</p><p className="side-caption">MEC CEE management</p><nav className="nav" aria-label="Administration navigation">{links.map(item=>item.label.startsWith('—')?<span className="nav-group" key={item.label}>{item.label.replaceAll('—','').trim()}</span>:<Link key={`${item.href}-${item.label}`} href={item.href as Route}>{item.label}</Link>)}</nav><div className="admin-side-actions"><form action={logout}><button className="button secondary">Sign out</button></form></div></aside><main className="main" id="main-content"><div className="account-line"><span>{profile.display_name}</span><strong>{profile.role.replace('_',' ')}</strong></div>{children}</main></div>;
+ const items:SideNavigationItem[]=links.map(item=>item.label.startsWith('—')?{kind:'group',label:item.label.replaceAll('—','').trim()}:{kind:'link',label:item.label,href:item.href});
+ return <div className="shell admin-shell"><aside className="side admin-side"><Link href="/admin" className="brand">MY<span>QUIZ</span></Link><p className="admin-title">ADMINISTRATION</p><p className="side-caption">MEC CEE management</p><SideNavigation items={items} label="Administration navigation"/><div className="admin-side-actions"><form action={logout}><button className="button side-signout">Sign out</button></form></div></aside><main className="main" id="main-content"><div className="account-line"><span>{profile.display_name}</span><strong>{profile.role.replace('_',' ')}</strong></div>{children}</main></div>;
 }
