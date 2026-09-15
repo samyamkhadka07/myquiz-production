@@ -1,6 +1,8 @@
 # Phase 0–28 evidence matrix
 
-> 2026-09-14 continuation: local migration lineage now contains `0001`–`0022`. Migrations `0020`–`0022` add question version restore, OCR/DOCX media preservation, first-login onboarding, target-aware adaptation and unseen-first selection. Local evidence is 59/59 Vitest plus a successful production build. Only `0019` is currently confirmed live from this continuation; `0020`–`0022` and the corresponding application commit still require deployment and live verification, so no incomplete phase is promoted to complete by this note.
+> 2026-09-15 Production parity update: Supabase migrations `0020`–`0022` are live and validated. GitHub/Vercel deployed implementation commit `1f448cfc1ad8ea123b0eb805cfb3e1245c577cb7` as Ready deployment `dpl_BdDSs7wDfPgVUGU1GWfg8v8NdaJh`. A live `ingestion_runs.finished_at` schema mismatch was found and repaired to `completed_at`; `/admin` now renders real PostgreSQL metrics. Media Library, Question Management, Verification, Publication, Processing, and Staged routes loaded purpose-specific states. Local evidence is 60/60 Vitest, TypeScript, ESLint, 22-migration PGlite execution, and production build PASS. Bulk Ashar processing and the remaining PRD production journeys are still outstanding, so Phase 2 is not complete.
+
+> Superseded 2026-09-14 checkpoint: local migration lineage contained `0001`–`0022`. Migrations `0020`–`0022` added question version restore, OCR/DOCX media preservation, first-login onboarding, target-aware adaptation and unseen-first selection. Evidence at that time was 59/59 Vitest plus a successful production build; the later 2026-09-15 note above records their live deployment and verification.
 
 | Phase | Requirement | Designed | Implemented | Tested | Live verified | Evidence / blocker |
 |---|---|---:|---:|---:|---:|---|

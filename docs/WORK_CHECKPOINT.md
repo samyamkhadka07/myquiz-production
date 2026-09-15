@@ -1,5 +1,17 @@
 # Work checkpoint
 
+## 2026-09-15 Phase 2 Production parity and Admin metrics repair
+
+Supabase Production project `pfrmuxkescvstqwwbgsv` was revalidated in the authenticated dashboard. Migrations `0020`, `0021`, and `0022` are live: question-version restore, persisted onboarding, both `start_attempt` functions, and the target-aware unseen-first selection logic were present. Production still contained exactly one `SUPER_ADMIN`.
+
+GitHub `samyamkhadka07/myquiz-production` and Vercel were advanced through implementation commit `1f448cfc1ad8ea123b0eb805cfb3e1245c577cb7`. Vercel deployment `dpl_BdDSs7wDfPgVUGU1GWfg8v8NdaJh` completed successfully in 25 seconds, with the Next.js build completing in 11 seconds. The only build notices were the existing unpinned Node major-version warning and npm install-script review notices; the deployment was Ready and Production.
+
+The first live check found `/admin` failing because it queried nonexistent `ingestion_runs.finished_at`; the authoritative schema uses `completed_at`. Commit `1f448cf` repairs that query and adds a regression assertion. Production then rendered live Admin metrics (6 users, 1 published question, 2 contributions, and 2 queued processing jobs at inspection time). `/admin/media`, Question Management, Verification Queue, Publication Queue, Document Processing, and Staged Questions loaded their purpose-specific database-backed states without 404 or workspace errors. Inspected runtime logs contained no 5xx or database error for the repaired deployment.
+
+Current executable verification after the repair: **60 Vitest passed / 0 failed** (**32 database/integration/security**, **28 unit/property/source**); all **22 migrations** execute in PGlite through the database suite; TypeScript PASS; ESLint PASS; production build PASS; Git whitespace PASS. A fresh npm audit could not start because this execution environment disconnected the network request before npm ran; the dependency graph did not change.
+
+Phase 2 remains **INCOMPLETE**. The Ashar/Baisakh/Jestha document is preserved and the visual/DOCX extraction path is implemented, but bulk OCR, academic answer/option-explanation verification, canonical publication, live media upload, onboarding/adaptive multi-session proof, and the remaining complete PRD production matrix have not been executed. These must not be represented as finished.
+
 ## 2026-09-14 Phase 2 content integrity and personalization checkpoint
 
 Production schema parity was checked in the authenticated Supabase dashboard for project `pfrmuxkescvstqwwbgsv`. Migrations `0017` and `0018` were already present. Migration `0019_question_media.sql` was applied once and validated: both media tables, the private `question-media` bucket, all three media RPCs, four table RLS policies and the Storage insert policy exist. The Vercel deployment still predates this continuation and must not be described as repository-parity evidence until the verified commit is deployed.
