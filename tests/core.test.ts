@@ -242,4 +242,9 @@ describe("functional separation and engagement contracts", () => {
     expect(migration).toContain("complete_student_onboarding");
     expect(migration).toContain("onboarding_completed_at=now()");
   });
+  it("queries the production ingestion timestamp used by the Admin Dashboard", () => {
+    const page = fs.readFileSync("src/app/admin/page.tsx", "utf8");
+    expect(page).toContain("status,started_at,completed_at,error");
+    expect(page).not.toContain("status,started_at,finished_at,error");
+  });
 });
