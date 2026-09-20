@@ -507,7 +507,7 @@ export async function learningApi(
   if (resource === "contribution-review") {
     staff(profile);
     const p = z
-      .object({ action: z.enum(["APPROVE", "REJECT", "NEEDS_REVISION"]) })
+      .object({ action: z.enum(["APPROVE", "REJECT", "NEEDS_REVISION", "REOPEN"]) })
       .strict()
       .parse(body);
     return {

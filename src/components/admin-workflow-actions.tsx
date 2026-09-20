@@ -6,10 +6,12 @@ export function ActionButtons({
   resource,
   id,
   actions,
+  onCompleted,
 }: {
   resource: string;
   id: string;
   actions: string[];
+  onCompleted?: (action: string) => void;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState(""),
@@ -37,6 +39,7 @@ export function ActionButtons({
                   await api(path, "POST", { action });
                   setCompleted(action);
                   setMessage(`${action.replaceAll("_", " ").toLowerCase()} saved.`);
+                  onCompleted?.(action);
                   router.refresh();
                 } catch (e) {
                   setMessage((e as Error).message);

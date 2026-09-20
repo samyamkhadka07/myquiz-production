@@ -574,6 +574,25 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     ).toHaveLength(0);
     expect((await as(a, "select * from contributions")).rows).toHaveLength(1);
   });
+  it("enforces explicit, auditable contribution review transitions", async () => {
+    const id = (
+      await db.query<{ id: string }>("select id from contributions where uploader_id=$1 limit 1", [
+        a,
+      ])
+    ).rows[0]!.id;
+    expect(
+      (await as(admin, "select review_contribution($1,'APPROVE') state", [id])).rows[0],
+    ).toEqual({ state: "APPROVED" });
+    await expect(as(admin, "select review_contribution($1,'REJECT')", [id])).rejects.toThrow(
+      /reopen/i,
+    );
+    expect(
+      (await as(admin, "select review_contribution($1,'REOPEN') state", [id])).rows[0],
+    ).toEqual({ state: "PENDING_REVIEW" });
+    expect(
+      (await as(admin, "select review_contribution($1,'NEEDS_REVISION') state", [id])).rows[0],
+    ).toEqual({ state: "NEEDS_REVISION" });
+  });
   it("restricts source management to administrators", async () => {
     const source = {
       platform: "META",
