@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Profile } from "@/lib/contracts";
 import { logout } from "@/app/auth/actions";
 import { SideNavigation, type SideNavigationItem } from "@/components/side-navigation";
+import type { Route } from "next";
 const navigation = [
   ["Overview", "/dashboard"],
   ["Search", "/search"],
@@ -17,6 +18,7 @@ const navigation = [
   ["Community", "/community"],
   ["Contributions", "/contributions"],
   ["Reading room", "/reading"],
+  ["Subscription", "/subscription"],
   ["Profile", "/profile"],
 ] as const;
 export function AppShell({
@@ -64,8 +66,8 @@ export function AppShell({
               Your Free account includes core practice. Premium access is granted securely by an
               authorized administrator.
             </p>
-            <Link href="/profile" className="side-link">
-              View access status
+            <Link href={"/plans" as Route} className="side-link">
+              View subscription plans
             </Link>
           </section>
         )}

@@ -239,7 +239,7 @@ export async function generateTutorResponse(input: {
   const day = new Date();
   day.setUTCHours(0, 0, 0, 0);
   const month = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), 1));
-  const [userDaily, globalDaily, globalMonthly] = await Promise.all([
+  const [userDaily, globalDaily, globalMonthly, activeSubscription, freePlan] = await Promise.all([
     db
       .from("ai_usage_logs")
       .select("id", { count: "exact", head: true })
@@ -261,9 +261,23 @@ export async function generateTutorResponse(input: {
       .eq("cache_hit", false)
       .eq("status", "SUCCEEDED")
       .gte("created_at", month.toISOString()),
+    db
+      .from("subscriptions")
+      .select("plan_snapshot")
+      .eq("user_id", input.userId)
+      .in("status", ["ACTIVE", "TRIAL", "PROMOTIONAL"])
+      .lte("starts_at", new Date().toISOString())
+      .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    db.from("subscription_plans").select("ai_daily_limit").eq("code", "FREE").maybeSingle(),
   ]);
+  const paidSnapshot = activeSubscription.data?.plan_snapshot as { ai_daily_limit?: number } | null;
+  const dailyLimit =
+    paidSnapshot?.ai_daily_limit ?? freePlan.data?.ai_daily_limit ?? settings.free_daily_limit;
   const quotaReason =
-    (userDaily.count ?? 0) >= settings.free_daily_limit
+    (userDaily.count ?? 0) >= dailyLimit
       ? "AI_USER_DAILY_LIMIT"
       : (globalDaily.count ?? 0) >= settings.global_daily_limit
         ? "AI_GLOBAL_DAILY_LIMIT"

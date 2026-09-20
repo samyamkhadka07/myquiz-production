@@ -663,6 +663,172 @@ export async function learningApi(
       }),
     };
   }
+  if (resource === "subscription-plans") {
+    if (method === "GET")
+      return {
+        data: check(
+          await db.from("subscription_plans").select("*").order("display_order").order("price_npr"),
+        ),
+      };
+    admin(profile);
+    const p = z
+      .object({
+        code: z
+          .string()
+          .trim()
+          .regex(/^[A-Z0-9_]+$/)
+          .optional(),
+        name: z.string().trim().min(2).max(80),
+        description: z.string().trim().max(500),
+        price_npr: z.number().min(0).max(1000000),
+        duration_days: z.number().int().min(1).max(3660).nullable(),
+        features: z
+          .array(
+            z
+              .string()
+              .trim()
+              .regex(/^[a-z0-9_]+$/),
+          )
+          .max(100),
+        ai_daily_limit: z.number().int().min(0).max(1000),
+        marketing_text: z.string().trim().max(500),
+        display_order: z.number().int().min(0).max(10000),
+        recommended: z.boolean(),
+        enabled: z.boolean(),
+      })
+      .strict()
+      .parse(body);
+    if (!id && !p.code)
+      throw new ApiError(400, "PLAN_CODE_REQUIRED", "A code is required for a new plan.");
+    return {
+      data: check(
+        await db.rpc("save_subscription_plan", {
+          p_id: id ? uuidSchema.parse(id) : null,
+          p_data: p,
+        }),
+      ),
+    };
+  }
+  if (resource === "ai-settings") {
+    admin(profile);
+    if (method === "GET")
+      return {
+        data: check(await db.from("ai_tutor_settings").select("*").eq("id", true).single()),
+      };
+    const p = z
+      .object({
+        enabled: z.boolean(),
+        provider: z.enum(["openai"]),
+        model: z.string().trim().min(1).max(100),
+        free_daily_limit: z.number().int().min(0).max(100),
+        global_daily_limit: z.number().int().min(0).max(100000),
+        global_monthly_limit: z.number().int().min(0).max(1000000),
+        timeout_ms: z.number().int().min(1000).max(30000),
+        max_output_tokens: z.number().int().min(100).max(2000),
+        nepali_enabled: z.boolean(),
+        followups_enabled: z.boolean(),
+        maintenance_message: z.string().trim().min(10).max(500),
+      })
+      .strict()
+      .parse(body);
+    return {
+      data: check(
+        await db
+          .from("ai_tutor_settings")
+          .update({ ...p, updated_at: new Date().toISOString(), updated_by: profile.id })
+          .eq("id", true)
+          .select()
+          .single(),
+      ),
+    };
+  }
+  if (resource === "payment-methods") {
+    if (method === "GET")
+      return {
+        data: check(
+          await db.from("payment_methods").select("*").order("display_order").order("name"),
+        ),
+      };
+    admin(profile);
+    const p = z
+      .object({
+        code: z
+          .string()
+          .trim()
+          .regex(/^[A-Z0-9_]+$/)
+          .optional(),
+        name: z.string().trim().min(2).max(80),
+        enabled: z.boolean(),
+        qr_object_path: z.string().trim().max(500).nullable(),
+        display_name: z.string().trim().max(120).nullable(),
+        instructions: z.string().trim().max(1000).nullable(),
+        account_identifier: z.string().trim().max(120).nullable(),
+        verification_instructions: z.string().trim().max(1000).nullable(),
+        display_order: z.number().int().min(0).max(10000),
+      })
+      .strict()
+      .parse(body);
+    if (!id && !p.code)
+      throw new ApiError(400, "PAYMENT_CODE_REQUIRED", "A code is required for a new method.");
+    return {
+      data: check(
+        await db.rpc("save_payment_method", {
+          p_id: id ? uuidSchema.parse(id) : null,
+          p_data: p,
+        }),
+      ),
+    };
+  }
+  if (resource === "payment-requests") {
+    if (method === "GET") {
+      const query = db
+        .from("payment_requests")
+        .select("*,subscription_plans(name,code),payment_methods(name,code)")
+        .order("submitted_at", { ascending: false })
+        .limit(100);
+      return {
+        data: check(await (profile.role === "STUDENT" ? query.eq("user_id", profile.id) : query)),
+      };
+    }
+    if (!id) {
+      const p = z
+        .object({
+          plan_id: uuidSchema,
+          payment_method_id: uuidSchema,
+          reference_id: z.string().trim().min(3).max(120),
+          note: z.string().trim().max(1000).nullable(),
+        })
+        .strict()
+        .parse(body);
+      return {
+        data: check(
+          await db.rpc("submit_payment_request", {
+            p_plan: p.plan_id,
+            p_method: p.payment_method_id,
+            p_reference: p.reference_id,
+            p_note: p.note,
+          }),
+        ),
+      };
+    }
+    admin(profile);
+    const p = z
+      .object({
+        action: z.enum(["APPROVE", "REJECT", "REQUEST_CLARIFICATION"]),
+        note: z.string().trim().max(1000).nullable(),
+      })
+      .strict()
+      .parse(body);
+    return {
+      data: check(
+        await db.rpc("review_payment_request", {
+          p_request: uuidSchema.parse(id),
+          p_action: p.action,
+          p_note: p.note,
+        }),
+      ),
+    };
+  }
   if (resource === "users") {
     superAdmin(profile);
     if (method === "GET")

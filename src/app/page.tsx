@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { roleHome, type AdminRequestStatus } from "@/lib/auth/role-routing";
 import type { Role } from "@/lib/contracts";
+import type { Route } from "next";
 export const dynamic = "force-dynamic";
 export default async function Home() {
   const db = await createClient();
@@ -32,6 +33,7 @@ export default async function Home() {
         <Link href="/login" className="button secondary">
           Sign in
         </Link>
+        <Link href={"/plans" as Route}>Plans</Link>
       </header>
       <section className="landing-content">
         <p className="eyebrow">MEC CEE preparation</p>

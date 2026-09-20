@@ -1626,6 +1626,38 @@ summary {
   justify-items: start;
   gap: 0.45rem;
 }
+.plans-page {
+  min-height: 100vh;
+  padding: 1.25rem clamp(1rem, 4vw, 4rem) 4rem;
+}
+.plans-page > .section {
+  max-width: 1280px;
+  margin: 2rem auto;
+}
+.plan-grid,
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.plan-grid ul {
+  padding-left: 1.2rem;
+  line-height: 1.75;
+}
+.payment-instructions {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f7fafb;
+}
+.payment-qr {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  margin: 1rem auto;
+  border-radius: 12px;
+}
 @media (max-width: 640px) {
   .onboarding-step {
     grid-template-columns: 1fr;

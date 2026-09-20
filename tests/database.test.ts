@@ -395,6 +395,64 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       .data as { items: unknown[] };
     expect(session.items).toHaveLength(1);
   });
+  it("versions plan edits and activates manual payments exactly once", async () => {
+    const plan = (await as(admin, "select id from subscription_plans where code='CEE_PRACTICE'"))
+      .rows[0]!.id;
+    const original = (
+      await as(admin, "select to_jsonb(p) data from subscription_plans p where id=$1", [plan])
+    ).rows[0]!.data as Record<string, unknown>;
+    const edited = {
+      ...original,
+      name: "CEE Practice",
+      price_npr: 499,
+      duration_days: 30,
+      ai_daily_limit: 10,
+      display_order: 20,
+      recommended: false,
+      enabled: true,
+    };
+    await as(admin, "select save_subscription_plan($1,$2::jsonb)", [plan, JSON.stringify(edited)]);
+    expect(
+      (
+        await as(admin, "select count(*)::int n from subscription_plan_versions where plan_id=$1", [
+          plan,
+        ])
+      ).rows[0]?.n,
+    ).toBe(1);
+    const method = (await as(admin, "select id from payment_methods where code='ESEWA'")).rows[0]!
+      .id;
+    const methodData = {
+      name: "eSewa",
+      enabled: true,
+      qr_object_path: null,
+      display_name: "MyQuiz",
+      instructions: "Use the owner-provided QR.",
+      account_identifier: null,
+      verification_instructions: "Match the reference ID.",
+      display_order: 10,
+    };
+    await as(admin, "select save_payment_method($1,$2::jsonb)", [
+      method,
+      JSON.stringify(methodData),
+    ]);
+    const payment = (
+      await as(b, "select (submit_payment_request($1,$2,'TEST-REFERENCE-1',null)).id id", [
+        plan,
+        method,
+      ])
+    ).rows[0]!.id;
+    await as(admin, "select review_payment_request($1,'APPROVE','Reference verified')", [payment]);
+    expect((await as(b, "select has_entitlement('custom_tests') allowed")).rows[0]).toEqual({
+      allowed: true,
+    });
+    expect(
+      (await as(b, "select tier,active_subscription_id is not null active from entitlements"))
+        .rows[0],
+    ).toEqual({ tier: "PREMIUM", active: true });
+    await expect(
+      as(admin, "select review_payment_request($1,'APPROVE',null)", [payment]),
+    ).rejects.toThrow(/finalized/i);
+  });
   it("does not let students see any canonical answer rows", async () =>
     expect((await as(a, "select * from questions")).rows).toHaveLength(0));
   it("requires review and verification before publication", async () => {
