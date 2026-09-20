@@ -5,6 +5,7 @@ import fc from "fast-check";
 import { scoreResponses } from "@/lib/quiz/scoring";
 import { priorityScore } from "@/lib/recommendations/deterministic";
 import { isStaffRole, roleHome } from "@/lib/auth/role-routing";
+import { processingPosition, processingProgress } from "@/lib/processing/progress";
 import academic from "../data/mec-2026.json";
 describe("production scoring", () => {
   it("scores mixed answers with blueprint policy", () =>
@@ -49,6 +50,17 @@ describe("production scoring", () => {
       ),
       { numRuns: 300 },
     ));
+});
+describe("document processing progress", () => {
+  it("uses actual PDF page checkpoints", () => {
+    expect(processingProgress("READY", { step: "EXTRACT", page: 6, pages: 10 })).toBe(58);
+    expect(processingPosition({ step: "EXTRACT", page: 6, pages: 10 })).toBe(
+      "5 of 10 pages processed",
+    );
+  });
+  it("never presents a failed job as complete", () => {
+    expect(processingProgress("FAILED", { step: "EXTRACT", page: 11, pages: 10 })).toBe(95);
+  });
 });
 describe("academic source", () => {
   it("preserves original PDF checksum", () =>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/server/auth";
-import { check } from "@/lib/server/data";
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { db, profile } = await requirePage();
@@ -31,25 +30,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
             .limit(100),
         ])
       : [empty, empty, empty, empty, empty];
-  const questionRows = check(questions),
-    topicRows = check(topics),
-    subjectRows = check(subjects),
-    readingRows = check(reading),
-    cardRows = (
-      check(cards) as unknown as Array<{
-        id: string;
-        question_id: string;
-        questions: Array<{ question_text: string }>;
-      }>
-    )
-      .filter((card) => card.questions[0]?.question_text.toLowerCase().includes(term.toLowerCase()))
-      .slice(0, 20);
+  const failures = [
+    ["questions", questions.error],
+    ["topics", topics.error],
+    ["subjects", subjects.error],
+    ["reading materials", reading.error],
+    ["flashcards", cards.error],
+  ].filter((entry) => entry[1]);
+  const questionRows = questions.error ? [] : (questions.data ?? []),
+    topicRows = topics.error ? [] : (topics.data ?? []),
+    subjectRows = subjects.error ? [] : (subjects.data ?? []),
+    readingRows = reading.error ? [] : (reading.data ?? []),
+    cardRows = ((cards.error ? [] : cards.data) ?? ([] as unknown)) as unknown as Array<{
+      id: string;
+      question_id: string;
+      questions: { question_text: string } | Array<{ question_text: string }> | null;
+    }>;
+  const matchingCards = cardRows
+    .filter((card) => {
+      const question = Array.isArray(card.questions) ? card.questions[0] : card.questions;
+      return question?.question_text.toLowerCase().includes(term.toLowerCase());
+    })
+    .slice(0, 20);
   const total =
     questionRows.length +
     topicRows.length +
     subjectRows.length +
     readingRows.length +
-    cardRows.length;
+    matchingCards.length;
   return (
     <>
       <p className="eyebrow">Published and personal learning content</p>
@@ -77,6 +85,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
         <p className="muted">
           {total} authorized result{total === 1 ? "" : "s"} for “{term}”
         </p>
+      ) : null}
+      {failures.length > 0 ? (
+        <section className="card error" role="alert">
+          <strong>Some search categories could not be loaded.</strong>
+          <p>Your account and saved progress are safe. Retry the search in a moment.</p>
+        </section>
       ) : null}
       {questionRows.length ? (
         <section className="card section">
@@ -126,7 +140,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
           ))}
         </section>
       ) : null}
-      {cardRows.length ? (
+      {matchingCards.length ? (
         <section className="card section">
           <div className="top">
             <h2>Your flashcards</h2>
@@ -134,12 +148,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
               Review cards
             </Link>
           </div>
-          {cardRows.map((card) => (
-            <article className="search-result" key={card.id}>
-              <strong>{card.questions[0]?.question_text}</strong>
-              <span>Personal saved review card</span>
-            </article>
-          ))}
+          {matchingCards.map((card) => {
+            const question = Array.isArray(card.questions) ? card.questions[0] : card.questions;
+            return (
+              <article className="search-result" key={card.id}>
+                <strong>{question?.question_text}</strong>
+                <span>Personal saved review card</span>
+              </article>
+            );
+          })}
         </section>
       ) : null}
       {term.length >= 2 && !total ? (

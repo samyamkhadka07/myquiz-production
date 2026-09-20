@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/client-api";
 export function ActionButtons({
   resource,
@@ -10,44 +11,52 @@ export function ActionButtons({
   id: string;
   actions: string[];
 }) {
+  const router = useRouter();
   const [message, setMessage] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [completed, setCompleted] = useState("");
   return (
     <div>
       <div className="toolbar">
-        {actions.map((action) => (
-          <button
-            className="button secondary"
-            disabled={busy}
-            key={action}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                const path =
-                  resource === "processing" && ["run", "retry"].includes(action)
-                    ? `${resource}/${id}/${action}`
-                    : resource === "comments"
-                      ? `${resource}/${id}/moderate`
-                      : `${resource}/${id}`;
-                await api(path, "POST", { action });
-                setMessage(`${action.replaceAll("_", " ").toLowerCase()} saved. Refreshing…`);
-                location.reload();
-              } catch (e) {
-                setMessage((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {action.replaceAll("_", " ")}
-          </button>
-        ))}
+        {actions
+          .filter((action) => !completed || action === completed)
+          .map((action) => (
+            <button
+              className="button secondary"
+              disabled={busy}
+              key={action}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  const path =
+                    resource === "processing" && ["run", "retry"].includes(action)
+                      ? `${resource}/${id}/${action}`
+                      : resource === "comments"
+                        ? `${resource}/${id}/moderate`
+                        : `${resource}/${id}`;
+                  await api(path, "POST", { action });
+                  setCompleted(action);
+                  setMessage(`${action.replaceAll("_", " ").toLowerCase()} saved.`);
+                  router.refresh();
+                } catch (e) {
+                  setMessage((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {completed === action
+                ? `${action.replaceAll("_", " ")} ✓`
+                : action.replaceAll("_", " ")}
+            </button>
+          ))}
       </div>
       <small role="status">{message}</small>
     </div>
   );
 }
 export function StagedEditor({ id, initial }: { id: string; initial: Record<string, unknown> }) {
+  const router = useRouter();
   const [draft, setDraft] = useState(initial),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
@@ -76,7 +85,7 @@ export function StagedEditor({ id, initial }: { id: string; initial: Record<stri
       setMessage(
         questionId ? `Saved as canonical question ${questionId}.` : "Review decision saved.",
       );
-      location.reload();
+      router.refresh();
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
@@ -201,15 +210,19 @@ export function UserAccess({ id, role }: { id: string; role: string }) {
   );
 }
 export function AdminRequestActions({ id }: { id: string }) {
+  const router = useRouter();
   const [note, setNote] = useState(""),
-    [message, setMessage] = useState("");
-  async function decide(decision: "APPROVE" | "REJECT") {
+    [message, setMessage] = useState(""),
+    [decision, setDecision] = useState<"APPROVE" | "REJECT" | "">("");
+  async function decide(nextDecision: "APPROVE" | "REJECT") {
     try {
-      await api(`admin-requests/${id}`, "PATCH", { decision, note: note.trim() || null });
-      setMessage(
-        `${decision === "APPROVE" ? "Admin access approved" : "Request rejected"}. Refreshing…`,
-      );
-      location.reload();
+      await api(`admin-requests/${id}`, "PATCH", {
+        decision: nextDecision,
+        note: note.trim() || null,
+      });
+      setDecision(nextDecision);
+      setMessage(`${nextDecision === "APPROVE" ? "Admin access approved" : "Request rejected"}.`);
+      router.refresh();
     } catch (e) {
       setMessage((e as Error).message);
     }
@@ -221,10 +234,18 @@ export function AdminRequestActions({ id }: { id: string }) {
         <input value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} />
       </label>
       <div className="toolbar">
-        <button className="button" onClick={() => void decide("APPROVE")}>
+        <button
+          className="button"
+          disabled={Boolean(decision)}
+          onClick={() => void decide("APPROVE")}
+        >
           Approve Admin
         </button>
-        <button className="button secondary" onClick={() => void decide("REJECT")}>
+        <button
+          className="button secondary"
+          disabled={Boolean(decision)}
+          onClick={() => void decide("REJECT")}
+        >
           Reject
         </button>
       </div>

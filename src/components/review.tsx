@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "@/lib/client-api";
 import type { AttemptDetail } from "@/lib/contracts";
 import { QuestionMedia } from "@/components/question-media";
+import { SourceMetadata } from "@/components/source-metadata";
 export function Review({ detail, saved }: { detail: AttemptDetail; saved: string[] }) {
   const [filter, setFilter] = useState("ALL");
   const [bookmarks, setBookmarks] = useState(new Set(saved));
@@ -267,10 +268,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                   Open Mistake Center
                 </a>
               </div>
-              <details>
-                <summary>Source and provenance</summary>
-                <pre>{JSON.stringify(q.provenance, null, 2)}</pre>
-              </details>
+              <SourceMetadata provenance={q.provenance} />
             </article>
           );
         })}

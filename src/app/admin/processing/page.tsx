@@ -1,6 +1,7 @@
 import { requirePage } from "@/lib/server/auth";
 import { check } from "@/lib/server/data";
 import { ActionButtons } from "@/components/admin-workflow-actions";
+import { processingPosition, processingProgress } from "@/lib/processing/progress";
 export default async function Page() {
   const { db } = await requirePage(true);
   const rows = check(
@@ -45,12 +46,8 @@ export default async function Page() {
             status = String(r.status),
             cursor = (r.cursor ?? {}) as Record<string, unknown>,
             artifacts = Array.isArray(r.processing_artifacts) ? r.processing_artifacts : [],
-            steps = ["HASH", "INSPECT", "EXTRACT", "CSV"],
             step = String(cursor.step ?? (status === "SUCCEEDED" ? "DONE" : "HASH")),
-            progress =
-              status === "SUCCEEDED"
-                ? 100
-                : Math.max(8, Math.round((100 * (steps.indexOf(step) + 1)) / (steps.length + 1))),
+            progress = processingProgress(status, cursor),
             lastError = r.last_error as Record<string, unknown> | null;
           return (
             <article className="card processing-record" key={String(r.id)}>
@@ -86,6 +83,10 @@ export default async function Page() {
                 <div>
                   <span>Extracted items</span>
                   <strong>{artifacts.length}</strong>
+                </div>
+                <div>
+                  <span>Saved checkpoint</span>
+                  <strong>{processingPosition(cursor)}</strong>
                 </div>
                 <div>
                   <span>Worker</span>
