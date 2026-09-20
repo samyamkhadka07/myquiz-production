@@ -12,13 +12,28 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
   const [alternate, setAlternate] = useState<Record<string, string>>({});
   async function assist(
     questionId: string,
-    activity: "EXPLAIN_DIFFERENTLY" | "EXPLAIN_DEEPER" | "GENERATE_MNEMONIC" | "SIMILAR_QUESTION",
-    text: string,
+    activity:
+      | "EXPLAIN_SIMPLER"
+      | "EXPLAIN_DEEPER"
+      | "WHY_WRONG"
+      | "STEP_BY_STEP"
+      | "ANALOGY"
+      | "NEPALI"
+      | "MNEMONIC",
   ) {
     setBusy(questionId);
     setError("");
     try {
-      const response = await api<{ text: string }>("learning", "POST", { activity, text });
+      const response = await api<{ text: string; ai: boolean; cached: boolean }>(
+        "learning",
+        "POST",
+        {
+          activity,
+          attempt_id: detail.attempt.id,
+          question_id: questionId,
+          language: activity === "NEPALI" ? "ne" : "en",
+        },
+      );
       setAlternate((value) => ({ ...value, [questionId]: response.text }));
     } catch (error) {
       setError((error as Error).message);
@@ -205,61 +220,53 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                 <button
                   className="button secondary"
                   disabled={busy === q.question_id}
-                  onClick={async () => {
-                    setBusy(q.question_id);
-                    try {
-                      const response = await api<{ text: string }>("learning", "POST", {
-                        activity: "EXPLAIN_DIFFERENTLY",
-                        text: `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
-                      });
-                      setAlternate((v) => ({ ...v, [q.question_id]: response.text }));
-                    } catch (e) {
-                      setError((e as Error).message);
-                    } finally {
-                      setBusy("");
-                    }
-                  }}
+                  onClick={() => void assist(q.question_id, "EXPLAIN_SIMPLER")}
                 >
-                  Explain differently
+                  Explain simpler
                 </button>
                 <button
                   className="button secondary"
                   disabled={busy === q.question_id}
-                  onClick={() =>
-                    void assist(
-                      q.question_id,
-                      "EXPLAIN_DEEPER",
-                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
-                    )
-                  }
+                  onClick={() => void assist(q.question_id, "EXPLAIN_DEEPER")}
                 >
                   Explain deeper
                 </button>
                 <button
                   className="button secondary"
                   disabled={busy === q.question_id}
-                  onClick={() =>
-                    void assist(
-                      q.question_id,
-                      "GENERATE_MNEMONIC",
-                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
-                    )
-                  }
+                  onClick={() => void assist(q.question_id, "STEP_BY_STEP")}
                 >
-                  Generate mnemonic
+                  Step-by-step
+                </button>
+                {q.selected_answer && q.is_correct === false ? (
+                  <button
+                    className="button secondary"
+                    disabled={busy === q.question_id}
+                    onClick={() => void assist(q.question_id, "WHY_WRONG")}
+                  >
+                    Why was my answer wrong?
+                  </button>
+                ) : null}
+                <button
+                  className="button secondary"
+                  disabled={busy === q.question_id}
+                  onClick={() => void assist(q.question_id, "ANALOGY")}
+                >
+                  Use an analogy
                 </button>
                 <button
                   className="button secondary"
                   disabled={busy === q.question_id}
-                  onClick={() =>
-                    void assist(
-                      q.question_id,
-                      "SIMILAR_QUESTION",
-                      `Question: ${q.snapshot.question_text}\nVerified answer: ${q.correct_answer}\nVerified explanation: ${q.explanation}`,
-                    )
-                  }
+                  onClick={() => void assist(q.question_id, "NEPALI")}
                 >
-                  Related practice question
+                  Explain in Nepali
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={busy === q.question_id}
+                  onClick={() => void assist(q.question_id, "MNEMONIC")}
+                >
+                  Generate mnemonic
                 </button>
                 <a className="button" href="/tests">
                   Practice this concept

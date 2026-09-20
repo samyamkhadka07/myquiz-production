@@ -7,7 +7,7 @@ import { ApiError, admin, staff, superAdmin } from "./auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scheduleReview } from "@/lib/flashcards/scheduler";
 import { dispatchJob } from "./dispatch";
-import { generateAI } from "./ai";
+import { generateTutorResponse } from "./ai";
 import { processIngestionRun } from "./external-worker";
 export async function learningApi(
   db: SupabaseClient,
@@ -581,55 +581,87 @@ export async function learningApi(
     const p = z
       .object({
         activity: z.enum([
-          "EXPLAIN_DIFFERENTLY",
+          "EXPLAIN_SIMPLER",
           "EXPLAIN_DEEPER",
-          "GENERATE_MNEMONIC",
-          "SIMILAR_QUESTION",
-          "RAPID_RECALL",
-          "MISTAKE_CORRECTION",
-          "MATCHING",
-          "CLASSIFICATION",
+          "WHY_WRONG",
+          "STEP_BY_STEP",
+          "ANALOGY",
+          "NEPALI",
+          "MNEMONIC",
         ]),
-        text: z.string().min(1).max(12000),
+        attempt_id: uuidSchema,
+        question_id: uuidSchema,
+        language: z.enum(["en", "ne"]).default("en"),
       })
       .strict()
       .parse(body);
-    const instructions = {
-      EXPLAIN_DIFFERENTLY:
-        "Explain this verified study content in simpler language. Do not change any stated answer key.",
-      EXPLAIN_DEEPER:
-        "Explain the underlying MEC concept in greater depth using only the supplied verified answer and explanation. Do not change the answer key.",
-      GENERATE_MNEMONIC:
-        "Create one concise, academically accurate memory cue from the supplied verified content. Clearly label it as a memory aid, not source evidence.",
-      SIMILAR_QUESTION:
-        "Create one new practice question testing the same concept. Include four options, the answer and brief rationales. Do not claim it is an official past question.",
-      RAPID_RECALL: "Create five brief recall prompts from only the supplied verified content.",
-      MISTAKE_CORRECTION:
-        "Help the learner identify and correct the mistake using only the supplied content.",
-      MATCHING: "Create a compact matching activity from only the supplied verified content.",
-      CLASSIFICATION:
-        "Create a compact classification activity from only the supplied verified content.",
-    }[p.activity];
-    try {
-      return {
-        data: {
-          text: await generateAI({
-            instructions,
-            text: p.text,
-            userId: profile.id,
-            purpose: p.activity,
-          }),
-          ai: true,
+    const server = createAdminClient();
+    const attempt = check(
+      await server
+        .from("attempts")
+        .select("id,user_id,status")
+        .eq("id", p.attempt_id)
+        .eq("user_id", profile.id)
+        .single(),
+    ) as { id: string; user_id: string; status: string };
+    if (!["COMPLETED", "EXPIRED"].includes(attempt.status))
+      throw new ApiError(
+        403,
+        "TUTOR_LOCKED",
+        "AI tutoring unlocks only after this test is submitted.",
+      );
+    const [questionResult, keyResult, versionResult] = await Promise.all([
+      server
+        .from("attempt_questions")
+        .select("snapshot,selected_answer")
+        .eq("attempt_id", p.attempt_id)
+        .eq("question_id", p.question_id)
+        .single(),
+      server
+        .from("attempt_question_keys")
+        .select("correct_answer,explanation,option_explanations")
+        .eq("attempt_id", p.attempt_id)
+        .eq("question_id", p.question_id)
+        .single(),
+      server
+        .from("question_versions")
+        .select("id", { count: "exact", head: true })
+        .eq("question_id", p.question_id),
+    ]);
+    const question = check(questionResult) as {
+      snapshot: Record<string, unknown>;
+      selected_answer: "A" | "B" | "C" | "D" | null;
+    };
+    const key = check(keyResult) as {
+      correct_answer: "A" | "B" | "C" | "D";
+      explanation: string;
+      option_explanations: Record<string, string>;
+    };
+    const snapshot = question.snapshot;
+    return {
+      data: await generateTutorResponse({
+        userId: profile.id,
+        action: p.activity,
+        language: p.language,
+        context: {
+          questionId: p.question_id,
+          questionVersion: (versionResult.count ?? 0) + 1,
+          questionText: String(snapshot.question_text ?? ""),
+          options: {
+            A: String(snapshot.option_a ?? ""),
+            B: String(snapshot.option_b ?? ""),
+            C: String(snapshot.option_c ?? ""),
+            D: String(snapshot.option_d ?? ""),
+          },
+          correctAnswer: key.correct_answer,
+          selectedAnswer: question.selected_answer,
+          canonicalExplanation: key.explanation,
+          optionExplanations: key.option_explanations,
+          difficulty: String(snapshot.difficulty ?? ""),
+          cognitiveLevel: String(snapshot.cognitive_level ?? ""),
         },
-      };
-    } catch {
-      return {
-        data: {
-          text: "AI assistance is temporarily unavailable. Continue with the verified explanation and review the related flashcard.",
-          ai: false,
-        },
-      };
-    }
+      }),
+    };
   }
   if (resource === "users") {
     superAdmin(profile);

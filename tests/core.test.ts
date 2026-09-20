@@ -6,7 +6,37 @@ import { scoreResponses } from "@/lib/quiz/scoring";
 import { priorityScore } from "@/lib/recommendations/deterministic";
 import { isStaffRole, roleHome } from "@/lib/auth/role-routing";
 import { processingPosition, processingProgress } from "@/lib/processing/progress";
+import { contradictsVerifiedAnswer, tutorFingerprint } from "@/lib/ai/tutor-safety";
 import academic from "../data/mec-2026.json";
+
+const tutorContext = {
+  questionId: "00000000-0000-4000-8000-000000000001",
+  questionVersion: 1,
+  questionText: "A verified question?",
+  options: { A: "One", B: "Two", C: "Three", D: "Four" },
+  correctAnswer: "B" as const,
+  selectedAnswer: "A" as const,
+  canonicalExplanation: "Two is verified.",
+  optionExplanations: {},
+  difficulty: "EASY",
+  cognitiveLevel: "RECALL",
+};
+
+describe("AI tutor safety", () => {
+  it("reuses general explanations but separates selected-option corrections", () => {
+    const simpler = tutorFingerprint(tutorContext, "EXPLAIN_SIMPLER", "en");
+    expect(
+      tutorFingerprint({ ...tutorContext, selectedAnswer: "C" }, "EXPLAIN_SIMPLER", "en"),
+    ).toBe(simpler);
+    expect(tutorFingerprint(tutorContext, "WHY_WRONG", "en")).not.toBe(
+      tutorFingerprint({ ...tutorContext, selectedAnswer: "C" }, "WHY_WRONG", "en"),
+    );
+  });
+  it("rejects an explicit answer that contradicts the verified key", () => {
+    expect(contradictsVerifiedAnswer("The correct answer is C.", "B")).toBe(true);
+    expect(contradictsVerifiedAnswer("The correct option is B.", "B")).toBe(false);
+  });
+});
 describe("production scoring", () => {
   it("scores mixed answers with blueprint policy", () =>
     expect(
