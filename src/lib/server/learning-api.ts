@@ -82,7 +82,7 @@ export async function learningApi(
       .parse(body);
     if (
       ["MISTAKE_RESCUE", "DAILY_CHALLENGE"].includes(p.mode) &&
-      !check(await db.rpc("has_premium"))
+      !check(await db.rpc("has_entitlement", { p_feature: "premium_games" }))
     )
       throw new ApiError(
         403,
@@ -595,6 +595,18 @@ export async function learningApi(
       })
       .strict()
       .parse(body);
+    if (!check(await db.rpc("has_entitlement", { p_feature: "ai_tutor" })))
+      throw new ApiError(403, "ENTITLEMENT_REQUIRED", "Your current plan does not include AI tutoring.");
+    if (
+      p.activity === "NEPALI" &&
+      !check(await db.rpc("has_entitlement", { p_feature: "ai_nepali" }))
+    )
+      throw new ApiError(403, "ENTITLEMENT_REQUIRED", "Your current plan does not include Nepali AI explanations.");
+    if (
+      p.activity === "MNEMONIC" &&
+      !check(await db.rpc("has_entitlement", { p_feature: "ai_mnemonics" }))
+    )
+      throw new ApiError(403, "ENTITLEMENT_REQUIRED", "Your current plan does not include AI mnemonics.");
     const server = createAdminClient();
     const attempt = check(
       await server
@@ -661,6 +673,90 @@ export async function learningApi(
           cognitiveLevel: String(snapshot.cognitive_level ?? ""),
         },
       }),
+    };
+  }
+  if (resource === "entitlement-overrides") {
+    admin(profile);
+    if (method === "GET") {
+      const user = url.searchParams.get("user");
+      let query = db
+        .from("entitlement_feature_overrides")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (user) query = query.eq("user_id", uuidSchema.parse(user));
+      return { data: check(await query) };
+    }
+    if (method === "DELETE") {
+      return {
+        data: check(
+          await db.rpc("revoke_feature_override", { p_id: uuidSchema.parse(id) }),
+        ),
+      };
+    }
+    const p = z
+      .object({
+        user_id: uuidSchema,
+        feature: z.string().trim().regex(/^[a-z0-9_]+$/),
+        allowed: z.boolean(),
+        starts_at: z.iso.datetime().nullable(),
+        ends_at: z.iso.datetime().nullable(),
+        reason: z.string().trim().max(500).nullable(),
+      })
+      .strict()
+      .parse(body);
+    return {
+      data: check(
+        await db.rpc("set_feature_override", {
+          p_user: p.user_id,
+          p_feature: p.feature,
+          p_allowed: p.allowed,
+          p_starts: p.starts_at,
+          p_ends: p.ends_at,
+          p_reason: p.reason,
+        }),
+      ),
+    };
+  }
+  if (resource === "entitlement-grants") {
+    admin(profile);
+    if (method === "GET") {
+      const user = url.searchParams.get("user");
+      let query = db
+        .from("entitlement_feature_grants")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (user) query = query.eq("user_id", uuidSchema.parse(user));
+      return { data: check(await query) };
+    }
+    if (method === "DELETE") {
+      return {
+        data: check(await db.rpc("revoke_feature_grant", { p_id: uuidSchema.parse(id) })),
+      };
+    }
+    const p = z
+      .object({
+        user_id: uuidSchema,
+        kind: z.enum(["TRIAL", "PROMOTIONAL"]),
+        features: z.array(z.string().trim().regex(/^[a-z0-9_]+$/)).min(1).max(100),
+        starts_at: z.iso.datetime().nullable(),
+        ends_at: z.iso.datetime(),
+        reason: z.string().trim().max(500).nullable(),
+      })
+      .strict()
+      .parse(body);
+    return {
+      data: check(
+        await db.rpc("grant_feature_access", {
+          p_user: p.user_id,
+          p_kind: p.kind,
+          p_features: p.features,
+          p_starts: p.starts_at,
+          p_ends: p.ends_at,
+          p_reason: p.reason,
+        }),
+      ),
     };
   }
   if (resource === "subscription-plans") {

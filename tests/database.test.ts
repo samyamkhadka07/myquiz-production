@@ -313,6 +313,93 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       ).rows[0]?.media_id,
     ).toBe(media);
   });
+  it("enforces granular plan features, overrides, grants, and legacy Premium compatibility", async () => {
+    expect((await as(a, "select has_entitlement('adaptive_practice') allowed")).rows[0]).toEqual({
+      allowed: false,
+    });
+    await expect(
+      as(
+        a,
+        "select start_attempt($1,'ADAPTIVE',1,null,null,'dddddddd-dddd-4ddd-8ddd-dddddddddddd')",
+        [program],
+      ),
+    ).rejects.toThrow(/Adaptive practice entitlement/i);
+
+    const allow = (
+      await as(
+        superAdmin,
+        "select set_feature_override($1,'adaptive_practice',true,now(),null,'Adaptive regression fixture') id",
+        [a],
+      )
+    ).rows[0]!.id;
+    expect((await as(a, "select has_entitlement('adaptive_practice') allowed")).rows[0]).toEqual({
+      allowed: true,
+    });
+    const deny = (
+      await as(
+        superAdmin,
+        "select set_feature_override($1,'adaptive_practice',false,now(),null,'Temporary deny fixture') id",
+        [a],
+      )
+    ).rows[0]!.id;
+    expect((await as(a, "select has_entitlement('adaptive_practice') allowed")).rows[0]).toEqual({
+      allowed: false,
+    });
+    await as(superAdmin, "select revoke_feature_override($1)", [deny]);
+    await as(
+      superAdmin,
+      "select set_feature_override($1,'adaptive_practice',true,now(),null,'Restore adaptive fixture')",
+      [a],
+    );
+
+    await as(
+      superAdmin,
+      "select grant_feature_access($1,'TRIAL',jsonb_build_array('adaptive_practice'),now(),now()+interval '1 hour','Trial fixture')",
+      [b],
+    );
+    expect((await as(b, "select has_entitlement('adaptive_practice') allowed")).rows[0]).toEqual({
+      allowed: true,
+    });
+    await as(
+      superAdmin,
+      "select grant_feature_access($1,'PROMOTIONAL',jsonb_build_array('full_mock'),now()-interval '2 hours',now()-interval '1 hour','Expired promo fixture')",
+      [rejectedRequester],
+    );
+    expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({
+      allowed: false,
+    });
+
+    await as(superAdmin, "select set_user_access($1,'STUDENT','PREMIUM',now()+interval '1 hour')", [
+      rejectedRequester,
+    ]);
+    expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({
+      allowed: true,
+    });
+    const legacyDeny = (
+      await as(
+        superAdmin,
+        "select set_feature_override($1,'full_mock',false,now(),null,'Legacy deny fixture') id",
+        [rejectedRequester],
+      )
+    ).rows[0]!.id;
+    expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({
+      allowed: false,
+    });
+    await as(superAdmin, "select revoke_feature_override($1)", [legacyDeny]);
+    expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({
+      allowed: true,
+    });
+
+    expect(
+      (
+        await as(
+          superAdmin,
+          "select count(*)::int n from audit_events where action in ('ENTITLEMENT_OVERRIDE_SET','ENTITLEMENT_OVERRIDE_REVOKED','ENTITLEMENT_GRANT_CREATED')",
+        )
+      ).rows[0]?.n,
+    ).toBeGreaterThanOrEqual(6);
+    expect(allow).toBeTruthy();
+  });
   it("uses target difficulty for adaptive selection, then prefers unseen questions", async () => {
     const payload = {
       question_text: "TEST FIXTURE: advanced target challenge.",
