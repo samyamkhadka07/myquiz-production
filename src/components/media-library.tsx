@@ -210,6 +210,13 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
                 width={560}
                 height={360}
                 unoptimized
+                onError={() =>
+                  setRows((items) =>
+                    items.map((item) =>
+                      item.id === asset.id ? { ...item, preview_url: null } : item,
+                    ),
+                  )
+                }
               />
             ) : asset.mime_type.startsWith("image/") ? (
               <div className="media-preview media-preview-unavailable" role="status">
@@ -227,6 +234,11 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
             </div>
             <p>{asset.default_alt_text}</p>
             <p className="muted">Linked to {asset.question_media_links?.length ?? 0} question(s)</p>
+            {asset.mime_type.startsWith("image/") ? (
+              <button className="button secondary" disabled={busy} onClick={() => void refresh()}>
+                Refresh preview
+              </button>
+            ) : null}
             <button
               className="button secondary"
               disabled={busy || Boolean(asset.question_media_links?.length)}

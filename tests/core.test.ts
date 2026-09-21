@@ -295,6 +295,8 @@ describe("functional separation and engagement contracts", () => {
     const uploader = fs.readFileSync("src/components/media-library.tsx", "utf8");
     expect(uploader).toContain("/storage/v1/upload/resumable");
     expect(uploader).toContain('bucketName: "question-media"');
+    expect(uploader).toContain("Refresh preview");
+    expect(uploader).toContain("onError={() =>");
     for (const file of [
       "src/components/quiz.tsx",
       "src/components/review.tsx",
