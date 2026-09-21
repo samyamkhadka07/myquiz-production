@@ -553,8 +553,11 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       .id;
     const ownerReceipt = `${a}/00000000-0000-4000-8000-000000000002.pdf`;
     const otherReceipt = `${b}/00000000-0000-4000-8000-000000000003.pdf`;
+    const disposableReceipt = `${a}/00000000-0000-4000-8000-000000000005.pdf`;
     await as(a, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [ownerReceipt]);
     await as(b, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [otherReceipt]);
+    await as(a, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [disposableReceipt]);
+    expect((await as(a, "delete from storage.objects where bucket_id='payment-receipts' and name=$1 returning name", [disposableReceipt])).rows).toEqual([{ name: disposableReceipt }]);
     await expect(
       as(a, "select submit_payment_request($1,$2,'OWNED-RECEIPT-TEST',null,$3)", [plan.id, method, otherReceipt]),
     ).rejects.toThrow(/valid payment receipt|required/i);
@@ -572,8 +575,25 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     ).rejects.toThrow();
     await as(admin, "select review_payment_request($1,'REJECT','Receipt does not match account history')", [payment]);
     expect((await as(a, "select status from payment_requests where id=$1", [payment])).rows[0]).toEqual({ status: "REJECTED" });
+    expect((await as(a, "delete from storage.objects where bucket_id='payment-receipts' and name=$1 returning name", [ownerReceipt])).rows).toEqual([]);
+    expect((await as(b, "delete from storage.objects where bucket_id='payment-receipts' and name=$1 returning name", [ownerReceipt])).rows).toEqual([]);
+    expect((await as(admin, "select name from storage.objects where bucket_id='payment-receipts' and name=$1", [ownerReceipt])).rows).toEqual([{ name: ownerReceipt }]);
     expect((await as(a, "select count(*)::int n from subscriptions where user_id=auth.uid() and source='MANUAL_PAYMENT'")).rows[0]?.n).toBe(0);
     await expect(as(a, "select review_payment_request($1,'APPROVE','forged')", [payment])).rejects.toThrow(/Admin access/i);
+  });
+  it("allows failed-upload cleanup but makes attached payment receipts immutable", async () => {
+    const plan = (await as(admin, "select id from subscription_plans where code='CEE_PRACTICE'")).rows[0]!
+      .id;
+    const method = (await as(admin, "select id from payment_methods where code='ESEWA'")).rows[0]!
+      .id;
+    const disposable = `${a}/00000000-0000-4000-8000-000000000006.png`;
+    const attached = `${a}/00000000-0000-4000-8000-000000000007.png`;
+    await as(a, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [disposable]);
+    expect((await as(a, "delete from storage.objects where bucket_id='payment-receipts' and name=$1 returning name", [disposable])).rows).toEqual([{ name: disposable }]);
+    await as(a, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [attached]);
+    await as(a, "select submit_payment_request($1,$2,'IMMUTABLE-RECEIPT-TEST',null,$3)", [plan, method, attached]);
+    expect((await as(a, "delete from storage.objects where bucket_id='payment-receipts' and name=$1 returning name", [attached])).rows).toEqual([]);
+    expect((await as(admin, "select name from storage.objects where bucket_id='payment-receipts' and name=$1", [attached])).rows).toEqual([{ name: attached }]);
   });
   it("does not let students see any canonical answer rows", async () =>
     expect((await as(a, "select * from questions")).rows).toHaveLength(0));

@@ -56,7 +56,13 @@ end $$;
 
 insert into public.payment_methods(code,name,display_order) values('FONEPAY','Fonepay',60) on conflict(code) do nothing;
 
-create policy payment_receipt_owner_delete on storage.objects for delete to authenticated using(bucket_id='payment-receipts' and (storage.foldername(name))[1]=auth.uid()::text);
+-- A failed browser submission may clean up its newly-uploaded object, but evidence
+-- becomes immutable as soon as a payment request references it.
+create policy payment_receipt_owner_delete on storage.objects for delete to authenticated using(
+ bucket_id='payment-receipts'
+ and (storage.foldername(name))[1]=auth.uid()::text
+ and not exists(select 1 from public.payment_requests p where p.receipt_object_path=name)
+);
 create policy payment_asset_admin_delete on storage.objects for delete to authenticated using(bucket_id='payment-assets' and public.is_admin());
 
 grant execute on function public.submit_payment_request(uuid,uuid,text,text,text),public.save_payment_method(uuid,jsonb) to authenticated;
