@@ -333,4 +333,17 @@ describe("functional separation and engagement contracts", () => {
     expect(page).toContain("status,started_at,completed_at,error");
     expect(page).not.toContain("status,started_at,finished_at,error");
   });
+  it("keeps zero-budget AI providers server-only and fallback-safe", () => {
+    const env = fs.readFileSync("src/lib/env.ts", "utf8");
+    const ai = fs.readFileSync("src/lib/server/ai.ts", "utf8");
+    const settings = fs.readFileSync("src/components/ai-settings-form.tsx", "utf8");
+    expect(env).toContain('"openrouter"');
+    expect(env).toContain('"ollama"');
+    expect(env).toContain("OPENROUTER_API_KEY");
+    expect(ai).toContain("https://openrouter.ai/api/v1/chat/completions");
+    expect(ai).toContain("AI_VISION_UNSUPPORTED");
+    expect(ai).toContain("AI_NOT_CONFIGURED");
+    expect(settings).toContain('option value="openrouter"');
+    expect(settings).toContain('option value="ollama"');
+  });
 });

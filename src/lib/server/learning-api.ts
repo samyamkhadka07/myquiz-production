@@ -817,7 +817,7 @@ export async function learningApi(
     const p = z
       .object({
         enabled: z.boolean(),
-        provider: z.enum(["openai"]),
+        provider: z.enum(["disabled", "openai", "openrouter", "ollama"]),
         model: z.string().trim().min(1).max(100),
         free_daily_limit: z.number().int().min(0).max(100),
         global_daily_limit: z.number().int().min(0).max(100000),

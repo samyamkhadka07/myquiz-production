@@ -1699,6 +1699,9 @@ summary {
   margin: 1rem auto;
   border-radius: 12px;
 }
+.leaderboard-table th,
+.leaderboard-table td { white-space: nowrap; }
+.leaderboard-own-row { background: #e7f8f6; font-weight: 650; }
 @media (max-width: 640px) {
   .onboarding-step {
     grid-template-columns: 1fr;

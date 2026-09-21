@@ -822,4 +822,33 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
   });
   it("keeps external source tables hidden from students", async () =>
     expect((await as(a, "select * from external_sources")).rows).toHaveLength(0));
+  it("keeps non-opted-in progress private while giving entitled learners aggregate comparison", async () => {
+    await db.query("update profiles set leaderboard_opt_in=true where id in ($1,$2)", [a, b]);
+    await db.query("update entitlements set tier='FREE',ends_at=null where user_id=$1", [b]);
+    await db.query("update subscriptions set status='EXPIRED' where user_id=$1", [b]);
+    await db.query("update entitlement_feature_overrides set revoked_at=now() where user_id=$1", [b]);
+    await db.query("update entitlement_feature_grants set revoked_at=now() where user_id=$1", [b]);
+    await db.query(
+      "insert into attempts(user_id,mode,status,started_at,completed_at,score,max_score,correct_count,incorrect_count,unanswered_count) values($1,'SUBJECT','COMPLETED',now()-interval '20 minutes',now(),8,10,8,2,0)",
+      [b],
+    );
+    const free = (await as(b, "select leaderboard() data")).rows[0]!.data as {
+      full_access: boolean;
+      entries: Array<{ id: string }>;
+    };
+    expect(free.full_access).toBe(false);
+    expect(free.entries).toHaveLength(1);
+    await db.query("update entitlements set tier='PREMIUM' where user_id=$1", [b]);
+    const premium = (await as(b, "select leaderboard() data")).rows[0]!.data as {
+      full_access: boolean;
+      entries: Array<{ id: string; tests_completed: number; questions_answered: number; accuracy: number }>;
+    };
+    expect(premium.full_access).toBe(true);
+    const participant = premium.entries.find((entry) => entry.id === a)!;
+    expect(participant.tests_completed).toBeGreaterThan(0);
+    expect(participant.questions_answered).toBeGreaterThanOrEqual(0);
+    const own = premium.entries.find((entry) => entry.id === b)!;
+    expect(own.questions_answered).toBe(10);
+    expect(own.accuracy).toBe(80);
+  });
 });

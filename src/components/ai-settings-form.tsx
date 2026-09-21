@@ -29,7 +29,7 @@ export function AiSettingsForm({ settings }: { settings: Settings }) {
         try {
           await api("ai-settings", "PATCH", {
             enabled: form.get("enabled") === "on",
-            provider: "openai",
+            provider: String(form.get("provider")),
             model: String(form.get("model")),
             free_daily_limit: Number(form.get("free_limit")),
             global_daily_limit: Number(form.get("daily_limit")),
@@ -59,7 +59,10 @@ export function AiSettingsForm({ settings }: { settings: Settings }) {
       <label>
         Provider
         <select name="provider" defaultValue={settings.provider}>
-          <option value="openai">OpenAI-compatible provider</option>
+          <option value="disabled">Disabled</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="openai">OpenAI</option>
+          <option value="ollama">Ollama (local/self-hosted)</option>
         </select>
       </label>
       <label>
