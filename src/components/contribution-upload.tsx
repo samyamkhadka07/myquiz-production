@@ -38,6 +38,7 @@ export function ContributionUpload({
     [progress, setProgress] = useState<number | null>(null),
     [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const upload = useRef<Upload | null>(null);
   async function refresh() {
     setRows(await api<Contribution[]>("contributions"));
@@ -91,6 +92,7 @@ export function ContributionUpload({
       setMessage("Original saved. Processing has started.");
       setProgress(null);
       form.reset();
+      setSelectedFile(null);
       await refresh();
     } catch (e) {
       setMessage((e as Error).message);
@@ -132,8 +134,9 @@ export function ContributionUpload({
         )}
         <label>
           {compact ? "Canonical CSV file" : "Original file"}
-          <input name="file" type="file" accept={accept} required />
+          <input name="file" type="file" accept={accept} required onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
         </label>
+        {selectedFile ? <p className="muted">Selected: {selectedFile.name} · {selectedFile.type || "unknown type"} · {(selectedFile.size / 1024).toFixed(1)} KB</p> : null}
         <p className="muted">
           The original uploads directly to private storage. Processing validates every row before
           anything enters the canonical bank.

@@ -147,7 +147,7 @@ export function PaymentRequestForm({
         <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf" required onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
       </label>
       <p className="muted">Accepted: JPG, PNG, WebP, PDF (max 5 MB). Upload the payment-success receipt showing the reference, amount and status when available. Never upload your password, PIN or OTP.</p>
-      {receipt ? <p className="muted">Selected: {receipt.name}</p> : null}
+      {receipt ? <p className="muted">Selected: {receipt.name} · {receipt.type || "unknown type"} · {(receipt.size / 1024).toFixed(1)} KB</p> : null}
       <label>
         Optional note
         <textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} />

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client-api";
 import type { PaymentMethod, SubscriptionPlan } from "@/lib/billing";
@@ -125,6 +125,15 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [qr, setQr] = useState<File | null>(null);
+  const [replacementPreview, setReplacementPreview] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const previewUrl = useRef<string | null>(null);
+  function selectReplacement(file: File | null) {
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = file ? URL.createObjectURL(file) : null;
+    setQr(file);
+    setReplacementPreview(previewUrl.current);
+  }
   return (
     <form
       className="card form"
@@ -154,7 +163,8 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
             display_order: Number(form.get("order")),
           });
           setMessage("Payment method saved.");
-          setQr(null);
+          selectReplacement(null);
+          if (input.current) input.current.value = "";
           router.refresh();
         } catch (error) {
           if (uploadedPath) await createClient().storage.from("payment-assets").remove([uploadedPath]);
@@ -191,7 +201,7 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
         <input name="order" type="number" min="0" defaultValue={method.display_order} />
       </label>
       <p className="muted">
-        QR asset: {method.qr_object_path ? "Configured" : "Awaiting owner-supplied QR"}
+        Current stored QR: {method.qr_object_path ? "Configured" : "Awaiting owner-supplied QR"}
       </p>
       {method.qr_url ? (
         <figure className="payment-qr-preview">
@@ -203,8 +213,18 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
       ) : null}
       <label>
         Replace QR image
-        <input type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onChange={(event) => setQr(event.target.files?.[0] ?? null)} />
+        <input ref={input} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onChange={(event) => selectReplacement(event.target.files?.[0] ?? null)} />
       </label>
+      {qr ? (
+        <section className="payment-instructions">
+          <strong>Selected replacement:</strong> {qr.name} · {(qr.size / 1024).toFixed(1)} KB
+          {replacementPreview ? (
+            // Local preview only; this does not upload or expose a storage path.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={replacementPreview} alt="Selected replacement QR preview" className="payment-qr-preview" />
+          ) : null}
+        </section>
+      ) : <p className="muted">New replacement: none selected.</p>}
       <label className="check">
         <input name="enabled" type="checkbox" defaultChecked={method.enabled} /> Enabled for
         students
