@@ -131,10 +131,12 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                   <span>Time spent</span>
                   <strong>{Math.round((q.response_ms ?? 0) / 1000)}s</strong>
                 </div>
-                <div>
-                  <span>Difficulty</span>
-                  <strong>{q.snapshot.difficulty}</strong>
-                </div>
+                {q.snapshot.difficulty ? (
+                  <div>
+                    <span>Difficulty</span>
+                    <strong>{q.snapshot.difficulty}</strong>
+                  </div>
+                ) : null}
               </div>
               <div className="review-options">
                 {(["A", "B", "C", "D"] as const).map((k) => {
@@ -192,8 +194,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                 </section>
               ) : null}
               <div className="review-meta">
-                <span>{q.snapshot.cognitive_level}</span>
-                <span>Topic ID: {q.snapshot.topic_id ?? "Unit-level"}</span>
+                {q.snapshot.cognitive_level ? <span>{q.snapshot.cognitive_level}</span> : null}
                 <span>
                   {source}
                   {year ? ` · ${year}` : ""}
