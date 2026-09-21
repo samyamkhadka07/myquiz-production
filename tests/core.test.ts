@@ -346,4 +346,14 @@ describe("functional separation and engagement contracts", () => {
     expect(settings).toContain('option value="openrouter"');
     expect(settings).toContain('option value="ollama"');
   });
+  it("maps sign-in failures safely and exposes a non-AI MyQuiz Guide", () => {
+    const auth = fs.readFileSync("src/app/auth/actions.ts", "utf8");
+    const guide = fs.readFileSync("src/components/myquiz-guide.tsx", "utf8");
+    expect(auth).toContain("Incorrect email or password.");
+    expect(auth).toContain("Please confirm your email before signing in.");
+    expect(auth).toContain("Too many sign-in attempts. Please wait and try again.");
+    expect(guide).toContain("MyQuiz Guide");
+    expect(guide).toContain("Contribution");
+    expect(guide).not.toContain("AI_API_KEY");
+  });
 });
