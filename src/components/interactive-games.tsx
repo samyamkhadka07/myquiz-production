@@ -52,7 +52,7 @@ type HubMode = {
 };
 const modes: HubMode[] = [
   {
-    mode: "SPEED_CHALLENGE",
+    mode: "RAPID_FIRE",
     title: "Rapid Fire",
     purpose: "Ten quick retrieval questions with immediate feedback and an accuracy-first combo.",
     count: 10,
@@ -73,7 +73,7 @@ const modes: HubMode[] = [
     skill: "Misconception repair",
   },
   {
-    mode: "RAPID_FIRE",
+    mode: "SPEED_CHALLENGE",
     title: "Speed Challenge",
     purpose: "A paced session that trains fast recognition without changing official test scores.",
     count: 15,
@@ -82,7 +82,7 @@ const modes: HubMode[] = [
   {
     mode: "MEMORY_MATCH",
     title: "Memory Match",
-    purpose: "Recall the concept first, reveal the choices, then rate how well you knew it.",
+    purpose: "Match each concept to its correct answer before the pairs disappear from view.",
     count: 8,
     skill: "Active recall",
   },

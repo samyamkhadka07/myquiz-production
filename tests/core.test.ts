@@ -238,6 +238,8 @@ describe("functional separation and engagement contracts", () => {
     expect(source).toContain("does not change an official MEC test score");
     expect(source).toContain("View session summary");
     expect(source).toContain("Memory matching board");
+    expect(source).toContain('mode: "RAPID_FIRE",\n    title: "Rapid Fire"');
+    expect(source).toContain('mode: "SPEED_CHALLENGE",\n    title: "Speed Challenge"');
     expect(source).not.toContain('title: "Speed Challenge",\n    purpose: "A paced session"\n    count: 15,\n    skill: "Accurate pacing",\n  },\n  {\n    mode: "RAPID_FIRE"');
   });
   it("calculates achievement progress from canonical attempt counts", () => {
