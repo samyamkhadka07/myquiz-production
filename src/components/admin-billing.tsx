@@ -193,6 +193,14 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
       <p className="muted">
         QR asset: {method.qr_object_path ? "Configured" : "Awaiting owner-supplied QR"}
       </p>
+      {method.qr_url ? (
+        <figure className="payment-qr-preview">
+          {/* A short-lived signed URL keeps the private bucket private. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={method.qr_url} alt={`Current ${method.name} payment QR`} />
+          <figcaption>Current QR</figcaption>
+        </figure>
+      ) : null}
       <label>
         Replace QR image
         <input type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onChange={(event) => setQr(event.target.files?.[0] ?? null)} />

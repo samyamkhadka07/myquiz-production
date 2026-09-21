@@ -481,6 +481,15 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     const session = (await as(a, "select start_learning_game('DAILY_CHALLENGE',1) data")).rows[0]!
       .data as { items: unknown[] };
     expect(session.items).toHaveLength(1);
+    await expect(as(a, "select start_learning_game('DAILY_CHALLENGE',1)")).rejects.toThrow(
+      /already exists/,
+    );
+    const speed = (await as(a, "select start_learning_game('SPEED_CHALLENGE',1) data")).rows[0]!
+      .data as { mode: string };
+    const memory = (await as(a, "select start_learning_game('MEMORY_MATCH',1) data")).rows[0]!
+      .data as { mode: string };
+    expect(speed.mode).toBe("SPEED_CHALLENGE");
+    expect(memory.mode).toBe("MEMORY_MATCH");
   });
   it("versions plan edits and activates manual payments exactly once", async () => {
     const plan = (await as(admin, "select id from subscription_plans where code='CEE_PRACTICE'"))

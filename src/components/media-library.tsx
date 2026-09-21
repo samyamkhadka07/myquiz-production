@@ -13,7 +13,8 @@ type Asset = {
   default_alt_text: string;
   status: string;
   created_at: string;
-  preview_url?: string;
+  preview_url?: string | null;
+  preview_expires_in?: number | null;
   question_media_links?: { question_id: string }[];
 };
 const accepted = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -201,7 +202,7 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
       <div className="media-library-grid">
         {visible.map((asset) => (
           <article className="card media-record" key={asset.id}>
-            {asset.preview_url && (
+            {asset.preview_url ? (
               <Image
                 className="media-preview"
                 src={asset.preview_url}
@@ -210,7 +211,11 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
                 height={360}
                 unoptimized
               />
-            )}
+            ) : asset.mime_type.startsWith("image/") ? (
+              <div className="media-preview media-preview-unavailable" role="status">
+                Preview unavailable. Refresh to request a new secure preview link.
+              </div>
+            ) : null}
             <div className="top">
               <div>
                 <h2>{asset.original_filename}</h2>

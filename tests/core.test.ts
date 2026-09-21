@@ -227,6 +227,8 @@ describe("functional separation and engagement contracts", () => {
     for (const mode of [
       "RAPID_FIRE",
       "RAPID_RECALL",
+      "MEMORY_MATCH",
+      "SPEED_CHALLENGE",
       "MISTAKE_RESCUE",
       "ACCURACY",
       "DAILY_CHALLENGE",
@@ -234,6 +236,27 @@ describe("functional separation and engagement contracts", () => {
       expect(source).toContain(mode);
     expect(source).toContain("learning-games");
     expect(source).toContain("does not change an official MEC test score");
+    expect(source).toContain("View session summary");
+    expect(source).toContain("Memory matching board");
+    expect(source).not.toContain('title: "Speed Challenge",\n    purpose: "A paced session"\n    count: 15,\n    skill: "Accurate pacing",\n  },\n  {\n    mode: "RAPID_FIRE"');
+  });
+  it("calculates achievement progress from canonical attempt counts", () => {
+    const page = fs.readFileSync("src/app/(student)/achievements/page.tsx", "utf8");
+    expect(page).toContain('select("id,correct_count,incorrect_count,status")');
+    expect(page).not.toContain("answered_count");
+    expect(page).toContain("correct_count ?? 0) + (a.incorrect_count ?? 0)");
+  });
+  it("uses controlled signed previews for payment QR configuration", () => {
+    const page = fs.readFileSync("src/app/admin/billing/payment-methods/page.tsx", "utf8");
+    const editor = fs.readFileSync("src/components/admin-billing.tsx", "utf8");
+    expect(page).toContain('from("payment-assets")');
+    expect(page).toContain("createSignedUrl(method.qr_object_path, 300)");
+    expect(editor).toContain("Current QR");
+  });
+  it("uses the canonical entitlement resolver for premium game affordances", () => {
+    const page = fs.readFileSync("src/app/(student)/games/page.tsx", "utf8");
+    expect(page).toContain('has_entitlement", { p_feature: "premium_games"');
+    expect(page).not.toContain('from("entitlements").select("tier")');
   });
   it("separates academic verification from publication", () => {
     const verification = fs.readFileSync("src/app/admin/questions/verification/page.tsx", "utf8");
@@ -266,6 +289,12 @@ describe("functional separation and engagement contracts", () => {
       "src/app/(student)/bookmarks/page.tsx",
     ])
       expect(fs.readFileSync(file, "utf8")).toContain("QuestionMedia");
+    expect(fs.readFileSync("src/lib/server/media-previews.ts", "utf8")).toContain(
+      "createSignedUrl(asset.object_path, 300)",
+    );
+    expect(fs.readFileSync("src/components/question-media.tsx", "utf8")).toContain(
+      "Question figure could not be loaded.",
+    );
   });
   it("preserves auditable question versions and requires re-review after restore", () => {
     const migration = fs.readFileSync("supabase/migrations/0020_question_versions.sql", "utf8");

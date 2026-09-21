@@ -7,7 +7,7 @@ export default async function Page() {
     db.from("user_achievements").select("*").eq("user_id", profile.id),
     db
       .from("attempts")
-      .select("id,correct_count,answered_count,status")
+      .select("id,correct_count,incorrect_count,status")
       .eq("user_id", profile.id)
       .eq("status", "COMPLETED"),
     db
@@ -23,7 +23,10 @@ export default async function Page() {
     HUNDRED_ANSWERS: { value: answers.count ?? 0, target: 100 },
     TEN_TESTS: { value: completed.length, target: 10 },
     PERFECT_TEST: {
-      value: completed.some((a) => a.answered_count >= 10 && a.correct_count === a.answered_count)
+      value: completed.some((a) => {
+        const answered = (a.correct_count ?? 0) + (a.incorrect_count ?? 0);
+        return answered >= 10 && (a.correct_count ?? 0) === answered;
+      })
         ? 1
         : 0,
       target: 1,
