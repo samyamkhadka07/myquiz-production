@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/server/auth";
 import { check } from "@/lib/server/data";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PaymentRequestForm } from "@/components/payment-request-form";
 import { featureLabel, type PaymentMethod, type SubscriptionPlan } from "@/lib/billing";
 import type { Route } from "next";
@@ -51,12 +52,14 @@ export default async function SubscriptionPage({
     subscription_plans: { name: string } | null;
     payment_methods: { name: string } | null;
   }>;
+  // The private QR bucket deliberately has no Student listing/read policy. The page first
+  // reads only enabled destinations through Student RLS, then issues a short-lived URL for
+  // just those rows on the server.
+  const paymentAssets = createAdminClient().storage.from("payment-assets");
   const methodsWithUrls = await Promise.all(
     methods.map(async (method) => {
       if (!method.qr_object_path) return { ...method, qr_url: null };
-      const signed = await db.storage
-        .from("payment-assets")
-        .createSignedUrl(method.qr_object_path, 300);
+      const signed = await paymentAssets.createSignedUrl(method.qr_object_path, 300);
       return { ...method, qr_url: signed.data?.signedUrl ?? null };
     }),
   );

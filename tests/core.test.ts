@@ -256,6 +256,12 @@ describe("functional separation and engagement contracts", () => {
     expect(page).toContain("createSignedUrl(method.qr_object_path, 300)");
     expect(editor).toContain("Current QR");
   });
+  it("signs only already-authorized enabled payment QRs for checkout", () => {
+    const page = fs.readFileSync("src/app/(student)/subscription/page.tsx", "utf8");
+    expect(page).toContain('.eq("enabled", true)');
+    expect(page).toContain('createAdminClient().storage.from("payment-assets")');
+    expect(page).toContain("createSignedUrl(method.qr_object_path, 300)");
+  });
   it("uses the canonical entitlement resolver for premium game affordances", () => {
     const page = fs.readFileSync("src/app/(student)/games/page.tsx", "utf8");
     expect(page).toContain('has_entitlement", { p_feature: "premium_games"');
