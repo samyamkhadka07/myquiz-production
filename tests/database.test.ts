@@ -514,7 +514,7 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       qr_object_path: null,
       display_name: "MyQuiz",
       instructions: "Use the owner-provided QR.",
-      account_identifier: null,
+      account_identifier: "TEST-OWNER-ID",
       verification_instructions: "Match the reference ID.",
       display_order: 10,
     };
@@ -522,10 +522,16 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       method,
       JSON.stringify(methodData),
     ]);
+    await as(
+      b,
+      "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)",
+      [`${b}/00000000-0000-4000-8000-000000000001.png`],
+    );
     const payment = (
-      await as(b, "select (submit_payment_request($1,$2,'TEST-REFERENCE-1',null)).id id", [
+      await as(b, "select (submit_payment_request($1,$2,'TEST-REFERENCE-1',null,$3)).id id", [
         plan,
         method,
+        `${b}/00000000-0000-4000-8000-000000000001.png`,
       ])
     ).rows[0]!.id;
     await as(admin, "select review_payment_request($1,'APPROVE','Reference verified')", [payment]);
@@ -539,6 +545,35 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     await expect(
       as(admin, "select review_payment_request($1,'APPROVE',null)", [payment]),
     ).rejects.toThrow(/finalized/i);
+  });
+  it("requires an owned receipt, preserves the server price, and never upgrades rejected payments", async () => {
+    const plan = (await as(admin, "select id,price_npr from subscription_plans where code='CEE_PRO'"))
+      .rows[0]!;
+    const method = (await as(admin, "select id from payment_methods where code='ESEWA'")).rows[0]!
+      .id;
+    const ownerReceipt = `${a}/00000000-0000-4000-8000-000000000002.pdf`;
+    const otherReceipt = `${b}/00000000-0000-4000-8000-000000000003.pdf`;
+    await as(a, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [ownerReceipt]);
+    await as(b, "insert into storage.objects(bucket_id,name) values('payment-receipts',$1)", [otherReceipt]);
+    await expect(
+      as(a, "select submit_payment_request($1,$2,'OWNED-RECEIPT-TEST',null,$3)", [plan.id, method, otherReceipt]),
+    ).rejects.toThrow(/valid payment receipt|required/i);
+    await expect(
+      as(a, "select submit_payment_request($1,$2,'MISSING-RECEIPT-TEST',null,$3)", [plan.id, method, `${a}/00000000-0000-4000-8000-000000000004.pdf`]),
+    ).rejects.toThrow(/receipt is unavailable/i);
+    const payment = (
+      await as(a, "select (submit_payment_request($1,$2,'OWNED-RECEIPT-TEST',null,$3)).id id", [plan.id, method, ownerReceipt])
+    ).rows[0]!.id;
+    expect((await as(a, "select amount_npr::float,receipt_object_path from payment_requests where id=$1", [payment])).rows[0]).toEqual({
+      amount_npr: Number(plan.price_npr), receipt_object_path: ownerReceipt,
+    });
+    await expect(
+      as(a, "select submit_payment_request($1,$2,'OWNED-RECEIPT-TEST',null,$3)", [plan.id, method, ownerReceipt]),
+    ).rejects.toThrow();
+    await as(admin, "select review_payment_request($1,'REJECT','Receipt does not match account history')", [payment]);
+    expect((await as(a, "select status from payment_requests where id=$1", [payment])).rows[0]).toEqual({ status: "REJECTED" });
+    expect((await as(a, "select count(*)::int n from subscriptions where user_id=auth.uid() and source='MANUAL_PAYMENT'")).rows[0]?.n).toBe(0);
+    await expect(as(a, "select review_payment_request($1,'APPROVE','forged')", [payment])).rejects.toThrow(/Admin access/i);
   });
   it("does not let students see any canonical answer rows", async () =>
     expect((await as(a, "select * from questions")).rows).toHaveLength(0));

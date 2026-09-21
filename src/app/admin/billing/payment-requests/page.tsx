@@ -8,7 +8,7 @@ export default async function Page() {
     await db
       .from("payment_requests")
       .select(
-        "*,profiles!payment_requests_user_id_fkey(display_name),subscription_plans(name),payment_methods(name)",
+        "*,profiles!payment_requests_user_id_fkey(display_name),subscription_plans(name),payment_methods(name,verification_instructions)",
       )
       .order("submitted_at", { ascending: false })
       .limit(100),
@@ -21,13 +21,19 @@ export default async function Page() {
     submitted_at: string;
     profiles: { display_name: string } | null;
     subscription_plans: { name: string } | null;
-    payment_methods: { name: string } | null;
+    payment_methods: { name: string; verification_instructions: string | null } | null;
+    receipt_object_path: string | null;
+    payment_method_id: string;
   }>;
+  const rowsWithProof = await Promise.all(rows.map(async (row) => {
+    const signed = row.receipt_object_path ? await db.storage.from("payment-receipts").createSignedUrl(row.receipt_object_path, 300) : null;
+    return { ...row, receiptUrl: signed?.data?.signedUrl ?? null, verificationInstructions: row.payment_methods?.verification_instructions ?? null };
+  }));
   return (
     <>
       <p className="eyebrow">Manual verification queue</p>
       <h1>Payment requests</h1>
-      {rows.length ? (
+      {rowsWithProof.length ? (
         <div className="table-wrap">
           <table>
             <thead>
@@ -42,7 +48,7 @@ export default async function Page() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {rowsWithProof.map((row) => (
                 <tr key={row.id}>
                   <td>{row.profiles?.display_name ?? "Student"}</td>
                   <td>{row.subscription_plans?.name ?? "Plan"}</td>
@@ -51,7 +57,7 @@ export default async function Page() {
                   <td>NPR {Number(row.amount_npr).toLocaleString()}</td>
                   <td>{new Date(row.submitted_at).toLocaleString()}</td>
                   <td>
-                    <PaymentReviewActions id={row.id} status={row.status} />
+                    <PaymentReviewActions id={row.id} status={row.status} receiptUrl={row.receiptUrl} verificationInstructions={row.verificationInstructions} />
                   </td>
                 </tr>
               ))}

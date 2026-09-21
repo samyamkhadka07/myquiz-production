@@ -893,6 +893,7 @@ export async function learningApi(
           payment_method_id: uuidSchema,
           reference_id: z.string().trim().min(3).max(120),
           note: z.string().trim().max(1000).nullable(),
+          receipt_object_path: z.string().trim().max(500),
         })
         .strict()
         .parse(body);
@@ -903,6 +904,7 @@ export async function learningApi(
             p_method: p.payment_method_id,
             p_reference: p.reference_id,
             p_note: p.note,
+            p_receipt_object_path: p.receipt_object_path,
           }),
         ),
       };

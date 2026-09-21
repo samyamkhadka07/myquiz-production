@@ -3,6 +3,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client-api";
 import type { PaymentMethod, SubscriptionPlan } from "@/lib/billing";
+import { createClient } from "@/lib/supabase/client";
+
+const qrTypes = ["image/png", "image/jpeg", "image/webp"];
+const qrExtensions: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
 
 export function PlanEditor({ plan }: { plan: SubscriptionPlan }) {
   const router = useRouter();
@@ -120,6 +124,7 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [qr, setQr] = useState<File | null>(null);
   return (
     <form
       className="card form"
@@ -128,11 +133,20 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
         setBusy(true);
         setMessage("");
         const form = new FormData(event.currentTarget);
+        let uploadedPath: string | null = null;
         try {
+          if (qr) {
+            if (!qrTypes.includes(qr.type) || qr.size > 5 * 1024 * 1024)
+              throw new Error("Choose a PNG, JPG or WebP QR image no larger than 5 MB.");
+            const supabase = createClient();
+            uploadedPath = `payment-methods/${method.id}/${crypto.randomUUID()}.${qrExtensions[qr.type]!}`;
+            const upload = await supabase.storage.from("payment-assets").upload(uploadedPath, qr, { contentType: qr.type, upsert: false });
+            if (upload.error) throw upload.error;
+          }
           await api(`payment-methods/${method.id}`, "PATCH", {
             name: String(form.get("name")),
             enabled: form.get("enabled") === "on",
-            qr_object_path: method.qr_object_path,
+            qr_object_path: uploadedPath ?? method.qr_object_path,
             display_name: String(form.get("display_name")) || null,
             instructions: String(form.get("instructions")) || null,
             account_identifier: String(form.get("identifier")) || null,
@@ -140,8 +154,10 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
             display_order: Number(form.get("order")),
           });
           setMessage("Payment method saved.");
+          setQr(null);
           router.refresh();
         } catch (error) {
+          if (uploadedPath) await createClient().storage.from("payment-assets").remove([uploadedPath]);
           setMessage((error as Error).message);
         } finally {
           setBusy(false);
@@ -177,6 +193,10 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
       <p className="muted">
         QR asset: {method.qr_object_path ? "Configured" : "Awaiting owner-supplied QR"}
       </p>
+      <label>
+        Replace QR image
+        <input type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onChange={(event) => setQr(event.target.files?.[0] ?? null)} />
+      </label>
       <label className="check">
         <input name="enabled" type="checkbox" defaultChecked={method.enabled} /> Enabled for
         students
@@ -189,13 +209,15 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
   );
 }
 
-export function PaymentReviewActions({ id, status }: { id: string; status: string }) {
+export function PaymentReviewActions({ id, status, receiptUrl, verificationInstructions }: { id: string; status: string; receiptUrl?: string | null; verificationInstructions?: string | null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [verified, setVerified] = useState(false);
   if (!["PENDING", "CLARIFICATION_REQUESTED"].includes(status))
     return <span className="pill">{status.replaceAll("_", " ")}</span>;
   async function act(action: "APPROVE" | "REJECT" | "REQUEST_CLARIFICATION") {
+    if (action === "APPROVE" && !verified) { setMessage("Confirm that you independently verified this transaction in the receiving account."); return; }
     const note =
       window.prompt(action === "APPROVE" ? "Optional approval note" : "Add a review note") ?? null;
     if (action !== "APPROVE" && !note) return;
@@ -213,6 +235,9 @@ export function PaymentReviewActions({ id, status }: { id: string; status: strin
   }
   return (
     <div>
+      {receiptUrl ? <a className="button secondary" href={receiptUrl} target="_blank" rel="noreferrer">View payment proof</a> : <small>Receipt unavailable</small>}
+      {verificationInstructions ? <small className="muted">{verificationInstructions}</small> : null}
+      <label className="check"><input type="checkbox" checked={verified} onChange={(event) => setVerified(event.target.checked)} /> I independently verified this transaction in the receiving payment account.</label>
       <div className="toolbar">
         <button className="button" disabled={busy} onClick={() => void act("APPROVE")}>
           Approve
