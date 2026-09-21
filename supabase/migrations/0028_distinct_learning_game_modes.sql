@@ -8,9 +8,11 @@ alter table public.learning_game_sessions
 
 create or replace function public.start_learning_game(p_mode text,p_count integer default 10)
 returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
-declare uid uuid; sid uuid; chosen integer; result jsonb;
+declare uid uuid; sid uuid; chosen integer; result jsonb; tz text; local_day date;
 begin
   uid=require_user();
+  select timezone into tz from profiles where id=uid;
+  local_day=(now() at time zone coalesce(tz,'Asia/Kathmandu'))::date;
   if p_mode not in ('RAPID_FIRE','RAPID_RECALL','MEMORY_MATCH','SPEED_CHALLENGE','MISTAKE_RESCUE','ACCURACY','DAILY_CHALLENGE') or p_count not between 1 and 20 then
     raise exception 'Invalid learning game' using errcode='22023';
   end if;
@@ -19,7 +21,8 @@ begin
   end if;
   if p_mode='DAILY_CHALLENGE' and exists(
     select 1 from learning_game_sessions
-    where user_id=uid and mode='DAILY_CHALLENGE' and started_at::date=current_date
+    where user_id=uid and mode='DAILY_CHALLENGE'
+      and (started_at at time zone coalesce(tz,'Asia/Kathmandu'))::date=local_day
       and status in ('ACTIVE','COMPLETED')
   ) then
     raise exception 'Today''s Daily Challenge already exists' using errcode='23505';
