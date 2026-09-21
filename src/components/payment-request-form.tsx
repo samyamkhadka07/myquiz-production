@@ -29,6 +29,9 @@ export function PaymentRequestForm({
   const [message, setMessage] = useState("");
   const method = methods.find((item) => item.id === methodId);
   const plan = plans.find((item) => item.id === planId);
+  const paymentDestinationReady = Boolean(
+    method && (method.qr_url || (method.account_identifier && method.instructions)),
+  );
   return (
     <form
       className="card form"
@@ -38,6 +41,8 @@ export function PaymentRequestForm({
         setMessage("");
         let uploadedPath: string | null = null;
         try {
+          if (!paymentDestinationReady)
+            throw new Error("The selected payment destination is temporarily unavailable. Do not pay until its QR or configured details are visible.");
           if (!receipt || !receiptTypes.includes(receipt.type) || receipt.size > 5 * 1024 * 1024)
             throw new Error("Choose a JPG, PNG, WebP or PDF receipt no larger than 5 MB.");
           const supabase = createClient();
@@ -102,6 +107,11 @@ export function PaymentRequestForm({
             // Signed private-storage URLs intentionally bypass the public image optimizer.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={method.qr_url} alt={`${method.name} payment QR`} className="payment-qr" />
+          ) : method.qr_object_path ? (
+            <p className="muted">
+              This configured payment QR is temporarily unavailable. Do not pay or submit a
+              receipt until it loads. <button type="button" className="button secondary" onClick={() => router.refresh()}>Retry</button>
+            </p>
           ) : (
             <p className="muted">
               QR payment is awaiting owner configuration. Use this method only if the payment
@@ -142,7 +152,7 @@ export function PaymentRequestForm({
         Optional note
         <textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} />
       </label>
-      <button className="button" disabled={busy || !planId || !methodId}>
+      <button className="button" disabled={busy || !planId || !methodId || !paymentDestinationReady}>
         {busy ? "Submitting…" : "Submit for verification"}
       </button>
       {message ? <p role="status">{message}</p> : null}

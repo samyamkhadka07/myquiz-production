@@ -55,14 +55,21 @@ export default async function SubscriptionPage({
   // The private QR bucket deliberately has no Student listing/read policy. The page first
   // reads only enabled destinations through Student RLS, then issues a short-lived URL for
   // just those rows on the server.
-  const paymentAssets = createAdminClient().storage.from("payment-assets");
-  const methodsWithUrls = await Promise.all(
-    methods.map(async (method) => {
-      if (!method.qr_object_path) return { ...method, qr_url: null };
-      const signed = await paymentAssets.createSignedUrl(method.qr_object_path, 300);
-      return { ...method, qr_url: signed.data?.signedUrl ?? null };
-    }),
-  );
+  let methodsWithUrls: PaymentMethod[];
+  try {
+    const paymentAssets = createAdminClient().storage.from("payment-assets");
+    methodsWithUrls = await Promise.all(
+      methods.map(async (method) => {
+        if (!method.qr_object_path) return { ...method, qr_url: null };
+        const signed = await paymentAssets.createSignedUrl(method.qr_object_path, 300);
+        return { ...method, qr_url: signed.data?.signedUrl ?? null };
+      }),
+    );
+  } catch {
+    // A missing server credential must not take the whole subscription page down. The form
+    // keeps payment submission disabled until an actual destination can be rendered.
+    methodsWithUrls = methods.map((method) => ({ ...method, qr_url: null }));
+  }
   const current = subscriptions.find(
     (item) =>
       ["ACTIVE", "TRIAL", "PROMOTIONAL"].includes(item.status) &&
