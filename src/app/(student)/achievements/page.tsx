@@ -2,7 +2,7 @@ import { requirePage } from "@/lib/server/auth";
 import { check } from "@/lib/server/data";
 export default async function Page() {
   const { db, profile } = await requirePage();
-  const [definitions, earned, attempts, answers] = await Promise.all([
+  const [definitions, earned, attempts] = await Promise.all([
     db.from("achievement_definitions").select("*"),
     db.from("user_achievements").select("*").eq("user_id", profile.id),
     db
@@ -10,17 +10,16 @@ export default async function Page() {
       .select("id,correct_count,incorrect_count,status")
       .eq("user_id", profile.id)
       .eq("status", "COMPLETED"),
-    db
-      .from("attempt_questions")
-      .select("id", { count: "exact", head: true })
-      .not("selected_answer", "is", null),
   ]);
   const unlocked = check(earned),
     completed = check(attempts);
-  check(answers);
+  const answered = completed.reduce(
+    (total, attempt) => total + (attempt.correct_count ?? 0) + (attempt.incorrect_count ?? 0),
+    0,
+  );
   const progress: Record<string, { value: number; target: number }> = {
     FIRST_TEST: { value: completed.length, target: 1 },
-    HUNDRED_ANSWERS: { value: answers.count ?? 0, target: 100 },
+    HUNDRED_ANSWERS: { value: answered, target: 100 },
     TEN_TESTS: { value: completed.length, target: 10 },
     PERFECT_TEST: {
       value: completed.some((a) => {

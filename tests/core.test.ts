@@ -244,7 +244,8 @@ describe("functional separation and engagement contracts", () => {
     const page = fs.readFileSync("src/app/(student)/achievements/page.tsx", "utf8");
     expect(page).toContain('select("id,correct_count,incorrect_count,status")');
     expect(page).not.toContain("answered_count");
-    expect(page).toContain("correct_count ?? 0) + (a.incorrect_count ?? 0)");
+    expect(page).not.toContain('from("attempt_questions")');
+    expect(page).toContain("attempt.correct_count ?? 0) + (attempt.incorrect_count ?? 0)");
   });
   it("uses controlled signed previews for payment QR configuration", () => {
     const page = fs.readFileSync("src/app/admin/billing/payment-methods/page.tsx", "utf8");
