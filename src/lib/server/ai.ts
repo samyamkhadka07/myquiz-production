@@ -84,14 +84,28 @@ class OpenAICompatibleProvider implements AiProvider {
 
 class GeminiProvider implements AiProvider {
   async generate(request: AiRequest) {
-    const key=process.env.GEMINI_API_KEY, model=request.model||process.env.GEMINI_MODEL||"gemini-2.0-flash";
+    const key=process.env.GEMINI_API_KEY, model=request.model||process.env.GEMINI_MODEL||"gemini-3.5-flash";
     if(!key) throw new Error("AI_NOT_CONFIGURED");
-    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig:{maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),temperature:.2}}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
-    if(!response.ok) throw new Error(response.status===429?"AI_RATE_LIMIT":response.status===401||response.status===403?"AI_AUTH_ERROR":response.status>=500||response.status===408?"AI_PROVIDER_ERROR":"AI_REQUEST_ERROR");
+    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig:{maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),temperature:.2}}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
+    if(!response.ok) throw new Error(await geminiErrorCode(response));
     const payload=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[],usageMetadata?:{promptTokenCount?:number;candidatesTokenCount?:number}};
     const text=payload.candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim(); if(!text) throw new Error("AI_EMPTY");
     return {text,provider:"gemini",model,inputTokens:payload.usageMetadata?.promptTokenCount??0,outputTokens:payload.usageMetadata?.candidatesTokenCount??0};
   }
+}
+
+async function geminiErrorCode(response: Response) {
+  let status = "", reason = "";
+  try {
+    const body = await response.json() as { error?: { status?: string; reason?: string; details?: Array<{ reason?: string }> } };
+    status = String(body.error?.status ?? "").toUpperCase();
+    reason = String(body.error?.reason ?? body.error?.details?.find(detail => detail.reason)?.reason ?? "").toUpperCase();
+  } catch { /* Provider diagnostics remain intentionally minimal. */ }
+  if (response.status === 401 || response.status === 403 || status === "API_KEY_INVALID" || reason === "API_KEY_INVALID") return "AI_AUTH_ERROR";
+  if (response.status === 429 || status === "RESOURCE_EXHAUSTED" || reason === "RESOURCE_EXHAUSTED") return "AI_RATE_LIMIT";
+  if (response.status === 404 || status === "NOT_FOUND" || reason === "NOT_FOUND") return "AI_GEMINI_MODEL_UNAVAILABLE";
+  if (status === "FAILED_PRECONDITION" || reason === "FAILED_PRECONDITION") return "AI_GEMINI_PROJECT_UNAVAILABLE";
+  return response.status >= 500 || response.status === 408 ? "AI_PROVIDER_ERROR" : "AI_REQUEST_ERROR";
 }
 
 class OpenAIProvider implements AiProvider {
@@ -143,6 +157,8 @@ export async function testAiProvider(provider: AiProviderName): Promise<AiProvid
     if (code === "AI_AUTH_ERROR") return { provider, status: "AUTHENTICATION_FAILED", message: "Provider authentication failed." };
     if (code === "AI_RATE_LIMIT") return { provider, status: "RATE_LIMITED", message: "Provider rate limit reached." };
     if (code === "AI_NOT_CONFIGURED") return { provider, status: "MISSING_CREDENTIAL", message: "This provider is not fully configured." };
+    if (code === "AI_GEMINI_MODEL_UNAVAILABLE") return { provider, status: "INVALID_CONFIGURATION", message: "Configured Gemini model is unavailable for this project." };
+    if (code === "AI_GEMINI_PROJECT_UNAVAILABLE") return { provider, status: "INVALID_CONFIGURATION", message: "The Gemini project or free tier is not currently eligible." };
     if (["AI_REQUEST_ERROR", "AI_VISION_UNSUPPORTED"].includes(code)) return { provider, status: "INVALID_CONFIGURATION", message: "Provider model or configuration is invalid." };
     return { provider, status: "TEMPORARILY_UNAVAILABLE", message: "Provider is temporarily unavailable." };
   }

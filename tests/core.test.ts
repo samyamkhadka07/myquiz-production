@@ -443,4 +443,10 @@ describe("functional separation and engagement contracts", () => {
     expect(ui).toContain('api<Result>("ai-provider-test", "POST", { provider })'); expect(ui).toContain("Credentials remain server-only");
     expect(ai).toContain("AUTHENTICATION_FAILED"); expect(ai).toContain("RATE_LIMITED"); expect(ai).toContain("TEMPORARILY_UNAVAILABLE");
   });
+  it("uses header-authenticated current Gemini requests with safe diagnostic mapping", () => {
+    const ai=fs.readFileSync("src/lib/server/ai.ts","utf8");
+    expect(ai).toContain('"x-goog-api-key":key'); expect(ai).toContain('process.env.GEMINI_MODEL||"gemini-3.5-flash"');
+    expect(ai).toContain("AI_GEMINI_MODEL_UNAVAILABLE"); expect(ai).toContain("AI_GEMINI_PROJECT_UNAVAILABLE"); expect(ai).toContain("RESOURCE_EXHAUSTED"); expect(ai).toContain("API_KEY_INVALID");
+    expect(ai).not.toContain("gemini-2.0-flash"); expect(ai).not.toContain(":generateContent?key=");
+  });
 });
