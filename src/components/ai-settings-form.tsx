@@ -61,6 +61,8 @@ export function AiSettingsForm({ settings }: { settings: Settings }) {
         <select name="provider" defaultValue={settings.provider}>
           <option value="disabled">Disabled</option>
           <option value="openrouter">OpenRouter</option>
+          <option value="gemini">Gemini</option>
+          <option value="groq">Groq</option>
           <option value="openai">OpenAI</option>
           <option value="ollama">Ollama (local/self-hosted)</option>
         </select>

@@ -29,14 +29,14 @@ export interface AiProvider {
 
 class OpenAICompatibleProvider implements AiProvider {
   constructor(
-    private readonly name: "openrouter" | "ollama",
+    private readonly name: "openrouter" | "ollama" | "groq",
     private readonly endpoint: string,
     private readonly key?: string,
     private readonly vision = false,
   ) {}
   async generate(request: AiRequest) {
-    const model = request.model ?? (this.name === "ollama" ? process.env.OLLAMA_MODEL : "openrouter/free");
-    if (!model || (this.name === "openrouter" && !this.key)) throw new Error("AI_NOT_CONFIGURED");
+    const model = request.model ?? (this.name === "ollama" ? process.env.OLLAMA_MODEL : this.name === "groq" ? process.env.GROQ_MODEL ?? "llama-3.1-8b-instant" : "openrouter/free");
+    if (!model || ((this.name === "openrouter" || this.name === "groq") && !this.key)) throw new Error("AI_NOT_CONFIGURED");
     if (request.image && !this.vision) throw new Error("AI_VISION_UNSUPPORTED");
     const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
       { type: "text", text: request.text },
@@ -81,6 +81,18 @@ class OpenAICompatibleProvider implements AiProvider {
   }
 }
 
+class GeminiProvider implements AiProvider {
+  async generate(request: AiRequest) {
+    const key=process.env.GEMINI_API_KEY, model=request.model||process.env.GEMINI_MODEL||"gemini-2.0-flash";
+    if(!key) throw new Error("AI_NOT_CONFIGURED");
+    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig:{maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),temperature:.2}}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
+    if(!response.ok) throw new Error(response.status===429?"AI_RATE_LIMIT":response.status===401||response.status===403?"AI_AUTH_ERROR":"AI_PROVIDER_ERROR");
+    const payload=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[],usageMetadata?:{promptTokenCount?:number;candidatesTokenCount?:number}};
+    const text=payload.candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim(); if(!text) throw new Error("AI_EMPTY");
+    return {text,provider:"gemini",model,inputTokens:payload.usageMetadata?.promptTokenCount??0,outputTokens:payload.usageMetadata?.candidatesTokenCount??0};
+  }
+}
+
 class OpenAIProvider implements AiProvider {
   async generate(request: AiRequest) {
     const model = request.model ?? process.env.AI_MODEL, key = process.env.AI_API_KEY;
@@ -102,20 +114,23 @@ class OpenAIProvider implements AiProvider {
 }
 
 function providerFor(name: string): AiProvider {
-  if (name !== process.env.AI_PROVIDER) throw new Error("AI_NOT_CONFIGURED");
   if (name === "openai") return new OpenAIProvider();
   if (name === "openrouter") return new OpenAICompatibleProvider("openrouter", "https://openrouter.ai/api/v1/chat/completions", process.env.OPENROUTER_API_KEY, true);
+  if (name === "groq") return new OpenAICompatibleProvider("groq", "https://api.groq.com/openai/v1/chat/completions", process.env.GROQ_API_KEY, false);
+  if (name === "gemini") return new GeminiProvider();
   if (name === "ollama") return new OpenAICompatibleProvider("ollama", `${(process.env.OLLAMA_BASE_URL ?? "http://localhost:11434").replace(/\/$/, "")}/v1/chat/completions`, undefined, false);
   throw new Error("AI_NOT_CONFIGURED");
 }
 
+function providerChain(primary: string) { const allowed=[primary,...(process.env.AI_PROVIDER_FALLBACKS??"").split(",").map(v=>v.trim())].filter(Boolean); return [...new Set(allowed)]; }
+
 export async function generateAI(request: AiRequest) {
-  const provider = providerFor(process.env.AI_PROVIDER ?? "");
+  const providers=providerChain(process.env.AI_PROVIDER??"");
   const start = Date.now();
   let outcome: Awaited<ReturnType<AiProvider["generate"]>> | undefined;
   let failure: string | null = null;
   try {
-    outcome = await provider.generate(request);
+    let last:unknown; for(const name of providers){try{outcome=await providerFor(name).generate(request);break}catch(error){last=error;const code=error instanceof Error?error.message:"AI_UNAVAILABLE";if(!["AI_RATE_LIMIT","AI_PROVIDER_ERROR","AI_UNAVAILABLE"].includes(code)) throw error;}} if(!outcome) throw last;
     return outcome.text;
   } catch (error) {
     failure =

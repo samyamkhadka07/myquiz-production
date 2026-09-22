@@ -34,4 +34,23 @@ alter table public.activity_archives enable row level security;
 create policy activity_archives_staff_read on public.activity_archives for select using(public.is_staff());
 grant select on public.activity_archives to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('activity-archives','activity-archives',false,10485760,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+
+create table if not exists public.subscription_notifications(
+ id uuid primary key default gen_random_uuid(),user_id uuid not null references public.profiles(id),subscription_id uuid references public.subscriptions(id),title text not null,message text not null,kind text not null check(kind in('EXPIRING','EXPIRED','REVOKED','ADMIN')),created_at timestamptz not null default now(),read_at timestamptz,dismissed_at timestamptz
+);
+create unique index if not exists subscription_notification_once_idx on public.subscription_notifications(user_id,subscription_id,kind) where dismissed_at is null;
+alter table public.subscription_notifications enable row level security;
+create policy subscription_notifications_owner_read on public.subscription_notifications for select using(user_id=auth.uid() or public.is_admin());
+grant select on public.subscription_notifications to authenticated;
+create or replace function public.revoke_subscription(p_subscription uuid,p_reason text) returns void language plpgsql security definer set search_path=public,pg_temp as $$
+declare s subscriptions;
+begin
+ perform require_staff(); if length(btrim(p_reason))<3 then raise exception 'Revocation reason is required'; end if;
+ select * into s from subscriptions where id=p_subscription for update; if not found then raise exception 'Subscription not found'; end if; if s.status='REVOKED' then return; end if;
+ update subscriptions set status='REVOKED',notes=concat_ws(E'\n',notes,'Revoked: '||btrim(p_reason)),updated_at=now() where id=s.id;
+ update entitlements set tier='FREE',starts_at=null,ends_at=null,active_subscription_id=null,updated_at=now() where user_id=s.user_id and active_subscription_id=s.id;
+ insert into subscription_notifications(user_id,subscription_id,title,message,kind) values(s.user_id,s.id,'Subscription revoked','Your subscription access has been revoked. Contact support if you believe this is incorrect.','REVOKED') on conflict do nothing;
+ insert into audit_events(actor_id,action,target_type,target_id,metadata) values(auth.uid(),'SUBSCRIPTION_REVOKED','subscription',s.id::text,jsonb_build_object('reason',btrim(p_reason)));
+end $$;
+grant execute on function public.revoke_subscription(uuid,text) to authenticated;
 commit;

@@ -1,6 +1,7 @@
 import { requirePage, admin } from "@/lib/server/auth";
 import { check } from "@/lib/server/data";
 import { AiSettingsForm } from "@/components/ai-settings-form";
+function providerStatus(name:string){if(name==='openrouter')return process.env.OPENROUTER_API_KEY?'Configured':'Missing credential';if(name==='gemini')return process.env.GEMINI_API_KEY?'Configured':'Missing credential';if(name==='groq')return process.env.GROQ_API_KEY?'Configured':'Missing credential';if(name==='ollama')return process.env.OLLAMA_BASE_URL?'Configured':'Disabled';return process.env.AI_API_KEY?'Configured':'Missing credential';}
 
 type Log = {
   id: string;
@@ -53,6 +54,7 @@ export default async function Page() {
         authoritative.
       </p>
       <AiSettingsForm settings={settings} />
+      <section className="card section"><h2>Provider status</h2><div className="record-grid">{["openrouter","gemini","groq","ollama","openai"].map(name=><div key={name}><span>{name}</span><strong>{providerStatus(name)}</strong></div>)}</div><p className="muted">Credentials remain server-only. Temporary failures and rate limits are recorded in usage logs.</p></section>
       <div className="stats">
         <section className="card">
           <span className="muted">Requests today</span>
