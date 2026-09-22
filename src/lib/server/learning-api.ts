@@ -796,7 +796,7 @@ export async function learningApi(
     const p = z
       .object({
         enabled: z.boolean(),
-        provider: z.enum(["disabled", "openai", "openrouter", "ollama"]),
+        provider: z.enum(["disabled", "openai", "openrouter", "ollama", "gemini", "groq"]),
         model: z.string().trim().min(1).max(100),
         free_daily_limit: z.number().int().min(0).max(100),
         global_daily_limit: z.number().int().min(0).max(100000),
@@ -908,6 +908,15 @@ export async function learningApi(
         }),
       ),
     };
+  }
+  if (resource === "subscription-notifications") {
+    if (method === "GET") return {data:check(await db.from("subscription_notifications").select("*").eq("user_id",profile.id).is("dismissed_at",null).order("created_at",{ascending:false}).limit(20))};
+    const p=z.object({action:z.enum(["READ","DISMISS"])}).strict().parse(body);
+    return {data:check(await db.from("subscription_notifications").update(p.action==="READ"?{read_at:new Date().toISOString()}:{dismissed_at:new Date().toISOString()}).eq("id",uuidSchema.parse(id)).eq("user_id",profile.id).select().single())};
+  }
+  if (resource === "subscriptions" && operation === "revoke") {
+    admin(profile); const p=z.object({reason:z.string().trim().min(3).max(1000)}).strict().parse(body);
+    return {data:check(await db.rpc("revoke_subscription",{p_subscription:uuidSchema.parse(id),p_reason:p.reason}))};
   }
   if (resource === "users") {
     superAdmin(profile);

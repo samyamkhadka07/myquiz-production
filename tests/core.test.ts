@@ -377,4 +377,13 @@ describe("functional separation and engagement contracts", () => {
     expect(games).toContain("Pair selected. Check this match when ready.");
     expect(games).toContain("Today's Daily Challenge");
   });
+  it("keeps operational controls server-side and preserves the private archive contract", () => {
+    const migration = fs.readFileSync("supabase/migrations/0030_operations_hardening.sql", "utf8");
+    const api = fs.readFileSync("src/lib/server/learning-api.ts", "utf8");
+    expect(migration).toContain("create table if not exists public.activity_archives");
+    expect(migration).toContain("create table if not exists public.subscription_notifications");
+    expect(migration).toContain("revoke_subscription");
+    expect(api).toContain('resource === "subscription-notifications"');
+    expect(api).toContain('resource === "subscriptions" && operation === "revoke"');
+  });
 });

@@ -11,15 +11,16 @@ type PlanItem = { id:string; kind:string; title:string; target_count:number; com
 export default async function Page({searchParams}:{searchParams:Promise<{admin_request?:string}>}) {
   const adminRequest=(await searchParams).admin_request;
   const {db,profile}=await requirePage();
-  const [dashboardResult,tax,planResult,activeResult,dueResult,mistakeResult]=await Promise.all([
+  const [dashboardResult,tax,planResult,activeResult,dueResult,mistakeResult,notificationsResult]=await Promise.all([
     db.rpc('get_dashboard'),taxonomy(),db.rpc('get_today_plan'),
     db.from('attempts').select('id,mode,last_activity_at').eq('user_id',profile.id).eq('status','ACTIVE').maybeSingle(),
     db.from('flashcards').select('id',{count:'exact',head:true}).eq('user_id',profile.id).lte('due',new Date().toISOString()),
     db.from('attempt_questions').select('question_id',{count:'exact',head:true}).eq('is_correct',false),
+    db.from('subscription_notifications').select('id,title,message,created_at').eq('user_id',profile.id).is('dismissed_at',null).order('created_at',{ascending:false}).limit(3),
   ]);
   const d=check(dashboardResult) as Dashboard;
   const plan=check(planResult) as PlanItem[];
-  check(activeResult);check(dueResult);check(mistakeResult);
+  check(activeResult);check(dueResult);check(mistakeResult);check(notificationsResult);
   const topics=d.dimensions.filter(item=>item.kind==='topic'&&item.answered).map(item=>({...item,accuracy:100*item.correct/item.answered})).sort((a,b)=>a.accuracy-b.accuracy);
   const weak=topics[0],strong=topics.at(-1);
   const topicName=(id?:string)=>tax.topics.find(item=>item.id===id)?.name??tax.units.find(item=>item.id===id)?.name??'MEC topic';
@@ -35,6 +36,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{admin_r
   const motivation=d.trends.length<2?'Complete two sessions to unlock a personal improvement trend.':delta>3?`Your recent accuracy improved by ${delta.toFixed(1)} percentage points. Keep the same study rhythm.`:delta<-3?`${topicName(weak?.value)} is the clearest recovery opportunity. Review mistakes before your next timed test.`:`Your performance is steady. A focused ${topicName(weak?.value)} session is the best next step.`;
   return <>
     {adminRequest?<section className="card section" role="status"><h2>Admin access {adminRequest==='pending'?'is awaiting approval':adminRequest==='rejected'?'was not approved':'is not active'}</h2><p>{adminRequest==='pending'?'A Super Admin must approve your request before the administration area becomes available.':adminRequest==='rejected'?'Your Admin request was rejected. Your student account remains active.':'Request Admin access and wait for Super Admin approval.'}</p></section>:null}
+    {(notificationsResult.data??[]).map(n=><section className="card section attention-soft" key={n.id}><strong>{n.title}</strong><p>{n.message}</p><small>{new Date(n.created_at).toLocaleString()}</small></section>)}
     <section className="student-hero"><div><p className="eyebrow">Your personal MEC preparation coach</p><h1>Welcome back, {profile.display_name}</h1><p>{motivation}</p><div className="hero-actions"><Link href={next.href as Route} className="button button-bright">{next.label}</Link><Link href="/mistakes" className="button button-ghost">Retry mistakes</Link></div></div><div className="score-orbit" aria-label={`Predicted score ${estimatedOutOf200.toFixed(1)} out of 200`}><strong>{estimatedOutOf200.toFixed(0)}</strong><span>predicted</span><small>out of 200</small></div></section>
     <section className="dashboard-band" aria-label="Current learning progress"><article><span>Daily goal</span><strong>{completedPlan} / {plan.length||1} tasks</strong><div className="mini-progress"><i style={{width:`${dailyProgress}%`}}/></div></article><article><span>Target progress</span><strong>{target?`${estimatedOutOf200.toFixed(0)} / ${target}`:'Set your target'}</strong><div className="mini-progress"><i style={{width:`${targetProgress}%`}}/></div></article><article><span>Study streak</span><strong>{d.streak} days</strong><small>Consistency, not perfection</small></article><article><span>XP earned</span><strong>{d.xp.toLocaleString()}</strong><small>From completed learning</small></article></section>
     <section className="card next-action section"><div className="next-action-copy"><span className="step-number">01</span><div><p className="eyebrow">Next best action</p><h2>{next.title}</h2><p>{next.reason}</p></div></div><Link href={next.href as Route} className="button">{next.label}</Link></section>
