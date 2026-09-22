@@ -37,6 +37,8 @@ export function PaymentRequestForm({
       className="card form"
       onSubmit={async (event) => {
         event.preventDefault();
+        // React clears currentTarget after an awaited handler. Keep the native form while it is valid.
+        const form = event.currentTarget;
         setBusy(true);
         setMessage("");
         let uploadedPath: string | null = null;
@@ -61,11 +63,13 @@ export function PaymentRequestForm({
             note: note || null,
             receipt_object_path: uploadedPath,
           });
+          // The request now owns the receipt. A later UI operation must never clean up its evidence.
+          uploadedPath = null;
           setMessage("Payment under review. Your subscription activates only after verification.");
           setReference("");
           setNote("");
           setReceipt(null);
-          event.currentTarget.reset();
+          form.reset();
           router.refresh();
         } catch (error) {
           if (uploadedPath) {

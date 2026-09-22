@@ -4,12 +4,14 @@ import { api } from "@/lib/client-api";
 import type { AttemptDetail } from "@/lib/contracts";
 import { QuestionMedia } from "@/components/question-media";
 import { SourceMetadata } from "@/components/source-metadata";
-export function Review({ detail, saved }: { detail: AttemptDetail; saved: string[] }) {
+type AiCapabilities = { tutor: boolean; nepali: boolean; mnemonics: boolean; followups: boolean };
+type AiResponse = { text: string; ai: boolean; cached: boolean; reason?: string };
+export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetail; saved: string[]; aiCapabilities: AiCapabilities }) {
   const [filter, setFilter] = useState("ALL");
   const [bookmarks, setBookmarks] = useState(new Set(saved));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
-  const [alternate, setAlternate] = useState<Record<string, string>>({});
+  const [alternate, setAlternate] = useState<Record<string, AiResponse>>({});
   const [followups, setFollowups] = useState<Record<string, string>>({});
   async function assist(
     questionId: string,
@@ -26,7 +28,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
     setBusy(questionId);
     setError("");
     try {
-      const response = await api<{ text: string; ai: boolean; cached: boolean }>(
+      const response = await api<AiResponse>(
         "learning",
         "POST",
         {
@@ -37,7 +39,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
           followup: activity === "FOLLOWUP" ? followups[questionId] ?? null : null,
         },
       );
-      setAlternate((value) => ({ ...value, [questionId]: response.text }));
+      setAlternate((value) => ({ ...value, [questionId]: response }));
     } catch (error) {
       setError((error as Error).message);
     } finally {
@@ -185,11 +187,12 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
               </section>
               {alternate[q.question_id] && (
                 <section className="ai-explanation section">
-                  <p className="eyebrow">AI explanation · answer key locked</p>
-                  <h3>Personal learning assistance</h3>
-                  <p>{alternate[q.question_id]}</p>
-                  <label>Ask a follow-up about this reviewed question<input value={followups[q.question_id] ?? ""} maxLength={600} onChange={(event) => setFollowups((value) => ({ ...value, [q.question_id]: event.target.value }))}/></label>
-                  <button className="button secondary" disabled={busy === q.question_id || !(followups[q.question_id] ?? "").trim()} onClick={() => void assist(q.question_id, "FOLLOWUP")}>Ask follow-up</button>
+                  <p className="eyebrow">{alternate[q.question_id]!.ai ? `${alternate[q.question_id]!.cached ? "Cached AI assistance" : "AI assistance"} · answer key locked` : "Verified explanation"}</p>
+                  <h3>{alternate[q.question_id]!.ai ? "Personal learning assistance" : "Verified explanation shown"}</h3>
+                  <p>{alternate[q.question_id]!.text}</p>
+                  {!alternate[q.question_id]!.ai ? <p className="muted">Verified explanation shown because AI is temporarily unavailable.</p> : null}
+                  {aiCapabilities.followups ? <><label>Ask a follow-up about this reviewed question<input value={followups[q.question_id] ?? ""} maxLength={600} onChange={(event) => setFollowups((value) => ({ ...value, [q.question_id]: event.target.value }))}/></label>
+                  <button className="button secondary" disabled={busy === q.question_id || !(followups[q.question_id] ?? "").trim()} onClick={() => void assist(q.question_id, "FOLLOWUP")}>Ask follow-up</button></> : null}
                 </section>
               )}
               {mnemonic ? (
@@ -223,28 +226,28 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                 >
                   Add flashcard
                 </button>
-                <button
+                {aiCapabilities.tutor ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "EXPLAIN_SIMPLER")}
                 >
                   Explain simpler
-                </button>
-                <button
+                </button> : null}
+                {aiCapabilities.tutor ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "EXPLAIN_DEEPER")}
                 >
                   Explain deeper
-                </button>
-                <button
+                </button> : null}
+                {aiCapabilities.tutor ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "STEP_BY_STEP")}
                 >
                   Step-by-step
-                </button>
-                {q.selected_answer && q.is_correct === false ? (
+                </button> : null}
+                {aiCapabilities.tutor && q.selected_answer && q.is_correct === false ? (
                   <button
                     className="button secondary"
                     disabled={busy === q.question_id}
@@ -253,27 +256,27 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                     Why was my answer wrong?
                   </button>
                 ) : null}
-                <button
+                {aiCapabilities.tutor ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "ANALOGY")}
                 >
                   Use an analogy
-                </button>
-                <button
+                </button> : null}
+                {aiCapabilities.nepali ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "NEPALI")}
                 >
                   Explain in Nepali
-                </button>
-                <button
+                </button> : null}
+                {aiCapabilities.mnemonics ? <button
                   className="button secondary"
                   disabled={busy === q.question_id}
                   onClick={() => void assist(q.question_id, "MNEMONIC")}
                 >
                   Generate mnemonic
-                </button>
+                </button> : null}
                 <a className="button" href="/tests">
                   Practice this concept
                 </a>

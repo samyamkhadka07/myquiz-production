@@ -58,13 +58,7 @@ class OpenAICompatibleProvider implements AiProvider {
       signal: AbortSignal.timeout(Math.min(request.timeoutMs ?? 15000, 30000)),
     });
     if (!response.ok)
-      throw new Error(
-        response.status === 429
-          ? "AI_RATE_LIMIT"
-          : response.status === 401
-            ? "AI_AUTH_ERROR"
-            : "AI_PROVIDER_ERROR",
-      );
+      throw new Error(response.status === 429 ? "AI_RATE_LIMIT" : response.status === 401 || response.status === 403 ? "AI_AUTH_ERROR" : response.status >= 500 || response.status === 408 ? "AI_PROVIDER_ERROR" : "AI_REQUEST_ERROR");
     const payload = (await response.json()) as {
       choices?: { message?: { content?: string } }[];
       usage?: { prompt_tokens?: number; completion_tokens?: number };
@@ -86,7 +80,7 @@ class GeminiProvider implements AiProvider {
     const key=process.env.GEMINI_API_KEY, model=request.model||process.env.GEMINI_MODEL||"gemini-2.0-flash";
     if(!key) throw new Error("AI_NOT_CONFIGURED");
     const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig:{maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),temperature:.2}}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
-    if(!response.ok) throw new Error(response.status===429?"AI_RATE_LIMIT":response.status===401||response.status===403?"AI_AUTH_ERROR":"AI_PROVIDER_ERROR");
+    if(!response.ok) throw new Error(response.status===429?"AI_RATE_LIMIT":response.status===401||response.status===403?"AI_AUTH_ERROR":response.status>=500||response.status===408?"AI_PROVIDER_ERROR":"AI_REQUEST_ERROR");
     const payload=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[],usageMetadata?:{promptTokenCount?:number;candidatesTokenCount?:number}};
     const text=payload.candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim(); if(!text) throw new Error("AI_EMPTY");
     return {text,provider:"gemini",model,inputTokens:payload.usageMetadata?.promptTokenCount??0,outputTokens:payload.usageMetadata?.candidatesTokenCount??0};
@@ -104,7 +98,7 @@ class OpenAIProvider implements AiProvider {
       body: JSON.stringify({ model, store: false, instructions: request.instructions, input: [{ role: "user", content }], max_output_tokens: Math.min(request.maxOutputTokens ?? 700, 2000) }),
       signal: AbortSignal.timeout(Math.min(request.timeoutMs ?? 15000, 30000)),
     });
-    if (!response.ok) throw new Error(response.status === 429 ? "AI_RATE_LIMIT" : response.status === 401 ? "AI_AUTH_ERROR" : "AI_PROVIDER_ERROR");
+    if (!response.ok) throw new Error(response.status === 429 ? "AI_RATE_LIMIT" : response.status === 401 || response.status === 403 ? "AI_AUTH_ERROR" : response.status >= 500 || response.status === 408 ? "AI_PROVIDER_ERROR" : "AI_REQUEST_ERROR");
     const payload = (await response.json()) as { status: string; output?: { content?: { type: string; text?: string }[] }[]; usage?: { input_tokens: number; output_tokens: number } };
     if (payload.status !== "completed") throw new Error("AI_INCOMPLETE");
     const text = payload.output?.flatMap((o) => o.content ?? []).filter((c) => c.type === "output_text").map((c) => c.text ?? "").join("\n").trim();
@@ -124,13 +118,33 @@ function providerFor(name: string): AiProvider {
 
 function providerChain(primary: string) { const allowed=[primary,...(process.env.AI_PROVIDER_FALLBACKS??"").split(",").map(v=>v.trim())].filter(Boolean); return [...new Set(allowed)]; }
 
+type AiOutcome = Awaited<ReturnType<AiProvider["generate"]>>;
+function retryableProviderError(error: unknown) {
+  const code = error instanceof Error ? error.message : "AI_UNAVAILABLE";
+  return ["AI_RATE_LIMIT", "AI_PROVIDER_ERROR", "AI_UNAVAILABLE", "AI_EMPTY", "AI_INCOMPLETE"].includes(code) || !code.startsWith("AI_");
+}
+/** Uses the same bounded, transient-only failover policy for tutor and non-tutor work. */
+export async function generateWithProviderChain(primary: string, request: AiRequest): Promise<AiOutcome> {
+  let last: unknown;
+  for (const name of providerChain(primary)) {
+    try {
+      // A configured model belongs only to the primary provider. Fallbacks resolve their own model.
+      return await providerFor(name).generate({ ...request, model: name === primary ? request.model : undefined });
+    } catch (error) {
+      last = error;
+      if (!retryableProviderError(error)) throw error;
+    }
+  }
+  throw last ?? new Error("AI_NOT_CONFIGURED");
+}
+
 export async function generateAI(request: AiRequest) {
   const providers=providerChain(process.env.AI_PROVIDER??"");
   const start = Date.now();
-  let outcome: Awaited<ReturnType<AiProvider["generate"]>> | undefined;
+  let outcome: AiOutcome | undefined;
   let failure: string | null = null;
   try {
-    let last:unknown; for(const name of providers){try{outcome=await providerFor(name).generate(request);break}catch(error){last=error;const code=error instanceof Error?error.message:"AI_UNAVAILABLE";if(!["AI_RATE_LIMIT","AI_PROVIDER_ERROR","AI_UNAVAILABLE"].includes(code)) throw error;}} if(!outcome) throw last;
+    outcome = await generateWithProviderChain(providers[0] ?? "", request);
     return outcome.text;
   } catch (error) {
     failure =
@@ -167,6 +181,7 @@ type TutorSettings = {
   timeout_ms: number;
   max_output_tokens: number;
   nepali_enabled: boolean;
+  followups_enabled: boolean;
   maintenance_message: string;
 };
 
@@ -181,7 +196,7 @@ const actionInstructions: Record<TutorAction, string> = {
   MNEMONIC: "Create one concise and academically accurate mnemonic. Label it as a memory aid.",
   FOLLOWUP: "Answer the learner's follow-up using only the verified question context. Do not reveal anything beyond the submitted question review.",
 };
-function controlledTutorText(c: TutorContext) {
+function controlledTutorText(c: TutorContext, followup?: string) {
   return JSON.stringify({
     question: c.questionText,
     options: c.options,
@@ -191,6 +206,7 @@ function controlledTutorText(c: TutorContext) {
     option_explanations: c.optionExplanations,
     difficulty: c.difficulty,
     cognitive_level: c.cognitiveLevel,
+    learner_followup: followup ?? null,
   }).slice(0, 16000);
 }
 
@@ -228,6 +244,7 @@ export async function generateTutorResponse(input: {
   action: TutorAction;
   language: "en" | "ne";
   context: TutorContext;
+  followup?: string;
 }): Promise<{ text: string; ai: boolean; cached: boolean; reason?: string }> {
   const db = createAdminClient(),
     started = Date.now();
@@ -257,13 +274,16 @@ export async function generateTutorResponse(input: {
   if (!settings.enabled) return logTutorFallback("AI_DISABLED");
   if (input.action === "NEPALI" && !settings.nepali_enabled)
     return logTutorFallback("AI_LANGUAGE_DISABLED");
+  if (input.action === "FOLLOWUP" && !settings.followups_enabled)
+    return logTutorFallback("AI_FOLLOWUPS_DISABLED");
+  // Follow-ups are intentionally not cached across different learner questions.
   const fingerprint = tutorFingerprint(input.context, input.action, input.language);
   const cached = await db
     .from("ai_tutor_cache")
     .select("response_text,provider,model")
     .eq("fingerprint", fingerprint)
     .maybeSingle();
-  if (cached.data) {
+  if (cached.data && input.action !== "FOLLOWUP") {
     await Promise.all([
       db.rpc("touch_ai_tutor_cache", { p_fingerprint: fingerprint }),
       logTutorUsage({
@@ -327,11 +347,11 @@ export async function generateTutorResponse(input: {
           ? "AI_GLOBAL_MONTHLY_LIMIT"
           : null;
   if (quotaReason) return logTutorFallback(quotaReason);
-  let outcome: Awaited<ReturnType<AiProvider["generate"]>> | undefined, failure: string | undefined;
+  let outcome: AiOutcome | undefined, failure: string | undefined;
   try {
-    outcome = await providerFor(settings.provider).generate({
+    outcome = await generateWithProviderChain(settings.provider, {
       instructions: `You are a question-scoped CEE tutor. The verified database answer is authoritative. Do not override it or introduce a different answer. Use only the supplied educational context. ${actionInstructions[input.action]}`,
-      text: controlledTutorText(input.context),
+      text: controlledTutorText(input.context, input.followup),
       userId: input.userId,
       purpose: "TUTOR",
       timeoutMs: settings.timeout_ms,
@@ -342,7 +362,7 @@ export async function generateTutorResponse(input: {
       failure = "AI_VERIFIED_ANSWER_CONFLICT";
       throw new Error(failure);
     }
-    const stored = await db.from("ai_tutor_cache").upsert({
+    const stored = input.action === "FOLLOWUP" ? { error: null } : await db.from("ai_tutor_cache").upsert({
       fingerprint,
       question_id: input.context.questionId,
       question_version: input.context.questionVersion,

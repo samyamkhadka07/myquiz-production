@@ -313,7 +313,7 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       ).rows[0]?.media_id,
     ).toBe(media);
   });
-  it("enforces granular plan features, overrides, grants, and legacy Premium compatibility", async () => {
+  it("enforces granular plan features without a generic Premium wildcard", async () => {
     expect((await as(a, "select has_entitlement('adaptive_practice') allowed")).rows[0]).toEqual({
       allowed: false,
     });
@@ -373,8 +373,10 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
       rejectedRequester,
     ]);
     expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({
-      allowed: true,
+      allowed: false,
     });
+    await as(superAdmin, "select grant_feature_access($1,'TRIAL',jsonb_build_array('full_mock'),now(),now()+interval '1 hour','Explicit full mock fixture')", [rejectedRequester]);
+    expect((await as(rejectedRequester, "select has_entitlement('full_mock') allowed")).rows[0]).toEqual({ allowed: true });
     const legacyDeny = (
       await as(
         superAdmin,
@@ -477,7 +479,7 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     await expect(as(a, "select start_learning_game('DAILY_CHALLENGE',1)")).rejects.toThrow(
       /Premium/,
     );
-    await as(superAdmin, "select set_user_access($1,'STUDENT','PREMIUM',null)", [a]);
+    await as(superAdmin, "select grant_feature_access($1,'TRIAL',jsonb_build_array('premium_games'),now(),now()+interval '1 hour','Game fixture')", [a]);
     const session = (await as(a, "select start_learning_game('DAILY_CHALLENGE',1) data")).rows[0]!
       .data as { items: unknown[] };
     expect(session.items).toHaveLength(1);
@@ -838,7 +840,7 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     };
     expect(free.full_access).toBe(false);
     expect(free.entries).toHaveLength(1);
-    await db.query("update entitlements set tier='PREMIUM' where user_id=$1", [b]);
+    await as(superAdmin,"select grant_feature_access($1,'TRIAL',jsonb_build_array('full_leaderboard'),now(),now()+interval '1 hour','Leaderboard fixture')", [b]);
     const premium = (await as(b, "select leaderboard() data")).rows[0]!.data as {
       full_access: boolean;
       entries: Array<{ id: string; tests_completed: number; questions_answered: number; accuracy: number }>;
@@ -860,5 +862,22 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     await db.query("insert into subscriptions(user_id,plan_id,plan_version,plan_snapshot,entitlement_snapshot,status,starts_at,source) values($1,$2,$3,$4::jsonb,$5::jsonb,'ACTIVE',now(),'ADMIN_GRANT')",[freeUser,coach.id,coach.version,JSON.stringify({name:coach.name,features:coach.features,ai_daily_limit:coach.ai_daily_limit}),JSON.stringify(coach.features)]);
     for(const feature of coach.features) expect((await as(freeUser,"select has_entitlement($1) allowed",[feature])).rows[0]?.allowed).toBe(true);
     await db.query("delete from subscriptions where user_id=$1",[freeUser]); await db.query("delete from auth.users where id=$1",[freeUser]);
+  });
+  it("revokes without nulling entitlement starts_at and retains detached billing evidence", async () => {
+    const user="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'runtime-repair@local.invalid','{}')",[user]);
+    const plan=(await db.query<{id:string;version:number;name:string;features:string[];ai_daily_limit:number}>("select id,version,name,features,ai_daily_limit from subscription_plans where code='CEE_PRACTICE'")).rows[0]!;
+    const method=(await db.query<{id:string}>("select id from payment_methods limit 1")).rows[0]!;
+    const subscription=(await db.query<{id:string}>("insert into subscriptions(user_id,plan_id,plan_version,plan_snapshot,entitlement_snapshot,status,starts_at,source) values($1,$2,$3,$4::jsonb,$5::jsonb,'ACTIVE',now(),'ADMIN_GRANT') returning id",[user,plan.id,plan.version,JSON.stringify({name:plan.name,features:plan.features,ai_daily_limit:plan.ai_daily_limit}),JSON.stringify(plan.features)])).rows[0]!.id;
+    await db.query("update entitlements set tier='PREMIUM',active_subscription_id=$2 where user_id=$1",[user,subscription]);
+    const payment=(await db.query<{id:string}>("insert into payment_requests(user_id,plan_id,plan_version,plan_snapshot,payment_method_id,amount_npr,reference_id,receipt_object_path,status,subscription_id) values($1,$2,$3,$4::jsonb,$5,1,'RUNTIME-REPAIR-REF','payment-receipts/evidence.png','APPROVED',$6) returning id",[user,plan.id,plan.version,JSON.stringify({name:plan.name}),method.id,subscription])).rows[0]!.id;
+    await as(admin,"select revoke_subscription($1,'Verified reversal')",[subscription]);
+    expect((await db.query("select status from subscriptions where id=$1",[subscription])).rows[0]).toEqual({status:"REVOKED"});
+    expect((await db.query("select tier,starts_at is not null valid_start,active_subscription_id is null free_access from entitlements where user_id=$1",[user])).rows[0]).toEqual({tier:"FREE",valid_start:true,free_access:true});
+    expect((await db.query("select status,receipt_object_path from payment_requests where id=$1",[payment])).rows[0]).toEqual({status:"APPROVED",receipt_object_path:"payment-receipts/evidence.png"});
+    await as(admin,"select revoke_subscription($1,'Verified reversal')",[subscription]);
+    await as(superAdmin,"select prepare_account_deletion($1,$2)",[user,`DELETE ${user}`]);
+    await db.query("delete from auth.users where id=$1",[user]);
+    expect((await db.query("select user_id,deleted_user_id,receipt_object_path from payment_requests where id=$1",[payment])).rows[0]).toEqual({user_id:null,deleted_user_id:user,receipt_object_path:"payment-receipts/evidence.png"});
   });
 });

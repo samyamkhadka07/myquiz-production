@@ -129,7 +129,7 @@ export function AiSettingsForm({ settings }: { settings: Settings }) {
       </label>
       <label className="check">
         <input name="followups" type="checkbox" defaultChecked={settings.followups_enabled} />{" "}
-        Follow-ups (reserved; remains unavailable until scoped chat ships)
+        Allow question-scoped follow-ups for AI Coach learners
       </label>
       <label>
         Maintenance message

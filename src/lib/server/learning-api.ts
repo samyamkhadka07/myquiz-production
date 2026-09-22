@@ -655,6 +655,7 @@ export async function learningApi(
         userId: profile.id,
         action: p.activity,
         language: p.language,
+        followup: p.followup ?? undefined,
         context: {
           questionId: p.question_id,
           questionVersion: (versionResult.count ?? 0) + 1,
