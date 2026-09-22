@@ -237,13 +237,13 @@ export function PaymentMethodEditor({ method }: { method: PaymentMethod }) {
   );
 }
 
-export function PaymentReviewActions({ id, status, receiptUrl, verificationInstructions }: { id: string; status: string; receiptUrl?: string | null; verificationInstructions?: string | null }) {
+export function PaymentReviewActions({ id, status, subscriptionId, receiptUrl, verificationInstructions }: { id: string; status: string; subscriptionId?: string | null; receiptUrl?: string | null; verificationInstructions?: string | null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [verified, setVerified] = useState(false);
   if (!["PENDING", "CLARIFICATION_REQUESTED"].includes(status))
-    return <span className="pill">{status.replaceAll("_", " ")}</span>;
+    return <div><span className="pill">{status.replaceAll("_", " ")}</span>{status==="APPROVED"&&subscriptionId?<button className="button secondary" disabled={busy} onClick={async()=>{const reason=window.prompt("Reason for revocation (required)")?.trim();if(!reason){setMessage("A revocation reason is required.");return;}setBusy(true);try{await api(`subscriptions/${subscriptionId}/revoke`,"POST",{reason});setMessage("Subscription revoked; FREE access now applies.");router.refresh();}catch(error){setMessage((error as Error).message);}finally{setBusy(false);}}}>Revoke subscription</button>:null}{message?<small role="status">{message}</small>:null}</div>;
   async function act(action: "APPROVE" | "REJECT" | "REQUEST_CLARIFICATION") {
     if (action === "APPROVE" && !verified) { setMessage("Confirm that you independently verified this transaction in the receiving account."); return; }
     const note =

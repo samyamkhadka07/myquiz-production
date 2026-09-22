@@ -45,7 +45,8 @@ grant select on public.subscription_notifications to authenticated;
 create or replace function public.revoke_subscription(p_subscription uuid,p_reason text) returns void language plpgsql security definer set search_path=public,pg_temp as $$
 declare s subscriptions;
 begin
- perform require_staff(); if length(btrim(p_reason))<3 then raise exception 'Revocation reason is required'; end if;
+ if not is_admin() then raise exception 'Admin access required' using errcode='42501'; end if;
+ if length(btrim(coalesce(p_reason,'')))<3 then raise exception 'Revocation reason is required'; end if;
  select * into s from subscriptions where id=p_subscription for update; if not found then raise exception 'Subscription not found'; end if; if s.status='REVOKED' then return; end if;
  update subscriptions set status='REVOKED',notes=concat_ws(E'\n',notes,'Revoked: '||btrim(p_reason)),updated_at=now() where id=s.id;
  update entitlements set tier='FREE',starts_at=null,ends_at=null,active_subscription_id=null,updated_at=now() where user_id=s.user_id and active_subscription_id=s.id;

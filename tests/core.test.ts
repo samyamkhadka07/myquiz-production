@@ -386,4 +386,15 @@ describe("functional separation and engagement contracts", () => {
     expect(api).toContain('resource === "subscription-notifications"');
     expect(api).toContain('resource === "subscriptions" && operation === "revoke"');
   });
+  it("keeps subscription revocation admin-only, idempotent, and evidence-preserving", () => {
+    const migration = fs.readFileSync("supabase/migrations/0030_operations_hardening.sql", "utf8");
+    const api = fs.readFileSync("src/lib/server/learning-api.ts", "utf8");
+    const page = fs.readFileSync("src/app/(student)/subscription/page.tsx", "utf8");
+    expect(migration).toContain("if not is_admin() then raise exception 'Admin access required'");
+    expect(migration).toContain("if s.status='REVOKED' then return");
+    expect(migration).toContain("active_subscription_id=null");
+    expect(migration).toContain("'SUBSCRIPTION_REVOKED'");
+    expect(api).toContain('resource === "subscriptions" && operation === "revoke"');
+    expect(page).toContain("Previous subscription:");
+  });
 });

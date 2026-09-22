@@ -75,6 +75,7 @@ export default async function SubscriptionPage({
       ["ACTIVE", "TRIAL", "PROMOTIONAL"].includes(item.status) &&
       (!item.ends_at || new Date(item.ends_at) > new Date()),
   );
+  const revoked = subscriptions.find((item) => item.status === "REVOKED");
   const paidPlans = plans.filter((plan) => Number(plan.price_npr) > 0);
   const initialPlan = paidPlans.some((plan) => plan.id === requestedPlan)
     ? requestedPlan!
@@ -110,7 +111,7 @@ export default async function SubscriptionPage({
             </ul>
           </>
         ) : (
-          <p>Your account uses the currently configured Free plan.</p>
+          <><p>Your effective access is Free.</p>{revoked?<p className="muted">Previous subscription: <strong>REVOKED</strong>. Paid features are no longer available.</p>:null}</>
         )}
       </section>
       {paidPlans.length && methodsWithUrls.length ? (

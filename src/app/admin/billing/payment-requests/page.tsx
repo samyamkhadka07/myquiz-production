@@ -24,6 +24,7 @@ export default async function Page() {
     payment_methods: { name: string; verification_instructions: string | null } | null;
     receipt_object_path: string | null;
     payment_method_id: string;
+    subscription_id: string | null;
   }>;
   const rowsWithProof = await Promise.all(rows.map(async (row) => {
     const signed = row.receipt_object_path ? await db.storage.from("payment-receipts").createSignedUrl(row.receipt_object_path, 300) : null;
@@ -57,7 +58,7 @@ export default async function Page() {
                   <td>NPR {Number(row.amount_npr).toLocaleString()}</td>
                   <td>{new Date(row.submitted_at).toLocaleString()}</td>
                   <td>
-                    <PaymentReviewActions id={row.id} status={row.status} receiptUrl={row.receiptUrl} verificationInstructions={row.verificationInstructions} />
+                    <PaymentReviewActions id={row.id} status={row.status} subscriptionId={row.subscription_id} receiptUrl={row.receiptUrl} verificationInstructions={row.verificationInstructions} />
                   </td>
                 </tr>
               ))}
