@@ -234,15 +234,15 @@ type TutorSettings = {
 };
 
 const actionInstructions: Record<TutorAction, string> = {
-  EXPLAIN_SIMPLER: "Explain at beginner level with short, plain sentences.",
-  EXPLAIN_DEEPER: "Explain the underlying concept and its important connections in greater depth.",
+  EXPLAIN_SIMPLER: "Explain in 80–150 words with short, plain sentences.",
+  EXPLAIN_DEEPER: "Explain the underlying concept and important connections in 150–300 words.",
   WHY_WRONG:
-    "Focus on why the learner's selected option is wrong, then contrast it with the correct concept.",
-  STEP_BY_STEP: "Explain the reasoning step by step. Preserve formulas, units, and calculations.",
-  ANALOGY: "Use one accurate, relatable analogy, then connect it back to the scientific concept.",
-  NEPALI: "Explain in clear Nepali, retaining standard English scientific terms where helpful.",
-  MNEMONIC: "Create one concise and academically accurate mnemonic. Label it as a memory aid.",
-  FOLLOWUP: "Answer the learner's follow-up using only the verified question context. Do not reveal anything beyond the submitted question review.",
+    "Use 100–200 words. Focus on why the learner's selected option is wrong, then contrast it with the correct concept.",
+  STEP_BY_STEP: "Use no more than 6 concise steps. Preserve formulas, units, and calculations.",
+  ANALOGY: "Use one short, accurate analogy plus one sentence connecting it to the concept.",
+  NEPALI: "Explain in clear Nepali in 100–200 words, retaining standard English scientific terms where helpful.",
+  MNEMONIC: "Provide one concise, academically accurate mnemonic and one-line explanation.",
+  FOLLOWUP: "Answer in 80–200 words using only the verified reviewed-question context. Do not reveal anything beyond it.",
 };
 function controlledTutorText(c: TutorContext, followup?: string) {
   return JSON.stringify({
@@ -398,7 +398,7 @@ export async function generateTutorResponse(input: {
   let outcome: AiOutcome | undefined, failure: string | undefined;
   try {
     outcome = await generateWithProviderChain(settings.provider, {
-      instructions: `You are a question-scoped CEE tutor. The verified database answer is authoritative. Do not override it or introduce a different answer. Use only the supplied educational context. ${actionInstructions[input.action]}`,
+      instructions: `You are a question-scoped CEE tutor. The verified database answer is authoritative. Do not override it or introduce a different answer. Use only the supplied educational context. Complete the final sentence. Prioritize a concise, exam-focused explanation. Do not add unnecessary sections or repeat the canonical explanation verbatim. ${actionInstructions[input.action]}`,
       text: controlledTutorText(input.context, input.followup),
       userId: input.userId,
       purpose: "TUTOR",

@@ -449,4 +449,10 @@ describe("functional separation and engagement contracts", () => {
     expect(ai).toContain("AI_GEMINI_MODEL_UNAVAILABLE"); expect(ai).toContain("AI_GEMINI_PROJECT_UNAVAILABLE"); expect(ai).toContain("RESOURCE_EXHAUSTED"); expect(ai).toContain("API_KEY_INVALID");
     expect(ai).not.toContain("gemini-2.0-flash"); expect(ai).not.toContain(":generateContent?key=");
   });
+  it("renders AI and cached explanations through safe Markdown and KaTeX", () => {
+    const renderer=fs.readFileSync("src/components/ai-response-markdown.tsx","utf8"); const review=fs.readFileSync("src/components/review.tsx","utf8"); const ai=fs.readFileSync("src/lib/server/ai.ts","utf8");
+    expect(renderer).toContain("ReactMarkdown"); expect(renderer).toContain("remarkMath"); expect(renderer).toContain("rehypeKatex"); expect(renderer).toContain("skipHtml");
+    expect(review).toContain("AiResponseMarkdown text={alternate[q.question_id]!.text}"); expect(review).toContain("Cached AI assistance");
+    expect(ai).toContain("Complete the final sentence"); expect(ai).toContain("80–150 words"); expect(ai).toContain("no more than 6 concise steps"); expect(ai).toContain("verified database answer is authoritative");
+  });
 });

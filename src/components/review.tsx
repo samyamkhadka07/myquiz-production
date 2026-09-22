@@ -4,6 +4,7 @@ import { api } from "@/lib/client-api";
 import type { AttemptDetail } from "@/lib/contracts";
 import { QuestionMedia } from "@/components/question-media";
 import { SourceMetadata } from "@/components/source-metadata";
+import { AiResponseMarkdown } from "@/components/ai-response-markdown";
 type AiCapabilities = { tutor: boolean; nepali: boolean; mnemonics: boolean; followups: boolean };
 type AiResponse = { text: string; ai: boolean; cached: boolean; reason?: string };
 export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetail; saved: string[]; aiCapabilities: AiCapabilities }) {
@@ -189,7 +190,7 @@ export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetai
                 <section className="ai-explanation section">
                   <p className="eyebrow">{alternate[q.question_id]!.ai ? `${alternate[q.question_id]!.cached ? "Cached AI assistance" : "AI assistance"} · answer key locked` : "Verified explanation"}</p>
                   <h3>{alternate[q.question_id]!.ai ? "Personal learning assistance" : "Verified explanation shown"}</h3>
-                  <p>{alternate[q.question_id]!.text}</p>
+                  <AiResponseMarkdown text={alternate[q.question_id]!.text} />
                   {!alternate[q.question_id]!.ai ? <p className="muted">Verified explanation shown because AI is temporarily unavailable.</p> : null}
                   {aiCapabilities.followups ? <><label>Ask a follow-up about this reviewed question<input value={followups[q.question_id] ?? ""} maxLength={600} onChange={(event) => setFollowups((value) => ({ ...value, [q.question_id]: event.target.value }))}/></label>
                   <button className="button secondary" disabled={busy === q.question_id || !(followups[q.question_id] ?? "").trim()} onClick={() => void assist(q.question_id, "FOLLOWUP")}>Ask follow-up</button></> : null}

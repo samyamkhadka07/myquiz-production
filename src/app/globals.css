@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 :root {
   --ink: #102a43;
   --muted: #627d98;
