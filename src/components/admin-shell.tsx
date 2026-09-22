@@ -40,6 +40,7 @@ const navigation: AdminLink[] = [
   { label: "Admin Analytics", href: "/admin/analytics", roles: admins },
   { label: "— System —", href: "/admin/audit", roles: superAdmins },
   { label: "Audit / Activity", href: "/admin/audit", roles: superAdmins },
+  { label: "Activity Archives", href: "/admin/activity-archives", roles: admins },
   { label: "Admin Profile", href: "/admin/profile", roles: allStaff },
 ];
 
