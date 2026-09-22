@@ -179,6 +179,7 @@ const actionInstructions: Record<TutorAction, string> = {
   ANALOGY: "Use one accurate, relatable analogy, then connect it back to the scientific concept.",
   NEPALI: "Explain in clear Nepali, retaining standard English scientific terms where helpful.",
   MNEMONIC: "Create one concise and academically accurate mnemonic. Label it as a memory aid.",
+  FOLLOWUP: "Answer the learner's follow-up using only the verified question context. Do not reveal anything beyond the submitted question review.",
 };
 function controlledTutorText(c: TutorContext) {
   return JSON.stringify({

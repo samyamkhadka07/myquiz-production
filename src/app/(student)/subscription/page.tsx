@@ -13,7 +13,8 @@ export default async function SubscriptionPage({
 }) {
   const { plan: requestedPlan } = await searchParams;
   const { db, profile } = await requirePage();
-  const [plansResult, methodsResult, subscriptionsResult, paymentsResult] = await Promise.all([
+  const today = new Date(); today.setUTCHours(0,0,0,0);
+  const [plansResult, methodsResult, subscriptionsResult, paymentsResult, aiUsageResult] = await Promise.all([
     db
       .from("subscription_plans")
       .select("*")
@@ -33,6 +34,7 @@ export default async function SubscriptionPage({
       .eq("user_id", profile.id)
       .order("submitted_at", { ascending: false })
       .limit(20),
+    db.from("ai_usage_logs").select("id",{count:"exact",head:true}).eq("user_id",profile.id).eq("purpose","TUTOR").eq("status","SUCCEEDED").gte("created_at",today.toISOString()),
   ]);
   const plans = check(plansResult) as SubscriptionPlan[];
   const methods = check(methodsResult) as PaymentMethod[];
@@ -52,6 +54,7 @@ export default async function SubscriptionPage({
     subscription_plans: { name: string } | null;
     payment_methods: { name: string } | null;
   }>;
+  const aiUsed=aiUsageResult.count??0;
   // The private QR bucket deliberately has no Student listing/read policy. The page first
   // reads only enabled destinations through Student RLS, then issues a short-lived URL for
   // just those rows on the server.
@@ -77,6 +80,8 @@ export default async function SubscriptionPage({
   );
   const revoked = subscriptions.find((item) => item.status === "REVOKED");
   const paidPlans = plans.filter((plan) => Number(plan.price_npr) > 0);
+  const freePlan=plans.find((plan)=>plan.code==="FREE");
+  const effectivePlan=current?.plan_snapshot??freePlan;
   const initialPlan = paidPlans.some((plan) => plan.id === requestedPlan)
     ? requestedPlan!
     : (paidPlans[0]?.id ?? "");
@@ -95,15 +100,15 @@ export default async function SubscriptionPage({
         </Link>
       </section>
       <section className="card section">
-        <h2>{current?.plan_snapshot.name ?? "Free access"}</h2>
-        <span className="pill">{current?.status ?? "ACTIVE"}</span>
+        <h2>{effectivePlan?.name ?? "Free access"}</h2>
+        <span className="pill">{current?.status ?? "FREE"}</span>
         {current ? (
           <>
             <p>
               {new Date(current.starts_at).toLocaleDateString()} →{" "}
               {current.ends_at ? new Date(current.ends_at).toLocaleDateString() : "No expiry"}
             </p>
-            <p>AI tutor limit: {current.plan_snapshot.ai_daily_limit ?? 0} per day</p>
+            <p>AI tutor: {aiUsed} used of {current.plan_snapshot.ai_daily_limit ?? 0} today</p>
             <ul>
               {(current.plan_snapshot.features ?? []).map((feature) => (
                 <li key={feature}>{featureLabel(feature)}</li>
@@ -111,7 +116,7 @@ export default async function SubscriptionPage({
             </ul>
           </>
         ) : (
-          <><p>Your effective access is Free.</p>{revoked?<p className="muted">Previous subscription: <strong>REVOKED</strong>. Paid features are no longer available.</p>:null}</>
+          <><p>Your effective access is Free.</p><p>AI tutor: {aiUsed} used of {freePlan?.ai_daily_limit ?? 0} today</p><ul>{(freePlan?.features??[]).map(feature=><li key={feature}>{featureLabel(feature)}</li>)}</ul>{revoked?<p className="muted">Previous subscription: <strong>REVOKED</strong>. Paid features are no longer available.</p>:null}</>
         )}
       </section>
       {paidPlans.length && methodsWithUrls.length ? (

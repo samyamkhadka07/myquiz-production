@@ -851,4 +851,14 @@ describe.sequential("migration, lifecycle, quiz and isolation evidence", () => {
     expect(own.questions_answered).toBe(10);
     expect(own.accuracy).toBe(80);
   });
+  it("uses disposable plan fixtures to enforce every advertised FREE and AI Coach feature", async () => {
+    const freeUser="99999999-9999-4999-8999-999999999999";
+    await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'test-student-free@local.invalid','{}')",[freeUser]);
+    const plans=(await db.query<{id:string;code:string;version:number;features:string[];name:string;ai_daily_limit:number}>("select id,code,version,features,name,ai_daily_limit from subscription_plans where code in ('FREE','CEE_AI_COACH') order by code")).rows;
+    const free=plans.find(plan=>plan.code==='FREE')!, coach=plans.find(plan=>plan.code==='CEE_AI_COACH')!;
+    for(const feature of free.features) expect((await as(freeUser,"select has_entitlement($1) allowed",[feature])).rows[0]?.allowed).toBe(true);
+    await db.query("insert into subscriptions(user_id,plan_id,plan_version,plan_snapshot,entitlement_snapshot,status,starts_at,source) values($1,$2,$3,$4::jsonb,$5::jsonb,'ACTIVE',now(),'ADMIN_GRANT')",[freeUser,coach.id,coach.version,JSON.stringify({name:coach.name,features:coach.features,ai_daily_limit:coach.ai_daily_limit}),JSON.stringify(coach.features)]);
+    for(const feature of coach.features) expect((await as(freeUser,"select has_entitlement($1) allowed",[feature])).rows[0]?.allowed).toBe(true);
+    await db.query("delete from subscriptions where user_id=$1",[freeUser]); await db.query("delete from auth.users where id=$1",[freeUser]);
+  });
 });

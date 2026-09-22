@@ -430,4 +430,9 @@ describe("functional separation and engagement contracts", () => {
     expect(archive).toContain("if (existing.data?.status === \"COMPLETED\") return existing.data"); expect(archive).toContain("new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 14))");
     expect(cron).toContain("CRON_SECRET"); expect(cron).toContain("generateNextActivityArchive"); expect(config).toContain("/api/cron/archive-activity");
   });
+  it("wires AI Coach follow-ups through the canonical post-submission tutor guard", () => {
+    const api=fs.readFileSync("src/lib/server/learning-api.ts","utf8"); const review=fs.readFileSync("src/components/review.tsx","utf8"); const safety=fs.readFileSync("src/lib/ai/tutor-safety.ts","utf8"); const subscription=fs.readFileSync("src/app/(student)/subscription/page.tsx","utf8");
+    expect(api).toContain('"FOLLOWUP"'); expect(api).toContain('p_feature: "ai_followups"'); expect(review).toContain("Ask follow-up"); expect(safety).toContain('| "FOLLOWUP"');
+    expect(subscription).toContain("freePlan?.features"); expect(subscription).toContain("AI tutor:");
+  });
 });

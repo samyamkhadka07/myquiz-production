@@ -10,6 +10,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [alternate, setAlternate] = useState<Record<string, string>>({});
+  const [followups, setFollowups] = useState<Record<string, string>>({});
   async function assist(
     questionId: string,
     activity:
@@ -19,7 +20,8 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
       | "STEP_BY_STEP"
       | "ANALOGY"
       | "NEPALI"
-      | "MNEMONIC",
+      | "MNEMONIC"
+      | "FOLLOWUP",
   ) {
     setBusy(questionId);
     setError("");
@@ -32,6 +34,7 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
           attempt_id: detail.attempt.id,
           question_id: questionId,
           language: activity === "NEPALI" ? "ne" : "en",
+          followup: activity === "FOLLOWUP" ? followups[questionId] ?? null : null,
         },
       );
       setAlternate((value) => ({ ...value, [questionId]: response.text }));
@@ -185,6 +188,8 @@ export function Review({ detail, saved }: { detail: AttemptDetail; saved: string
                   <p className="eyebrow">AI explanation · answer key locked</p>
                   <h3>Personal learning assistance</h3>
                   <p>{alternate[q.question_id]}</p>
+                  <label>Ask a follow-up about this reviewed question<input value={followups[q.question_id] ?? ""} maxLength={600} onChange={(event) => setFollowups((value) => ({ ...value, [q.question_id]: event.target.value }))}/></label>
+                  <button className="button secondary" disabled={busy === q.question_id || !(followups[q.question_id] ?? "").trim()} onClick={() => void assist(q.question_id, "FOLLOWUP")}>Ask follow-up</button>
                 </section>
               )}
               {mnemonic ? (

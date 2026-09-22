@@ -7,7 +7,8 @@ export type TutorAction =
   | "STEP_BY_STEP"
   | "ANALOGY"
   | "NEPALI"
-  | "MNEMONIC";
+  | "MNEMONIC"
+  | "FOLLOWUP";
 
 export type TutorContext = {
   questionId: string;

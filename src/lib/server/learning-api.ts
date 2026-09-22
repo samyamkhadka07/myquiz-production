@@ -582,10 +582,12 @@ export async function learningApi(
           "ANALOGY",
           "NEPALI",
           "MNEMONIC",
+          "FOLLOWUP",
         ]),
         attempt_id: uuidSchema,
         question_id: uuidSchema,
         language: z.enum(["en", "ne"]).default("en"),
+        followup: z.string().trim().min(3).max(600).nullable().default(null),
       })
       .strict()
       .parse(body);
@@ -601,6 +603,10 @@ export async function learningApi(
       !check(await db.rpc("has_entitlement", { p_feature: "ai_mnemonics" }))
     )
       throw new ApiError(403, "ENTITLEMENT_REQUIRED", "Your current plan does not include AI mnemonics.");
+    if (p.activity === "FOLLOWUP" && !check(await db.rpc("has_entitlement", { p_feature: "ai_followups" })))
+      throw new ApiError(403, "ENTITLEMENT_REQUIRED", "Your current plan does not include AI follow-ups.");
+    if (p.activity === "FOLLOWUP" && !p.followup)
+      throw new ApiError(400, "VALIDATION_FAILED", "Enter a follow-up question.");
     const server = createAdminClient();
     const attempt = check(
       await server
@@ -661,7 +667,7 @@ export async function learningApi(
           },
           correctAnswer: key.correct_answer,
           selectedAnswer: question.selected_answer,
-          canonicalExplanation: key.explanation,
+          canonicalExplanation: p.activity === "FOLLOWUP" ? `${key.explanation}\n\nLearner follow-up: ${p.followup}` : key.explanation,
           optionExplanations: key.option_explanations,
           difficulty: String(snapshot.difficulty ?? ""),
           cognitiveLevel: String(snapshot.cognitive_level ?? ""),
