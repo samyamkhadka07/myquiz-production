@@ -68,6 +68,12 @@ export async function learningApi(
         ),
       };
     }
+    if (operation === "timeout") {
+      return { data: check(await db.rpc("timeout_learning_game_item", { p_session: uuidSchema.parse(id), p_question: uuidSchema.parse((body as { question_id?: unknown }).question_id) })) };
+    }
+    if (operation === "expire") {
+      return { data: check(await db.rpc("expire_learning_game_session", { p_session: uuidSchema.parse(id) })) };
+    }
     const p = z
       .object({
         mode: z.enum([

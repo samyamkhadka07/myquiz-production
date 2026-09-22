@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client-api";
 import { QuestionMedia } from "@/components/question-media";
 type Mode =
@@ -33,6 +33,7 @@ type Result = {
   completed: boolean;
   completed_count: number;
   correct_count: number;
+  timed_out?: boolean;
 };
 type Summary = {
   mode: Mode;
@@ -148,22 +149,47 @@ export function InteractiveGames({
     [sessionSeconds, setSessionSeconds] = useState(0),
     [responseTimes, setResponseTimes] = useState<number[]>([]),
     [summary, setSummary] = useState<Summary | null>(null);
+  const timeoutSent = useRef(false);
   const item = session?.items[index];
-  const timed = session?.mode === "RAPID_FIRE" || session?.mode === "SPEED_CHALLENGE";
+  const timed = session?.mode === "RAPID_FIRE";
   const speedChallenge = session?.mode === "SPEED_CHALLENGE";
   const recall = session?.mode === "RAPID_RECALL";
   const memoryMatch = session?.mode === "MEMORY_MATCH";
   useEffect(() => {
-    if (!timed || !item || result) return;
+    if (!timed || !item || result || seconds <= 0) return;
     const timer = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(timer);
-  }, [timed, item, result]);
+  }, [timed, item, result, seconds]);
   useEffect(() => {
     if (!speedChallenge || !item || result || sessionSeconds <= 0) return;
     const timer = setInterval(() => setSessionSeconds((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(timer);
   }, [speedChallenge, item, result, sessionSeconds]);
+  useEffect(() => {
+    if (!session || !item || result || !timed || seconds !== 0 || timeoutSent.current) return;
+    timeoutSent.current = true;
+    setBusy(true);
+    void api<Result>(`learning-games/${session.id}/timeout`, "POST", { question_id: item.question_id })
+      .then(setResult)
+      .catch((error) => setMessage((error as Error).message))
+      .finally(() => setBusy(false));
+  }, [session, item, result, timed, seconds]);
+  useEffect(() => {
+    if (!session || !speedChallenge || !item || result || sessionSeconds !== 0 || timeoutSent.current) return;
+    timeoutSent.current = true;
+    setBusy(true);
+    void api<Result>(`learning-games/${session.id}/expire`, "POST", {})
+      .then((data) => {
+        setSummary({ mode: session.mode, title: titleForMode(session.mode), questionCount: session.question_count, correctCount: data.correct_count, responseTimes });
+        setSession(null);
+      })
+      .catch((error) => setMessage((error as Error).message))
+      .finally(() => setBusy(false));
+  }, [session, item, result, speedChallenge, sessionSeconds, responseTimes]);
   const combo = useMemo(() => (result?.correct ? result.correct_count : 0), [result]);
+  const speedPace = speedChallenge && session
+    ? Math.round((100 * index) / Math.max(1, session.question_count))
+    : 0;
   async function start(mode: Mode, count: number, eventTime: number) {
     setBusy(true);
     setMessage("");
@@ -177,6 +203,7 @@ export function InteractiveGames({
       setRating(null);
       setSeconds(20);
       setSessionSeconds(mode === "SPEED_CHALLENGE" ? count * 12 : 0);
+      timeoutSent.current = false;
       setResponseTimes([]);
       setSummary(null);
       setStarted(eventTime);
@@ -224,6 +251,7 @@ export function InteractiveGames({
     setRating(null);
     setRevealed(session.mode !== "RAPID_RECALL");
     setSeconds(20);
+    timeoutSent.current = false;
     setStarted(eventTime);
   }
   if (summary) {
@@ -260,7 +288,7 @@ export function InteractiveGames({
               {titleForMode(session.mode)}
             </h1>
             <p className="muted">
-              Question {index + 1} of {session.question_count}
+              {session.mode === "DAILY_CHALLENGE" ? "Today's Daily Challenge · " : ""}Question {index + 1} of {session.question_count}
             </p>
           </div>
           {timed && (
@@ -277,6 +305,7 @@ export function InteractiveGames({
         <div className="game-progress">
           <i style={{ width: `${(100 * (index + (result ? 1 : 0))) / session.question_count}%` }} />
         </div>
+        {speedChallenge ? <p className="muted">Session pace: {speedPace}% complete · average response time is shown in your speed summary.</p> : null}
         <h2>{item.snapshot.question_text}</h2>
         <QuestionMedia questionId={item.question_id} />
         {recall && !revealed ? (
@@ -288,7 +317,8 @@ export function InteractiveGames({
           </section>
         ) : memoryMatch ? (
           <section className="recall-prompt" aria-label="Memory matching board">
-            <p>Match this question to the answer card you recall. The answer key stays hidden until you check.</p>
+            <p>Choose this prompt card, then pair it with one shuffled answer card. The verified match stays hidden until you check.</p>
+            <p className="match-slot"><strong>Prompt selected:</strong> {item.snapshot.question_text}</p>
             <div className="options" role="group" aria-label="Answer cards">
               {(["A", "B", "C", "D"] as const).map((key) => (
                 <button type="button" className={`option ${selected === key ? "selected" : ""}`} key={key} onClick={() => setSelected(key)} disabled={!!result}>
@@ -296,7 +326,7 @@ export function InteractiveGames({
                 </button>
               ))}
             </div>
-            {selected && <p className="match-slot">Matched answer card: <strong>{selected}</strong></p>}
+            {selected && <p className="match-slot">Pair selected. Check this match when ready.</p>}
           </section>
         ) : (
           <fieldset className="options" disabled={!!result}>
@@ -353,7 +383,7 @@ export function InteractiveGames({
             <span className="pill">
               {result.correct ? "Concept retrieved" : "Learning opportunity"}
             </span>
-            <h2>{result.correct ? "Correct — keep the reasoning" : "Not yet — repair it now"}</h2>
+            <h2>{result.timed_out ? "Time expired — review this concept" : result.correct ? "Correct — keep the reasoning" : "Not yet — repair it now"}</h2>
             <p>
               <strong>Correct answer: {result.correct_answer}.</strong> {result.explanation}
             </p>

@@ -356,4 +356,23 @@ describe("functional separation and engagement contracts", () => {
     expect(guide).toContain("Contribution");
     expect(guide).not.toContain("AI_API_KEY");
   });
+  it("keeps leaderboard metrics null-safe and uses each learner local date for streaks", () => {
+    const migration = fs.readFileSync("supabase/migrations/0029_leaderboard_progress.sql", "utf8");
+    const leaderboard = fs.readFileSync("src/components/leaderboard.tsx", "utf8");
+    expect(migration).toContain("now() at time zone coalesce(e.timezone,'Asia/Kathmandu')");
+    expect(leaderboard).toContain("function numeric(value:unknown)");
+    expect(leaderboard).toContain("<th>Target</th>");
+    expect(leaderboard).toContain("numeric(e.target_score)===null?'—'");
+  });
+  it("enforces distinct timed game semantics without turning Memory Match into radio MCQ", () => {
+    const migration = fs.readFileSync("supabase/migrations/0028_distinct_learning_game_modes.sql", "utf8");
+    const games = fs.readFileSync("src/components/interactive-games.tsx", "utf8");
+    expect(migration).toContain("timeout_learning_game_item");
+    expect(migration).toContain("expire_learning_game_session");
+    expect(games).toContain("learning-games/${session.id}/timeout");
+    expect(games).toContain("learning-games/${session.id}/expire");
+    expect(games).toContain("Memory matching board");
+    expect(games).toContain("Pair selected. Check this match when ready.");
+    expect(games).toContain("Today's Daily Challenge");
+  });
 });

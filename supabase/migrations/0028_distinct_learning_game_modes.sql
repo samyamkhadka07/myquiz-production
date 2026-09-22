@@ -55,4 +55,40 @@ begin
 end $$;
 
 grant execute on function public.start_learning_game(text,integer) to authenticated;
+
+-- Timed learning modes need an authoritative timeout path; client clocks only trigger it.
+create or replace function public.timeout_learning_game_item(p_session uuid,p_question uuid)
+returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare uid uuid; session learning_game_sessions; item learning_game_items;
+begin
+  uid=require_user();
+  select * into session from learning_game_sessions where id=p_session and user_id=uid for update;
+  if not found or session.status<>'ACTIVE' then raise exception 'Learning session is not active' using errcode='42501'; end if;
+  select * into item from learning_game_items where session_id=p_session and question_id=p_question for update;
+  if not found then raise exception 'Question is unavailable' using errcode='22023'; end if;
+  if item.answered_at is null then
+    update learning_game_items set is_correct=false,response_ms=null,answered_at=now() where session_id=p_session and question_id=p_question;
+    update learning_game_sessions set completed_count=completed_count+1,
+      status=case when completed_count+1>=question_count then 'COMPLETED' else status end,
+      completed_at=case when completed_count+1>=question_count then now() else completed_at end
+      where id=p_session returning * into session;
+  end if;
+  return jsonb_build_object('correct',false,'correct_answer',item.correct_answer,'explanation',item.explanation,'timed_out',true,'completed',session.status='COMPLETED','completed_count',session.completed_count,'correct_count',session.correct_count);
+end $$;
+
+create or replace function public.expire_learning_game_session(p_session uuid)
+returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare uid uuid; session learning_game_sessions; added integer;
+begin
+  uid=require_user(); select * into session from learning_game_sessions where id=p_session and user_id=uid for update;
+  if not found then raise exception 'Learning session is unavailable' using errcode='42501'; end if;
+  if session.status='ACTIVE' then
+    update learning_game_items set is_correct=false,response_ms=null,answered_at=now() where session_id=p_session and answered_at is null;
+    get diagnostics added=row_count;
+    update learning_game_sessions set completed_count=completed_count+added,status='COMPLETED',completed_at=now() where id=p_session returning * into session;
+    insert into xp_events(user_id,event_key,amount,reason) values(uid,'game:'||session.id,greatest(2,session.correct_count),'Completed learning game') on conflict do nothing;
+  end if;
+  return jsonb_build_object('correct',false,'correct_answer',null,'explanation','Time is up. Review the session summary to revisit missed concepts.','timed_out',true,'completed',true,'completed_count',session.completed_count,'correct_count',session.correct_count);
+end $$;
+grant execute on function public.timeout_learning_game_item(uuid,uuid),public.expire_learning_game_session(uuid) to authenticated;
 commit;

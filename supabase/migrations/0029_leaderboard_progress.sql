@@ -45,7 +45,9 @@ begin
             where user_id=e.id and status in ('COMPLETED','EXPIRED') and correct_count+incorrect_count>0
           ), ordered as (
             select d,row_number() over(order by d desc)::integer n from dates
-          ) select count(*) streak from ordered where d=current_date-(n-1)
+          ) select count(*) streak
+            from ordered
+            where d=(now() at time zone coalesce(e.timezone,'Asia/Kathmandu'))::date-(n-1)
         ) s on true
         left join lateral (
           with scored as (
