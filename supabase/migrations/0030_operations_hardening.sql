@@ -31,9 +31,11 @@ create table if not exists public.activity_archives(
  id uuid primary key default gen_random_uuid(),period_start date not null,period_end date not null,categories text[] not null default array['ADMIN','STUDENT'],item_count integer not null default 0 check(item_count>=0),object_path text not null unique,status text not null default 'PENDING' check(status in('PENDING','COMPLETED','FAILED')),checksum text,generated_at timestamptz,generated_by uuid references public.profiles(id),created_at timestamptz not null default now(),failure_reason text,unique(period_start,period_end,categories)
 );
 alter table public.activity_archives enable row level security;
+drop policy if exists activity_archives_admin_read on public.activity_archives;
 create policy activity_archives_admin_read on public.activity_archives for select using(public.is_admin());
 grant select on public.activity_archives to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('activity-archives','activity-archives',false,10485760,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+drop policy if exists activity_archives_admin_storage_read on storage.objects;
 create policy activity_archives_admin_storage_read on storage.objects for select using(bucket_id='activity-archives' and public.is_admin());
 
 create table if not exists public.subscription_notifications(
@@ -42,6 +44,7 @@ create table if not exists public.subscription_notifications(
 create unique index if not exists subscription_notification_once_idx on public.subscription_notifications(user_id,subscription_id,notification_type);
 create index if not exists subscription_notifications_user_active_idx on public.subscription_notifications(user_id,created_at desc) where dismissed_at is null;
 alter table public.subscription_notifications enable row level security;
+drop policy if exists subscription_notifications_owner_read on public.subscription_notifications;
 create policy subscription_notifications_owner_read on public.subscription_notifications for select using(user_id=auth.uid() or public.is_admin());
 grant select on public.subscription_notifications to authenticated;
 create or replace function public.update_subscription_notification(p_id uuid,p_action text) returns public.subscription_notifications language plpgsql security definer set search_path=public,pg_temp as $$
