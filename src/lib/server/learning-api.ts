@@ -6,7 +6,7 @@ import { check } from "./data";
 import { ApiError, admin, staff, superAdmin } from "./auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scheduleReview } from "@/lib/flashcards/scheduler";
-import { generateTutorResponse } from "./ai";
+import { generateTutorResponse, testAiProvider } from "./ai";
 import { processIngestionRun } from "./external-worker";
 import { attachMediaPreviews } from "./media-previews";
 import { generateActivityArchive, signedArchiveUrl } from "./activity-archives";
@@ -838,6 +838,12 @@ export async function learningApi(
           .single(),
       ),
     };
+  }
+  if (resource === "ai-provider-test") {
+    admin(profile);
+    if (method !== "POST") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Provider tests require POST.");
+    const p = z.object({ provider: z.enum(["openrouter", "gemini", "groq", "ollama", "openai"]) }).strict().parse(body);
+    return { data: await testAiProvider(p.provider) };
   }
   if (resource === "payment-methods") {
     if (method === "GET")

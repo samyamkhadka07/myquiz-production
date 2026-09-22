@@ -435,4 +435,12 @@ describe("functional separation and engagement contracts", () => {
     expect(api).toContain('"FOLLOWUP"'); expect(api).toContain('p_feature: "ai_followups"'); expect(review).toContain("Ask follow-up"); expect(safety).toContain('| "FOLLOWUP"');
     expect(subscription).toContain("freePlan?.features"); expect(subscription).toContain("AI tutor:");
   });
+  it("keeps manual provider diagnostics selected-provider-only, admin-gated, and secret-safe", () => {
+    const ai=fs.readFileSync("src/lib/server/ai.ts","utf8"); const api=fs.readFileSync("src/lib/server/learning-api.ts","utf8"); const ui=fs.readFileSync("src/components/ai-provider-tests.tsx","utf8");
+    const testHelper=ai.slice(ai.indexOf("testAiProvider(provider"),ai.indexOf("function providerChain"));
+    expect(ai).toContain("testAiProvider(provider"); expect(testHelper).toContain("providerFor(provider).generate"); expect(testHelper).not.toContain("generateWithProviderChain");
+    expect(api).toContain('resource === "ai-provider-test"'); expect(api).toContain("admin(profile)");
+    expect(ui).toContain('api<Result>("ai-provider-test", "POST", { provider })'); expect(ui).toContain("Credentials remain server-only");
+    expect(ai).toContain("AUTHENTICATION_FAILED"); expect(ai).toContain("RATE_LIMITED"); expect(ai).toContain("TEMPORARILY_UNAVAILABLE");
+  });
 });

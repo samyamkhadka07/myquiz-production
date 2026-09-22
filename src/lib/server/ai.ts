@@ -26,6 +26,13 @@ export interface AiProvider {
     outputTokens: number;
   }>;
 }
+export type AiProviderName = "openrouter" | "gemini" | "groq" | "ollama" | "openai";
+export type AiProviderTestResult = {
+  provider: AiProviderName;
+  status: "SUCCESS" | "MISSING_CREDENTIAL" | "AUTHENTICATION_FAILED" | "RATE_LIMITED" | "TEMPORARILY_UNAVAILABLE" | "INVALID_CONFIGURATION" | "DISABLED";
+  message: string;
+  model?: string;
+};
 
 class OpenAICompatibleProvider implements AiProvider {
   constructor(
@@ -114,6 +121,31 @@ function providerFor(name: string): AiProvider {
   if (name === "gemini") return new GeminiProvider();
   if (name === "ollama") return new OpenAICompatibleProvider("ollama", `${(process.env.OLLAMA_BASE_URL ?? "http://localhost:11434").replace(/\/$/, "")}/v1/chat/completions`, undefined, false);
   throw new Error("AI_NOT_CONFIGURED");
+}
+
+/** Executes exactly one selected provider request. It intentionally never uses fallbacks. */
+export async function testAiProvider(provider: AiProviderName): Promise<AiProviderTestResult> {
+  if (provider === "ollama" && !process.env.OLLAMA_BASE_URL)
+    return { provider, status: "DISABLED", message: "Ollama is not configured for this environment." };
+  if ((provider === "openrouter" && !process.env.OPENROUTER_API_KEY) || (provider === "gemini" && !process.env.GEMINI_API_KEY) || (provider === "groq" && !process.env.GROQ_API_KEY) || (provider === "openai" && !process.env.AI_API_KEY))
+    return { provider, status: "MISSING_CREDENTIAL", message: "This provider has no configured credential." };
+  try {
+    const outcome = await providerFor(provider).generate({
+      instructions: "Reply with OK.",
+      text: "Reply with OK.",
+      purpose: "ADMIN_PROVIDER_TEST",
+      timeoutMs: 5000,
+      maxOutputTokens: 16,
+    });
+    return { provider, status: "SUCCESS", message: "Provider responded successfully.", model: outcome.model };
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "AI_UNAVAILABLE";
+    if (code === "AI_AUTH_ERROR") return { provider, status: "AUTHENTICATION_FAILED", message: "Provider authentication failed." };
+    if (code === "AI_RATE_LIMIT") return { provider, status: "RATE_LIMITED", message: "Provider rate limit reached." };
+    if (code === "AI_NOT_CONFIGURED") return { provider, status: "MISSING_CREDENTIAL", message: "This provider is not fully configured." };
+    if (["AI_REQUEST_ERROR", "AI_VISION_UNSUPPORTED"].includes(code)) return { provider, status: "INVALID_CONFIGURATION", message: "Provider model or configuration is invalid." };
+    return { provider, status: "TEMPORARILY_UNAVAILABLE", message: "Provider is temporarily unavailable." };
+  }
 }
 
 function providerChain(primary: string) { const allowed=[primary,...(process.env.AI_PROVIDER_FALLBACKS??"").split(",").map(v=>v.trim())].filter(Boolean); return [...new Set(allowed)]; }
