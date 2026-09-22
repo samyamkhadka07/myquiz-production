@@ -403,4 +403,20 @@ describe("functional separation and engagement contracts", () => {
     expect(migration).toContain("EXPIRING_7_DAYS"); expect(migration).toContain("EXPIRING_3_DAYS"); expect(migration).toContain("EXPIRING_TODAY"); expect(migration).toContain("send_subscription_notification"); expect(migration).toContain("subscription_notification_once_idx");
     expect(api).toContain('resource === "subscription-notification-send"'); expect(api).toContain('resource === "subscription-notifications"');
   });
+  it("keeps Super Admin account lifecycle server-authorized and centrally enforced", () => {
+    const migration=fs.readFileSync("supabase/migrations/0030_operations_hardening.sql","utf8");
+    const auth=fs.readFileSync("src/lib/server/auth.ts","utf8");
+    const api=fs.readFileSync("src/lib/server/learning-api.ts","utf8");
+    const users=fs.readFileSync("src/app/admin/users/page.tsx","utf8");
+    const actions=fs.readFileSync("src/components/admin-workflow-actions.tsx","utf8");
+    expect(migration).toContain("account_status text not null default 'ACTIVE'");
+    expect(migration).toContain("set_account_status"); expect(migration).toContain("prepare_account_deletion");
+    expect(migration).toContain("Protected Super Admin accounts cannot be deleted");
+    expect(migration).toContain("Accounts with billing evidence cannot be permanently deleted");
+    expect(auth).toContain("ACCOUNT_DEACTIVATED");
+    expect(api).toContain('operation === "lifecycle"'); expect(api).toContain('operation === "delete"');
+    expect(api).toContain("auth.admin.deleteUser");
+    expect(users).toContain("UserLifecycle");
+    expect(actions).toContain("Deactivate account"); expect(actions).toContain("Permanently delete account");
+  });
 });

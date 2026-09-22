@@ -21,7 +21,7 @@ export async function identity() {
   const result = await db
     .from("profiles")
     .select(
-      "id,display_name,role,target_score,timezone,exam_program_id,onboarding_completed_at,self_assessed_weak_subject_ids",
+      "id,display_name,role,target_score,timezone,exam_program_id,onboarding_completed_at,self_assessed_weak_subject_ids,account_status",
     )
     .eq("id", user.id)
     .single();
@@ -31,7 +31,14 @@ export async function identity() {
       "PROFILE_UNAVAILABLE",
       "Your profile is unavailable. Please try again.",
     );
-  return { db, user, profile: result.data as Profile };
+  const profile = result.data as Profile & { account_status?: "ACTIVE" | "DEACTIVATED" };
+  if (profile.account_status === "DEACTIVATED")
+    throw new ApiError(
+      403,
+      "ACCOUNT_DEACTIVATED",
+      "Your account has been deactivated. Contact the administrator if you believe this is a mistake.",
+    );
+  return { db, user, profile };
 }
 export async function requirePage(staff = false) {
   try {
@@ -53,6 +60,8 @@ export async function requirePage(staff = false) {
     return ctx;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) redirect("/login");
+    if (error instanceof ApiError && error.code === "ACCOUNT_DEACTIVATED")
+      redirect("/login?account=deactivated");
     throw error;
   }
 }

@@ -212,6 +212,30 @@ export function UserAccess({ id, role }: { id: string; role: string }) {
     </div>
   );
 }
+export function UserLifecycle({ id, displayName, status }: { id: string; displayName: string; status: "ACTIVE" | "DEACTIVATED" }) {
+  const router = useRouter();
+  const [message, setMessage] = useState(""), [busy, setBusy] = useState(false);
+  async function lifecycle(action: "DEACTIVATE" | "REACTIVATE") {
+    const reason = window.prompt(`${action === "DEACTIVATE" ? "Deactivation" : "Reactivation"} reason (required):`)?.trim();
+    if (!reason) return setMessage("A reason is required.");
+    setBusy(true);
+    try {
+      await api(`users/${id}/lifecycle`, "POST", { action, reason });
+      setMessage(`Account ${action === "DEACTIVATE" ? "deactivated" : "reactivated"}.`);
+      router.refresh();
+    } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
+  }
+  async function remove() {
+    const confirmation = window.prompt(`Type DELETE ${displayName} or DELETE ${id} to permanently delete this account:`)?.trim();
+    if (!confirmation) return setMessage("Explicit delete confirmation is required.");
+    setBusy(true);
+    try {
+      await api(`users/${id}/delete`, "DELETE", { confirmation });
+      setMessage("Account permanently deleted."); router.refresh();
+    } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
+  }
+  return <div className="toolbar"><span className={`pill ${status === "DEACTIVATED" ? "attention" : ""}`}>{status}</span><button className="button secondary" disabled={busy} onClick={() => void lifecycle(status === "ACTIVE" ? "DEACTIVATE" : "REACTIVATE")}>{status === "ACTIVE" ? "Deactivate account" : "Reactivate account"}</button><button className="button danger" disabled={busy} onClick={() => void remove()}>Permanently delete account</button><small role="status">{message}</small></div>;
+}
 export function AdminRequestActions({ id }: { id: string }) {
   const router = useRouter();
   const [note, setNote] = useState(""),

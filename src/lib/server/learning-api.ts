@@ -924,6 +924,38 @@ export async function learningApi(
   }
   if (resource === "users") {
     superAdmin(profile);
+    if (operation === "lifecycle") {
+      if (method !== "POST")
+        throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported account lifecycle operation.");
+      const p = z
+        .object({
+          action: z.enum(["DEACTIVATE", "REACTIVATE"]),
+          reason: z.string().trim().min(3).max(1000),
+        })
+        .strict()
+        .parse(body);
+      const target = uuidSchema.parse(id);
+      return {
+        data: check(
+          await db.rpc("set_account_status", {
+            p_user: target,
+            p_status: p.action === "DEACTIVATE" ? "DEACTIVATED" : "ACTIVE",
+            p_reason: p.reason,
+          }),
+        ),
+      };
+    }
+    if (operation === "delete") {
+      if (method !== "DELETE")
+        throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported account deletion operation.");
+      const p = z.object({ confirmation: z.string().trim().min(8).max(200) }).strict().parse(body);
+      const target = uuidSchema.parse(id);
+      check(await db.rpc("prepare_account_deletion", { p_user: target, p_confirmation: p.confirmation }));
+      const result = await createAdminClient().auth.admin.deleteUser(target);
+      if (result.error)
+        throw new ApiError(500, "ACCOUNT_DELETE_FAILED", "The account could not be permanently deleted.");
+      return { data: { deleted: true } };
+    }
     if (method === "GET")
       return {
         data: check(
