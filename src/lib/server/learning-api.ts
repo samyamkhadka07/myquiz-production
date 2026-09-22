@@ -930,7 +930,7 @@ export async function learningApi(
   if (resource === "subscription-notifications") {
     if (method === "GET") return {data:check(await db.from("subscription_notifications").select("*").eq("user_id",profile.id).is("dismissed_at",null).order("created_at",{ascending:false}).limit(20))};
     const p=z.object({action:z.enum(["READ","DISMISS"])}).strict().parse(body);
-    return {data:check(await db.from("subscription_notifications").update(p.action==="READ"?{read_at:new Date().toISOString()}:{dismissed_at:new Date().toISOString()}).eq("id",uuidSchema.parse(id)).eq("user_id",profile.id).select().single())};
+    return {data:check(await db.rpc("update_subscription_notification",{p_id:uuidSchema.parse(id),p_action:p.action}))};
   }
   if (resource === "subscription-notification-send") {
     admin(profile); const p=z.object({subscription_id:uuidSchema,notification_type:z.enum(["EXPIRING_7_DAYS","EXPIRING_3_DAYS","EXPIRING_TODAY","EXPIRED"]),message:z.string().trim().max(500).nullable()}).strict().parse(body);

@@ -31,7 +31,7 @@ create table if not exists public.activity_archives(
  id uuid primary key default gen_random_uuid(),period_start date not null,period_end date not null,categories text[] not null default array['ADMIN','STUDENT'],item_count integer not null default 0 check(item_count>=0),object_path text not null unique,status text not null default 'PENDING' check(status in('PENDING','COMPLETED','FAILED')),checksum text,generated_at timestamptz,generated_by uuid references public.profiles(id),created_at timestamptz not null default now(),failure_reason text,unique(period_start,period_end,categories)
 );
 alter table public.activity_archives enable row level security;
-create policy activity_archives_staff_read on public.activity_archives for select using(public.is_staff());
+create policy activity_archives_admin_read on public.activity_archives for select using(public.is_admin());
 grant select on public.activity_archives to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('activity-archives','activity-archives',false,10485760,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 create policy activity_archives_admin_storage_read on storage.objects for select using(bucket_id='activity-archives' and public.is_admin());
@@ -44,6 +44,16 @@ create index if not exists subscription_notifications_user_active_idx on public.
 alter table public.subscription_notifications enable row level security;
 create policy subscription_notifications_owner_read on public.subscription_notifications for select using(user_id=auth.uid() or public.is_admin());
 grant select on public.subscription_notifications to authenticated;
+create or replace function public.update_subscription_notification(p_id uuid,p_action text) returns public.subscription_notifications language plpgsql security definer set search_path=public,pg_temp as $$
+declare result public.subscription_notifications;
+begin
+ perform public.require_user();
+ if p_action not in('READ','DISMISS') then raise exception 'Invalid notification action' using errcode='22023'; end if;
+ update public.subscription_notifications set read_at=case when p_action='READ' then coalesce(read_at,now()) else read_at end,dismissed_at=case when p_action='DISMISS' then coalesce(dismissed_at,now()) else dismissed_at end where id=p_id and user_id=auth.uid() returning * into result;
+ if not found then raise exception 'Notification not found' using errcode='P0002'; end if;
+ return result;
+end $$;
+grant execute on function public.update_subscription_notification(uuid,text) to authenticated;
 create or replace function public.revoke_subscription(p_subscription uuid,p_reason text) returns void language plpgsql security definer set search_path=public,pg_temp as $$
 declare s subscriptions;
 begin
