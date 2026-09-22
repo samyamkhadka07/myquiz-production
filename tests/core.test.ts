@@ -397,4 +397,10 @@ describe("functional separation and engagement contracts", () => {
     expect(api).toContain('resource === "subscriptions" && operation === "revoke"');
     expect(page).toContain("Previous subscription:");
   });
+  it("keeps renewal notices server-created, deduplicated, and student-owned", () => {
+    const migration=fs.readFileSync("supabase/migrations/0030_operations_hardening.sql","utf8");
+    const api=fs.readFileSync("src/lib/server/learning-api.ts","utf8");
+    expect(migration).toContain("EXPIRING_7_DAYS"); expect(migration).toContain("EXPIRING_3_DAYS"); expect(migration).toContain("EXPIRING_TODAY"); expect(migration).toContain("send_subscription_notification"); expect(migration).toContain("subscription_notification_once_idx");
+    expect(api).toContain('resource === "subscription-notification-send"'); expect(api).toContain('resource === "subscription-notifications"');
+  });
 });

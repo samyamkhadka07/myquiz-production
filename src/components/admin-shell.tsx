@@ -35,6 +35,7 @@ const navigation: AdminLink[] = [
   { label: "Subscription Plans", href: "/admin/billing/plans", roles: admins },
   { label: "Payment Methods", href: "/admin/billing/payment-methods", roles: admins },
   { label: "Payment Requests", href: "/admin/billing/payment-requests", roles: admins },
+  { label: "Subscription Notifications", href: "/admin/billing/notifications", roles: admins },
   { label: "— AI & analytics —", href: "/admin/ai-usage", roles: admins },
   { label: "AI Review / Usage", href: "/admin/ai-usage", roles: admins },
   { label: "Admin Analytics", href: "/admin/analytics", roles: admins },

@@ -36,9 +36,10 @@ grant select on public.activity_archives to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('activity-archives','activity-archives',false,10485760,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 
 create table if not exists public.subscription_notifications(
- id uuid primary key default gen_random_uuid(),user_id uuid not null references public.profiles(id),subscription_id uuid references public.subscriptions(id),title text not null,message text not null,kind text not null check(kind in('EXPIRING','EXPIRED','REVOKED','ADMIN')),created_at timestamptz not null default now(),read_at timestamptz,dismissed_at timestamptz
+ id uuid primary key default gen_random_uuid(),user_id uuid not null references public.profiles(id),subscription_id uuid references public.subscriptions(id),notification_type text not null check(notification_type in('EXPIRING_7_DAYS','EXPIRING_3_DAYS','EXPIRING_TODAY','EXPIRED','SUBSCRIPTION_REVOKED','ADMIN')),title text not null,message text not null,created_by uuid references public.profiles(id),created_at timestamptz not null default now(),read_at timestamptz,dismissed_at timestamptz
 );
-create unique index if not exists subscription_notification_once_idx on public.subscription_notifications(user_id,subscription_id,kind) where dismissed_at is null;
+create unique index if not exists subscription_notification_once_idx on public.subscription_notifications(user_id,subscription_id,notification_type);
+create index if not exists subscription_notifications_user_active_idx on public.subscription_notifications(user_id,created_at desc) where dismissed_at is null;
 alter table public.subscription_notifications enable row level security;
 create policy subscription_notifications_owner_read on public.subscription_notifications for select using(user_id=auth.uid() or public.is_admin());
 grant select on public.subscription_notifications to authenticated;
@@ -50,8 +51,22 @@ begin
  select * into s from subscriptions where id=p_subscription for update; if not found then raise exception 'Subscription not found'; end if; if s.status='REVOKED' then return; end if;
  update subscriptions set status='REVOKED',notes=concat_ws(E'\n',notes,'Revoked: '||btrim(p_reason)),updated_at=now() where id=s.id;
  update entitlements set tier='FREE',starts_at=null,ends_at=null,active_subscription_id=null,updated_at=now() where user_id=s.user_id and active_subscription_id=s.id;
- insert into subscription_notifications(user_id,subscription_id,title,message,kind) values(s.user_id,s.id,'Subscription revoked','Your subscription access has been revoked. Contact support if you believe this is incorrect.','REVOKED') on conflict do nothing;
+ insert into subscription_notifications(user_id,subscription_id,title,message,notification_type,created_by) values(s.user_id,s.id,'Subscription revoked','Your subscription access has been revoked. Contact support if you believe this is incorrect.','SUBSCRIPTION_REVOKED',auth.uid()) on conflict do nothing;
  insert into audit_events(actor_id,action,target_type,target_id,metadata) values(auth.uid(),'SUBSCRIPTION_REVOKED','subscription',s.id::text,jsonb_build_object('reason',btrim(p_reason)));
 end $$;
 grant execute on function public.revoke_subscription(uuid,text) to authenticated;
+create or replace function public.send_subscription_notification(p_subscription uuid,p_type text,p_message text default null) returns public.subscription_notifications language plpgsql security definer set search_path=public,pg_temp as $$
+declare s subscriptions; result subscription_notifications; title_text text; message_text text;
+begin
+ if not is_admin() then raise exception 'Admin access required' using errcode='42501'; end if;
+ select * into s from subscriptions where id=p_subscription for update; if not found then raise exception 'Subscription not found' using errcode='P0002'; end if;
+ if p_type not in('EXPIRING_7_DAYS','EXPIRING_3_DAYS','EXPIRING_TODAY','EXPIRED') then raise exception 'Unsupported notification type'; end if;
+ if p_type='EXPIRED' and s.status not in('EXPIRED','ACTIVE','TRIAL','PROMOTIONAL') then raise exception 'Subscription is not eligible'; end if;
+ title_text=case p_type when 'EXPIRED' then 'Subscription expired' else 'Subscription renewal reminder' end;
+ message_text=coalesce(nullif(btrim(p_message),''),'Your subscription expires on '||coalesce(to_char(s.ends_at at time zone 'Asia/Kathmandu','DD Mon YYYY'),'the configured expiry date')||'. Renew to continue premium access.');
+ insert into subscription_notifications(user_id,subscription_id,notification_type,title,message,created_by) values(s.user_id,s.id,p_type,title_text,left(message_text,500),auth.uid()) on conflict(user_id,subscription_id,notification_type) do nothing returning * into result;
+ if result.id is null then select * into result from subscription_notifications where user_id=s.user_id and subscription_id=s.id and notification_type=p_type; end if;
+ return result;
+end $$;
+grant execute on function public.send_subscription_notification(uuid,text,text) to authenticated;
 commit;

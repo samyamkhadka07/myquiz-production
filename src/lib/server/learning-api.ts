@@ -914,6 +914,10 @@ export async function learningApi(
     const p=z.object({action:z.enum(["READ","DISMISS"])}).strict().parse(body);
     return {data:check(await db.from("subscription_notifications").update(p.action==="READ"?{read_at:new Date().toISOString()}:{dismissed_at:new Date().toISOString()}).eq("id",uuidSchema.parse(id)).eq("user_id",profile.id).select().single())};
   }
+  if (resource === "subscription-notification-send") {
+    admin(profile); const p=z.object({subscription_id:uuidSchema,notification_type:z.enum(["EXPIRING_7_DAYS","EXPIRING_3_DAYS","EXPIRING_TODAY","EXPIRED"]),message:z.string().trim().max(500).nullable()}).strict().parse(body);
+    return {data:check(await db.rpc("send_subscription_notification",{p_subscription:p.subscription_id,p_type:p.notification_type,p_message:p.message}))};
+  }
   if (resource === "subscriptions" && operation === "revoke") {
     admin(profile); const p=z.object({reason:z.string().trim().min(3).max(1000)}).strict().parse(body);
     return {data:check(await db.rpc("revoke_subscription",{p_subscription:uuidSchema.parse(id),p_reason:p.reason}))};
