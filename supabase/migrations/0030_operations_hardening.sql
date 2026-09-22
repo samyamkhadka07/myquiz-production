@@ -28,12 +28,13 @@ end $$;
 
 -- A private manifest supports idempotent archive generation without deleting canonical activity.
 create table if not exists public.activity_archives(
- id uuid primary key default gen_random_uuid(),period_start date not null,period_end date not null,categories text[] not null,item_count integer not null check(item_count>=0),object_path text not null unique,generated_at timestamptz not null default now(),generated_by uuid references public.profiles(id),unique(period_start,period_end,categories)
+ id uuid primary key default gen_random_uuid(),period_start date not null,period_end date not null,categories text[] not null default array['ADMIN','STUDENT'],item_count integer not null default 0 check(item_count>=0),object_path text not null unique,status text not null default 'PENDING' check(status in('PENDING','COMPLETED','FAILED')),checksum text,generated_at timestamptz,generated_by uuid references public.profiles(id),created_at timestamptz not null default now(),failure_reason text,unique(period_start,period_end,categories)
 );
 alter table public.activity_archives enable row level security;
 create policy activity_archives_staff_read on public.activity_archives for select using(public.is_staff());
 grant select on public.activity_archives to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('activity-archives','activity-archives',false,10485760,array['application/pdf']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+create policy activity_archives_admin_storage_read on storage.objects for select using(bucket_id='activity-archives' and public.is_admin());
 
 create table if not exists public.subscription_notifications(
  id uuid primary key default gen_random_uuid(),user_id uuid not null references public.profiles(id),subscription_id uuid references public.subscriptions(id),notification_type text not null check(notification_type in('EXPIRING_7_DAYS','EXPIRING_3_DAYS','EXPIRING_TODAY','EXPIRED','SUBSCRIPTION_REVOKED','ADMIN')),title text not null,message text not null,created_by uuid references public.profiles(id),created_at timestamptz not null default now(),read_at timestamptz,dismissed_at timestamptz

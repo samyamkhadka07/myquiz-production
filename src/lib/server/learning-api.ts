@@ -9,6 +9,7 @@ import { scheduleReview } from "@/lib/flashcards/scheduler";
 import { generateTutorResponse } from "./ai";
 import { processIngestionRun } from "./external-worker";
 import { attachMediaPreviews } from "./media-previews";
+import { generateActivityArchive, signedArchiveUrl } from "./activity-archives";
 export async function learningApi(
   db: SupabaseClient,
   profile: Profile,
@@ -18,6 +19,17 @@ export async function learningApi(
   url: URL,
 ): Promise<{ data: unknown } | null> {
   const [resource, id, operation] = path;
+  if (resource === "activity-archives") {
+    admin(profile);
+    if (operation === "download") {
+      if (method !== "GET") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported archive download operation.");
+      return { data: { url: await signedArchiveUrl(uuidSchema.parse(id)) } };
+    }
+    if (method !== "POST") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported archive operation.");
+    const p=z.object({period_start:z.iso.date(),period_end:z.iso.date()}).strict().parse(body);
+    if (p.period_end >= new Date(Date.now()-14*86400000).toISOString().slice(0,10)) throw new ApiError(400,"ARCHIVE_PERIOD_INVALID","Only activity older than 14 days can be archived.");
+    return {data:await generateActivityArchive(p.period_start,p.period_end,profile.id)};
+  }
   if (resource === "admin-profile" && method === "PATCH") {
     staff(profile);
     const p = z

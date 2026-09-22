@@ -419,4 +419,15 @@ describe("functional separation and engagement contracts", () => {
     expect(users).toContain("UserLifecycle");
     expect(actions).toContain("Deactivate account"); expect(actions).toContain("Permanently delete account");
   });
+  it("keeps activity archives private, PDF-backed, idempotent, and cron-protected", () => {
+    const migration=fs.readFileSync("supabase/migrations/0030_operations_hardening.sql","utf8");
+    const archive=fs.readFileSync("src/lib/server/activity-archives.ts","utf8");
+    const cron=fs.readFileSync("src/app/api/cron/archive-activity/route.ts","utf8");
+    const config=fs.readFileSync("vercel.json","utf8");
+    expect(migration).toContain("activity-archives',false"); expect(migration).toContain("status text not null default 'PENDING'");
+    expect(migration).toContain("unique(period_start,period_end,categories)"); expect(migration).toContain("activity_archives_admin_storage_read");
+    expect(archive).toContain('"%PDF-1.4\\n"'); expect(archive).toContain('"application/pdf"');
+    expect(archive).toContain("if (existing.data?.status === \"COMPLETED\") return existing.data"); expect(archive).toContain("new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 14))");
+    expect(cron).toContain("CRON_SECRET"); expect(cron).toContain("generateNextActivityArchive"); expect(config).toContain("/api/cron/archive-activity");
+  });
 });
