@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Profile } from "@/lib/contracts";
 import { logout } from "@/app/auth/actions";
 import { SideNavigation, type SideNavigationItem } from "@/components/side-navigation";
+import { MyQuizGuide } from "@/components/myquiz-guide";
 import type { Route } from "next";
 const navigation = [
   ["Overview", "/dashboard"],
@@ -78,6 +79,7 @@ export function AppShell({
       <main className="main" id="main-content">
         {children}
       </main>
+      <MyQuizGuide />
     </div>
   );
 }

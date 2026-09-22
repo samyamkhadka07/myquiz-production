@@ -227,6 +227,8 @@ describe("functional separation and engagement contracts", () => {
     for (const mode of [
       "RAPID_FIRE",
       "RAPID_RECALL",
+      "MEMORY_MATCH",
+      "SPEED_CHALLENGE",
       "MISTAKE_RESCUE",
       "ACCURACY",
       "DAILY_CHALLENGE",
@@ -234,6 +236,40 @@ describe("functional separation and engagement contracts", () => {
       expect(source).toContain(mode);
     expect(source).toContain("learning-games");
     expect(source).toContain("does not change an official MEC test score");
+    expect(source).toContain("View session summary");
+    expect(source).toContain("Memory matching board");
+    expect(source).toContain('mode: "RAPID_FIRE",\n    title: "Rapid Fire"');
+    expect(source).toContain('mode: "SPEED_CHALLENGE",\n    title: "Speed Challenge"');
+    expect(source).not.toContain('title: "Speed Challenge",\n    purpose: "A paced session"\n    count: 15,\n    skill: "Accurate pacing",\n  },\n  {\n    mode: "RAPID_FIRE"');
+  });
+  it("calculates achievement progress from canonical attempt counts", () => {
+    const page = fs.readFileSync("src/app/(student)/achievements/page.tsx", "utf8");
+    expect(page).toContain('select("id,correct_count,incorrect_count,status")');
+    expect(page).not.toContain("answered_count");
+    expect(page).not.toContain('from("attempt_questions")');
+    expect(page).toContain("attempt.correct_count ?? 0) + (attempt.incorrect_count ?? 0)");
+  });
+  it("uses controlled signed previews for payment QR configuration", () => {
+    const page = fs.readFileSync("src/app/admin/billing/payment-methods/page.tsx", "utf8");
+    const editor = fs.readFileSync("src/components/admin-billing.tsx", "utf8");
+    expect(page).toContain('from("payment-assets")');
+    expect(page).toContain("createSignedUrl(method.qr_object_path, 300)");
+    expect(editor).toContain("Current QR");
+  });
+  it("signs only already-authorized enabled payment QRs for checkout", () => {
+    const page = fs.readFileSync("src/app/(student)/subscription/page.tsx", "utf8");
+    expect(page).toContain('.eq("enabled", true)');
+    expect(page).toContain('createAdminClient().storage.from("payment-assets")');
+    expect(page).toContain("createSignedUrl(method.qr_object_path, 300)");
+    expect(page).toContain("methodsWithUrls = methods.map");
+    const form = fs.readFileSync("src/components/payment-request-form.tsx", "utf8");
+    expect(form).toContain("paymentDestinationReady");
+    expect(form).toContain("temporarily unavailable");
+  });
+  it("uses the canonical entitlement resolver for premium game affordances", () => {
+    const page = fs.readFileSync("src/app/(student)/games/page.tsx", "utf8");
+    expect(page).toContain('has_entitlement", { p_feature: "premium_games"');
+    expect(page).not.toContain('from("entitlements").select("tier")');
   });
   it("separates academic verification from publication", () => {
     const verification = fs.readFileSync("src/app/admin/questions/verification/page.tsx", "utf8");
@@ -259,6 +295,8 @@ describe("functional separation and engagement contracts", () => {
     const uploader = fs.readFileSync("src/components/media-library.tsx", "utf8");
     expect(uploader).toContain("/storage/v1/upload/resumable");
     expect(uploader).toContain('bucketName: "question-media"');
+    expect(uploader).toContain("Refresh preview");
+    expect(uploader).toContain("onError={() =>");
     for (const file of [
       "src/components/quiz.tsx",
       "src/components/review.tsx",
@@ -266,6 +304,12 @@ describe("functional separation and engagement contracts", () => {
       "src/app/(student)/bookmarks/page.tsx",
     ])
       expect(fs.readFileSync(file, "utf8")).toContain("QuestionMedia");
+    expect(fs.readFileSync("src/lib/server/media-previews.ts", "utf8")).toContain(
+      "createSignedUrl(asset.object_path, 300)",
+    );
+    expect(fs.readFileSync("src/components/question-media.tsx", "utf8")).toContain(
+      "Question figure could not be loaded.",
+    );
   });
   it("preserves auditable question versions and requires re-review after restore", () => {
     const migration = fs.readFileSync("supabase/migrations/0020_question_versions.sql", "utf8");
@@ -288,5 +332,47 @@ describe("functional separation and engagement contracts", () => {
     const page = fs.readFileSync("src/app/admin/page.tsx", "utf8");
     expect(page).toContain("status,started_at,completed_at,error");
     expect(page).not.toContain("status,started_at,finished_at,error");
+  });
+  it("keeps zero-budget AI providers server-only and fallback-safe", () => {
+    const env = fs.readFileSync("src/lib/env.ts", "utf8");
+    const ai = fs.readFileSync("src/lib/server/ai.ts", "utf8");
+    const settings = fs.readFileSync("src/components/ai-settings-form.tsx", "utf8");
+    expect(env).toContain('"openrouter"');
+    expect(env).toContain('"ollama"');
+    expect(env).toContain("OPENROUTER_API_KEY");
+    expect(ai).toContain("https://openrouter.ai/api/v1/chat/completions");
+    expect(ai).toContain("AI_VISION_UNSUPPORTED");
+    expect(ai).toContain("AI_NOT_CONFIGURED");
+    expect(settings).toContain('option value="openrouter"');
+    expect(settings).toContain('option value="ollama"');
+  });
+  it("maps sign-in failures safely and exposes a non-AI MyQuiz Guide", () => {
+    const auth = fs.readFileSync("src/app/auth/actions.ts", "utf8");
+    const guide = fs.readFileSync("src/components/myquiz-guide.tsx", "utf8");
+    expect(auth).toContain("Incorrect email or password.");
+    expect(auth).toContain("Please confirm your email before signing in.");
+    expect(auth).toContain("Too many sign-in attempts. Please wait and try again.");
+    expect(guide).toContain("MyQuiz Guide");
+    expect(guide).toContain("Contribution");
+    expect(guide).not.toContain("AI_API_KEY");
+  });
+  it("keeps leaderboard metrics null-safe and uses each learner local date for streaks", () => {
+    const migration = fs.readFileSync("supabase/migrations/0029_leaderboard_progress.sql", "utf8");
+    const leaderboard = fs.readFileSync("src/components/leaderboard.tsx", "utf8");
+    expect(migration).toContain("now() at time zone coalesce(e.timezone,'Asia/Kathmandu')");
+    expect(leaderboard).toContain("function numeric(value:unknown)");
+    expect(leaderboard).toContain("<th>Target</th>");
+    expect(leaderboard).toContain("numeric(e.target_score)===null?'—'");
+  });
+  it("enforces distinct timed game semantics without turning Memory Match into radio MCQ", () => {
+    const migration = fs.readFileSync("supabase/migrations/0028_distinct_learning_game_modes.sql", "utf8");
+    const games = fs.readFileSync("src/components/interactive-games.tsx", "utf8");
+    expect(migration).toContain("timeout_learning_game_item");
+    expect(migration).toContain("expire_learning_game_session");
+    expect(games).toContain("learning-games/${session.id}/timeout");
+    expect(games).toContain("learning-games/${session.id}/expire");
+    expect(games).toContain("Memory matching board");
+    expect(games).toContain("Pair selected. Check this match when ready.");
+    expect(games).toContain("Today's Daily Challenge");
   });
 });

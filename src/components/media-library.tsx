@@ -13,7 +13,8 @@ type Asset = {
   default_alt_text: string;
   status: string;
   created_at: string;
-  preview_url?: string;
+  preview_url?: string | null;
+  preview_expires_in?: number | null;
   question_media_links?: { question_id: string }[];
 };
 const accepted = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -22,7 +23,8 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
     [busy, setBusy] = useState(false),
     [progress, setProgress] = useState<number | null>(null),
     [message, setMessage] = useState(""),
-    [query, setQuery] = useState("");
+    [query, setQuery] = useState(""),
+    [selectedFile, setSelectedFile] = useState<File | null>(null);
   const current = useRef<Upload | null>(null);
   async function refresh() {
     setRows(await api<Asset[]>("media"));
@@ -74,6 +76,7 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
       });
       await api(`media/${asset.id}/finalize`, "POST", {});
       form.reset();
+      setSelectedFile(null);
       setProgress(null);
       setMessage("Media saved privately and is ready to link to questions.");
       await refresh();
@@ -141,8 +144,10 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
             type="file"
             accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"
             required
+            onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
           />
         </label>
+        {selectedFile ? <p className="muted">Selected: {selectedFile.name} · {selectedFile.type} · {(selectedFile.size / 1024).toFixed(1)} KB</p> : null}
         <label>
           Accessible description
           <input
@@ -201,7 +206,7 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
       <div className="media-library-grid">
         {visible.map((asset) => (
           <article className="card media-record" key={asset.id}>
-            {asset.preview_url && (
+            {asset.preview_url ? (
               <Image
                 className="media-preview"
                 src={asset.preview_url}
@@ -209,8 +214,19 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
                 width={560}
                 height={360}
                 unoptimized
+                onError={() =>
+                  setRows((items) =>
+                    items.map((item) =>
+                      item.id === asset.id ? { ...item, preview_url: null } : item,
+                    ),
+                  )
+                }
               />
-            )}
+            ) : asset.mime_type.startsWith("image/") ? (
+              <div className="media-preview media-preview-unavailable" role="status">
+                Preview unavailable. Refresh to request a new secure preview link.
+              </div>
+            ) : null}
             <div className="top">
               <div>
                 <h2>{asset.original_filename}</h2>
@@ -222,6 +238,11 @@ export function MediaLibrary({ initial }: { initial: Asset[] }) {
             </div>
             <p>{asset.default_alt_text}</p>
             <p className="muted">Linked to {asset.question_media_links?.length ?? 0} question(s)</p>
+            {asset.mime_type.startsWith("image/") ? (
+              <button className="button secondary" disabled={busy} onClick={() => void refresh()}>
+                Refresh preview
+              </button>
+            ) : null}
             <button
               className="button secondary"
               disabled={busy || Boolean(asset.question_media_links?.length)}

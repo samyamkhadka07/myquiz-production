@@ -7,6 +7,16 @@ import { roleHome, type AdminRequestStatus } from "@/lib/auth/role-routing";
 import type { Role } from "@/lib/contracts";
 export type AuthState = { message: string; success?: boolean };
 const credentials = z.object({ email: z.email(), password: z.string().min(12).max(128) });
+function loginErrorMessage(error: { code?: string; message?: string; status?: number }) {
+  const detail = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+  if (detail.includes("email_not_confirmed") || detail.includes("email not confirmed"))
+    return "Please confirm your email before signing in.";
+  if (error.status === 429 || detail.includes("rate limit") || detail.includes("too many"))
+    return "Too many sign-in attempts. Please wait and try again.";
+  if (detail.includes("invalid login") || detail.includes("invalid credentials"))
+    return "Incorrect email or password.";
+  return "Sign-in is temporarily unavailable. Please try again.";
+}
 export async function authenticate(_state: AuthState, form: FormData): Promise<AuthState> {
   const mode = String(form.get("mode"));
   const email = String(form.get("email") ?? "").trim();
@@ -62,8 +72,7 @@ export async function authenticate(_state: AuthState, form: FormData): Promise<A
       z.email().parse(email);
       if (!password) return { message: "Enter your password." };
       const r = await db.auth.signInWithPassword({ email, password });
-      if (r.error)
-        return { message: "Unable to sign in. Check your email, password and email confirmation." };
+      if (r.error) return { message: loginErrorMessage(r.error) };
     } else return { message: "Invalid authentication request." };
   } catch (error) {
     return {

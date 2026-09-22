@@ -1,10 +1,17 @@
 "use client";
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client-api";
 import { QuestionMedia } from "@/components/question-media";
-type Mode = "RAPID_FIRE" | "RAPID_RECALL" | "MISTAKE_RESCUE" | "ACCURACY" | "DAILY_CHALLENGE";
+type Mode =
+  | "RAPID_FIRE"
+  | "RAPID_RECALL"
+  | "MEMORY_MATCH"
+  | "SPEED_CHALLENGE"
+  | "MISTAKE_RESCUE"
+  | "ACCURACY"
+  | "DAILY_CHALLENGE";
 type Item = {
   question_id: string;
   position: number;
@@ -26,6 +33,14 @@ type Result = {
   completed: boolean;
   completed_count: number;
   correct_count: number;
+  timed_out?: boolean;
+};
+type Summary = {
+  mode: Mode;
+  title: string;
+  questionCount: number;
+  correctCount: number;
+  responseTimes: number[];
 };
 type HubMode = {
   mode?: Mode;
@@ -45,7 +60,7 @@ const modes: HubMode[] = [
     skill: "Retrieval speed",
   },
   {
-    href: "/flashcards",
+    href: "/flashcards?sprint=1",
     title: "Flashcard Sprint",
     purpose: "Clear today’s due FSRS cards with Again, Hard, Good and Easy ratings.",
     skill: "Long-term memory",
@@ -59,21 +74,21 @@ const modes: HubMode[] = [
     skill: "Misconception repair",
   },
   {
-    mode: "RAPID_FIRE",
+    mode: "SPEED_CHALLENGE",
     title: "Speed Challenge",
     purpose: "A paced session that trains fast recognition without changing official test scores.",
     count: 15,
     skill: "Accurate pacing",
   },
   {
-    mode: "RAPID_RECALL",
+    mode: "MEMORY_MATCH",
     title: "Memory Match",
-    purpose: "Recall the concept first, reveal the choices, then rate how well you knew it.",
+    purpose: "Match each concept to its correct answer before the pairs disappear from view.",
     count: 8,
     skill: "Active recall",
   },
   {
-    href: "/tests",
+    href: "/tests?mode=ADAPTIVE",
     title: "Adaptive Challenge",
     purpose: "Start a question session guided by your current weak-topic priorities.",
     premium: true,
@@ -88,7 +103,7 @@ const modes: HubMode[] = [
     skill: "Daily consistency",
   },
   {
-    href: "/recommendations",
+    href: "/recommendations?challenge=weekly",
     title: "Weekly Challenge",
     purpose: "Complete the week’s recommended practice, mistake and flashcard goals.",
     skill: "Study consistency",
@@ -101,6 +116,12 @@ const modes: HubMode[] = [
     skill: "Careful reasoning",
   },
 ];
+function titleForMode(mode: Mode) {
+  return (
+    modes.find((entry) => entry.mode === mode)?.title ??
+    (mode === "RAPID_RECALL" ? "Rapid Recall" : mode.replaceAll("_", " "))
+  );
+}
 export function InteractiveGames({
   history,
   tier,
@@ -124,15 +145,51 @@ export function InteractiveGames({
     [revealed, setRevealed] = useState(false),
     [rating, setRating] = useState<"KNEW_IT" | "ALMOST" | "DIDNT_KNOW" | null>(null),
     [started, setStarted] = useState(0),
-    [seconds, setSeconds] = useState(20);
+    [seconds, setSeconds] = useState(20),
+    [sessionSeconds, setSessionSeconds] = useState(0),
+    [responseTimes, setResponseTimes] = useState<number[]>([]),
+    [summary, setSummary] = useState<Summary | null>(null);
+  const timeoutSent = useRef(false);
   const item = session?.items[index];
   const timed = session?.mode === "RAPID_FIRE";
+  const speedChallenge = session?.mode === "SPEED_CHALLENGE";
+  const recall = session?.mode === "RAPID_RECALL";
+  const memoryMatch = session?.mode === "MEMORY_MATCH";
   useEffect(() => {
-    if (!timed || !item || result) return;
+    if (!timed || !item || result || seconds <= 0) return;
     const timer = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(timer);
-  }, [timed, item, result]);
+  }, [timed, item, result, seconds]);
+  useEffect(() => {
+    if (!speedChallenge || !item || result || sessionSeconds <= 0) return;
+    const timer = setInterval(() => setSessionSeconds((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [speedChallenge, item, result, sessionSeconds]);
+  useEffect(() => {
+    if (!session || !item || result || !timed || seconds !== 0 || timeoutSent.current) return;
+    timeoutSent.current = true;
+    setBusy(true);
+    void api<Result>(`learning-games/${session.id}/timeout`, "POST", { question_id: item.question_id })
+      .then(setResult)
+      .catch((error) => setMessage((error as Error).message))
+      .finally(() => setBusy(false));
+  }, [session, item, result, timed, seconds]);
+  useEffect(() => {
+    if (!session || !speedChallenge || !item || result || sessionSeconds !== 0 || timeoutSent.current) return;
+    timeoutSent.current = true;
+    setBusy(true);
+    void api<Result>(`learning-games/${session.id}/expire`, "POST", {})
+      .then((data) => {
+        setSummary({ mode: session.mode, title: titleForMode(session.mode), questionCount: session.question_count, correctCount: data.correct_count, responseTimes });
+        setSession(null);
+      })
+      .catch((error) => setMessage((error as Error).message))
+      .finally(() => setBusy(false));
+  }, [session, item, result, speedChallenge, sessionSeconds, responseTimes]);
   const combo = useMemo(() => (result?.correct ? result.correct_count : 0), [result]);
+  const speedPace = speedChallenge && session
+    ? Math.round((100 * index) / Math.max(1, session.question_count))
+    : 0;
   async function start(mode: Mode, count: number, eventTime: number) {
     setBusy(true);
     setMessage("");
@@ -145,6 +202,10 @@ export function InteractiveGames({
       setRevealed(mode !== "RAPID_RECALL");
       setRating(null);
       setSeconds(20);
+      setSessionSeconds(mode === "SPEED_CHALLENGE" ? count * 12 : 0);
+      timeoutSent.current = false;
+      setResponseTimes([]);
+      setSummary(null);
       setStarted(eventTime);
     } catch (error) {
       setMessage((error as Error).message);
@@ -156,12 +217,14 @@ export function InteractiveGames({
     if (!session || !item || !selected) return;
     setBusy(true);
     try {
+      const responseMs = Math.max(0, Math.round(eventTime - started));
       const data = await api<Result>(`learning-games/${session.id}/answer`, "POST", {
         question_id: item.question_id,
         answer: selected,
         rating,
-        response_ms: Math.max(0, Math.round(eventTime - started)),
+        response_ms: responseMs,
       });
+      setResponseTimes((times) => [...times, responseMs]);
       setResult(data);
     } catch (error) {
       setMessage((error as Error).message);
@@ -172,10 +235,14 @@ export function InteractiveGames({
   function next(eventTime: number) {
     if (!session) return;
     if (index + 1 >= session.items.length) {
+      setSummary({
+        mode: session.mode,
+        title: titleForMode(session.mode),
+        questionCount: session.question_count,
+        correctCount: result?.correct_count ?? 0,
+        responseTimes,
+      });
       setSession(null);
-      setMessage(
-        `Session complete. ${result?.correct_count ?? 0} of ${session.question_count} correct; the result was saved separately from official tests.`,
-      );
       return;
     }
     setIndex((i) => i + 1);
@@ -184,7 +251,32 @@ export function InteractiveGames({
     setRating(null);
     setRevealed(session.mode !== "RAPID_RECALL");
     setSeconds(20);
+    timeoutSent.current = false;
     setStarted(eventTime);
+  }
+  if (summary) {
+    const accuracy = Math.round((100 * summary.correctCount) / Math.max(1, summary.questionCount));
+    const average = summary.responseTimes.length
+      ? Math.round(summary.responseTimes.reduce((sum, value) => sum + value, 0) / summary.responseTimes.length / 100) / 10
+      : null;
+    return (
+      <section className="game-stage card">
+        <p className="eyebrow">Saved learning-game session</p>
+        <h1>{summary.title} summary</h1>
+        <div className="stats">
+          <div><span className="muted">Completed</span><strong>{summary.questionCount}</strong></div>
+          <div><span className="muted">Correct</span><strong>{summary.correctCount}</strong></div>
+          <div><span className="muted">Accuracy</span><strong>{accuracy}%</strong></div>
+          {average !== null && <div><span className="muted">Average response</span><strong>{average}s</strong></div>}
+        </div>
+        <p>{summary.questionCount - summary.correctCount} question(s) need another look. Use Mistake Center for targeted correction; official MEC scores are unchanged.</p>
+        <p className="muted">Learning XP recorded: {Math.max(2, summary.correctCount)}.</p>
+        <div className="toolbar">
+          <button className="button" onClick={(event) => void start(summary.mode, summary.questionCount, event.timeStamp)}>Retry {summary.title}</button>
+          <button className="button secondary" onClick={() => setSummary(null)}>Return to games</button>
+        </div>
+      </section>
+    );
   }
   if (session && item)
     return (
@@ -193,11 +285,10 @@ export function InteractiveGames({
           <div>
             <p className="eyebrow">Interactive learning session</p>
             <h1>
-              {modes.find((m) => m.mode === session.mode)?.title ??
-                session.mode.replaceAll("_", " ")}
+              {titleForMode(session.mode)}
             </h1>
             <p className="muted">
-              Question {index + 1} of {session.question_count}
+              {session.mode === "DAILY_CHALLENGE" ? "Today's Daily Challenge · " : ""}Question {index + 1} of {session.question_count}
             </p>
           </div>
           {timed && (
@@ -205,18 +296,37 @@ export function InteractiveGames({
               {seconds}s
             </div>
           )}
+          {speedChallenge && (
+            <div className={`timer ${sessionSeconds <= 10 ? "timer-warning" : ""}`} aria-live="polite">
+              {sessionSeconds}s session
+            </div>
+          )}
         </div>
         <div className="game-progress">
           <i style={{ width: `${(100 * (index + (result ? 1 : 0))) / session.question_count}%` }} />
         </div>
+        {speedChallenge ? <p className="muted">Session pace: {speedPace}% complete · average response time is shown in your speed summary.</p> : null}
         <h2>{item.snapshot.question_text}</h2>
         <QuestionMedia questionId={item.question_id} />
-        {session.mode === "RAPID_RECALL" && !revealed ? (
+        {recall && !revealed ? (
           <section className="recall-prompt">
             <p>Pause and recall the answer before revealing the options.</p>
             <button className="button" onClick={() => setRevealed(true)}>
               Reveal answer choices
             </button>
+          </section>
+        ) : memoryMatch ? (
+          <section className="recall-prompt" aria-label="Memory matching board">
+            <p>Choose this prompt card, then pair it with one shuffled answer card. The verified match stays hidden until you check.</p>
+            <p className="match-slot"><strong>Prompt selected:</strong> {item.snapshot.question_text}</p>
+            <div className="options" role="group" aria-label="Answer cards">
+              {(["A", "B", "C", "D"] as const).map((key) => (
+                <button type="button" className={`option ${selected === key ? "selected" : ""}`} key={key} onClick={() => setSelected(key)} disabled={!!result}>
+                  <strong>{key}</strong> {item.snapshot[`option_${key.toLowerCase()}` as "option_a"]}
+                </button>
+              ))}
+            </div>
+            {selected && <p className="match-slot">Pair selected. Check this match when ready.</p>}
           </section>
         ) : (
           <fieldset className="options" disabled={!!result}>
@@ -234,7 +344,7 @@ export function InteractiveGames({
             ))}
           </fieldset>
         )}
-        {session.mode === "RAPID_RECALL" && revealed && !result && (
+        {recall && revealed && !result && (
           <div className="confidence-picker" aria-label="Recall confidence">
             <p>How well did you know it?</p>
             {(
@@ -258,7 +368,7 @@ export function InteractiveGames({
         {!result && revealed && (
           <button
             className="button section"
-            disabled={!selected || busy || (session.mode === "RAPID_RECALL" && !rating)}
+            disabled={!selected || busy || (recall && !rating)}
             onClick={(event) => void answer(event.timeStamp)}
           >
             {busy ? "Checking…" : "Check answer"}
@@ -273,7 +383,7 @@ export function InteractiveGames({
             <span className="pill">
               {result.correct ? "Concept retrieved" : "Learning opportunity"}
             </span>
-            <h2>{result.correct ? "Correct — keep the reasoning" : "Not yet — repair it now"}</h2>
+            <h2>{result.timed_out ? "Time expired — review this concept" : result.correct ? "Correct — keep the reasoning" : "Not yet — repair it now"}</h2>
             <p>
               <strong>Correct answer: {result.correct_answer}.</strong> {result.explanation}
             </p>

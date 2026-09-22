@@ -9,6 +9,7 @@ import { scheduleReview } from "@/lib/flashcards/scheduler";
 import { dispatchJob } from "./dispatch";
 import { generateTutorResponse } from "./ai";
 import { processIngestionRun } from "./external-worker";
+import { attachMediaPreviews } from "./media-previews";
 export async function learningApi(
   db: SupabaseClient,
   profile: Profile,
@@ -67,11 +68,19 @@ export async function learningApi(
         ),
       };
     }
+    if (operation === "timeout") {
+      return { data: check(await db.rpc("timeout_learning_game_item", { p_session: uuidSchema.parse(id), p_question: uuidSchema.parse((body as { question_id?: unknown }).question_id) })) };
+    }
+    if (operation === "expire") {
+      return { data: check(await db.rpc("expire_learning_game_session", { p_session: uuidSchema.parse(id) })) };
+    }
     const p = z
       .object({
         mode: z.enum([
           "RAPID_FIRE",
           "RAPID_RECALL",
+          "MEMORY_MATCH",
+          "SPEED_CHALLENGE",
           "MISTAKE_RESCUE",
           "ACCURACY",
           "DAILY_CHALLENGE",
@@ -292,16 +301,16 @@ export async function learningApi(
   }
   if (resource === "media") {
     staff(profile);
-    if (method === "GET")
-      return {
-        data: check(
-          await db
-            .from("media_assets")
-            .select("*,question_media_links(question_id)")
-            .order("created_at", { ascending: false })
-            .limit(100),
-        ),
-      };
+    if (method === "GET") {
+      const assets = check(
+        await db
+          .from("media_assets")
+          .select("*,question_media_links(question_id)")
+          .order("created_at", { ascending: false })
+          .limit(100),
+      );
+      return { data: await attachMediaPreviews(assets) };
+    }
     if (operation === "finalize") {
       const server = createAdminClient();
       check(
@@ -814,7 +823,7 @@ export async function learningApi(
     const p = z
       .object({
         enabled: z.boolean(),
-        provider: z.enum(["openai"]),
+        provider: z.enum(["disabled", "openai", "openrouter", "ollama"]),
         model: z.string().trim().min(1).max(100),
         free_daily_limit: z.number().int().min(0).max(100),
         global_daily_limit: z.number().int().min(0).max(100000),

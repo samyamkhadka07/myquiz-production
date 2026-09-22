@@ -27,23 +27,33 @@ export interface AiProvider {
   }>;
 }
 
-class OpenAIProvider implements AiProvider {
+class OpenAICompatibleProvider implements AiProvider {
+  constructor(
+    private readonly name: "openrouter" | "ollama",
+    private readonly endpoint: string,
+    private readonly key?: string,
+    private readonly vision = false,
+  ) {}
   async generate(request: AiRequest) {
-    const model = request.model ?? process.env.AI_MODEL,
-      key = process.env.AI_API_KEY;
-    if (!model || !key) throw new Error("AI_NOT_CONFIGURED");
-    const content: Record<string, string>[] = [{ type: "input_text", text: request.text }];
-    if (request.image)
-      content.push({ type: "input_image", image_url: request.image, detail: "high" });
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const model = request.model ?? (this.name === "ollama" ? process.env.OLLAMA_MODEL : "openrouter/free");
+    if (!model || (this.name === "openrouter" && !this.key)) throw new Error("AI_NOT_CONFIGURED");
+    if (request.image && !this.vision) throw new Error("AI_VISION_UNSUPPORTED");
+    const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+      { type: "text", text: request.text },
+    ];
+    if (request.image) content.push({ type: "image_url", image_url: { url: request.image } });
+    const response = await fetch(this.endpoint, {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(this.key ? { Authorization: `Bearer ${this.key}` } : {}),
+        ...(this.name === "openrouter" ? { "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://myquiz-production.vercel.app", "X-Title": "MyQuiz" } : {}),
+      },
       body: JSON.stringify({
         model,
-        store: false,
-        instructions: request.instructions,
-        input: [{ role: "user", content }],
-        max_output_tokens: Math.min(request.maxOutputTokens ?? 700, 2000),
+        messages: [{ role: "system", content: request.instructions }, { role: "user", content }],
+        max_tokens: Math.min(request.maxOutputTokens ?? 700, 2000),
+        temperature: 0.2,
       }),
       signal: AbortSignal.timeout(Math.min(request.timeoutMs ?? 15000, 30000)),
     });
@@ -56,30 +66,46 @@ class OpenAIProvider implements AiProvider {
             : "AI_PROVIDER_ERROR",
       );
     const payload = (await response.json()) as {
-      status: string;
-      output?: { content?: { type: string; text?: string }[] }[];
-      usage?: { input_tokens: number; output_tokens: number };
+      choices?: { message?: { content?: string } }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
     };
-    if (payload.status !== "completed") throw new Error("AI_INCOMPLETE");
-    const text = payload.output
-      ?.flatMap((o) => o.content ?? [])
-      .filter((c) => c.type === "output_text")
-      .map((c) => c.text ?? "")
-      .join("\n")
-      .trim();
+    const text = payload.choices?.[0]?.message?.content?.trim();
     if (!text) throw new Error("AI_EMPTY");
     return {
       text,
-      provider: "openai",
+      provider: this.name,
       model,
-      inputTokens: payload.usage?.input_tokens ?? 0,
-      outputTokens: payload.usage?.output_tokens ?? 0,
+      inputTokens: payload.usage?.prompt_tokens ?? 0,
+      outputTokens: payload.usage?.completion_tokens ?? 0,
     };
   }
 }
 
+class OpenAIProvider implements AiProvider {
+  async generate(request: AiRequest) {
+    const model = request.model ?? process.env.AI_MODEL, key = process.env.AI_API_KEY;
+    if (!model || !key) throw new Error("AI_NOT_CONFIGURED");
+    const content: Record<string, string>[] = [{ type: "input_text", text: request.text }];
+    if (request.image) content.push({ type: "input_image", image_url: request.image, detail: "high" });
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, store: false, instructions: request.instructions, input: [{ role: "user", content }], max_output_tokens: Math.min(request.maxOutputTokens ?? 700, 2000) }),
+      signal: AbortSignal.timeout(Math.min(request.timeoutMs ?? 15000, 30000)),
+    });
+    if (!response.ok) throw new Error(response.status === 429 ? "AI_RATE_LIMIT" : response.status === 401 ? "AI_AUTH_ERROR" : "AI_PROVIDER_ERROR");
+    const payload = (await response.json()) as { status: string; output?: { content?: { type: string; text?: string }[] }[]; usage?: { input_tokens: number; output_tokens: number } };
+    if (payload.status !== "completed") throw new Error("AI_INCOMPLETE");
+    const text = payload.output?.flatMap((o) => o.content ?? []).filter((c) => c.type === "output_text").map((c) => c.text ?? "").join("\n").trim();
+    if (!text) throw new Error("AI_EMPTY");
+    return { text, provider: "openai", model, inputTokens: payload.usage?.input_tokens ?? 0, outputTokens: payload.usage?.output_tokens ?? 0 };
+  }
+}
+
 function providerFor(name: string): AiProvider {
-  if (name === "openai" && process.env.AI_PROVIDER === "openai") return new OpenAIProvider();
+  if (name !== process.env.AI_PROVIDER) throw new Error("AI_NOT_CONFIGURED");
+  if (name === "openai") return new OpenAIProvider();
+  if (name === "openrouter") return new OpenAICompatibleProvider("openrouter", "https://openrouter.ai/api/v1/chat/completions", process.env.OPENROUTER_API_KEY, true);
+  if (name === "ollama") return new OpenAICompatibleProvider("ollama", `${(process.env.OLLAMA_BASE_URL ?? "http://localhost:11434").replace(/\/$/, "")}/v1/chat/completions`, undefined, false);
   throw new Error("AI_NOT_CONFIGURED");
 }
 
