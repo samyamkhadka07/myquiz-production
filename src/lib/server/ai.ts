@@ -16,6 +16,8 @@ type AiRequest = {
   timeoutMs?: number;
   maxOutputTokens?: number;
   model?: string;
+  /** Gemini 3.x only; omitted for providers/models that do not support it. */
+  geminiThinkingLevel?: "minimal" | "low" | "medium" | "high";
 };
 export interface AiProvider {
   generate(request: AiRequest): Promise<{
@@ -86,7 +88,19 @@ class GeminiProvider implements AiProvider {
   async generate(request: AiRequest) {
     const key=process.env.GEMINI_API_KEY, model=request.model||process.env.GEMINI_MODEL||"gemini-3.5-flash";
     if(!key) throw new Error("AI_NOT_CONFIGURED");
-    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig:{maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),temperature:.2}}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
+    const isGemini3=/^gemini-3(?:[.-]|$)/i.test(model);
+    const generationConfig={
+      maxOutputTokens:Math.min(request.maxOutputTokens??700,2000),
+      ...(isGemini3 ? {thinkingConfig:{thinkingLevel:request.geminiThinkingLevel??"low"}} : {}),
+    };
+    let response: Response;
+    try {
+      response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:request.instructions}]},contents:[{role:"user",parts:[{text:request.text}]}],generationConfig}),signal:AbortSignal.timeout(Math.min(request.timeoutMs??15000,30000))});
+    } catch(error) {
+      if (error instanceof DOMException && error.name === "TimeoutError") throw new Error("AI_TIMEOUT");
+      if (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) throw new Error("AI_TIMEOUT");
+      throw error;
+    }
     if(!response.ok) throw new Error(await geminiErrorCode(response));
     const payload=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[],usageMetadata?:{promptTokenCount?:number;candidatesTokenCount?:number}};
     const text=payload.candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim(); if(!text) throw new Error("AI_EMPTY");
@@ -148,8 +162,9 @@ export async function testAiProvider(provider: AiProviderName): Promise<AiProvid
       instructions: "Reply with OK.",
       text: "Reply with OK.",
       purpose: "ADMIN_PROVIDER_TEST",
-      timeoutMs: 5000,
-      maxOutputTokens: 16,
+      timeoutMs: provider === "gemini" ? 15000 : 5000,
+      maxOutputTokens: provider === "gemini" ? 128 : 16,
+      ...(provider === "gemini" ? { geminiThinkingLevel: "minimal" as const } : {}),
     });
     return { provider, status: "SUCCESS", message: "Provider responded successfully.", model: outcome.model };
   } catch (error) {
@@ -159,6 +174,8 @@ export async function testAiProvider(provider: AiProviderName): Promise<AiProvid
     if (code === "AI_NOT_CONFIGURED") return { provider, status: "MISSING_CREDENTIAL", message: "This provider is not fully configured." };
     if (code === "AI_GEMINI_MODEL_UNAVAILABLE") return { provider, status: "INVALID_CONFIGURATION", message: "Configured Gemini model is unavailable for this project." };
     if (code === "AI_GEMINI_PROJECT_UNAVAILABLE") return { provider, status: "INVALID_CONFIGURATION", message: "The Gemini project or free tier is not currently eligible." };
+    if (provider === "gemini" && code === "AI_TIMEOUT") return { provider, status: "TEMPORARILY_UNAVAILABLE", message: "Gemini request timed out." };
+    if (provider === "gemini" && code === "AI_EMPTY") return { provider, status: "TEMPORARILY_UNAVAILABLE", message: "Gemini returned no usable text." };
     if (["AI_REQUEST_ERROR", "AI_VISION_UNSUPPORTED"].includes(code)) return { provider, status: "INVALID_CONFIGURATION", message: "Provider model or configuration is invalid." };
     return { provider, status: "TEMPORARILY_UNAVAILABLE", message: "Provider is temporarily unavailable." };
   }

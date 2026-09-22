@@ -449,6 +449,18 @@ describe("functional separation and engagement contracts", () => {
     expect(ai).toContain("AI_GEMINI_MODEL_UNAVAILABLE"); expect(ai).toContain("AI_GEMINI_PROJECT_UNAVAILABLE"); expect(ai).toContain("RESOURCE_EXHAUSTED"); expect(ai).toContain("API_KEY_INVALID");
     expect(ai).not.toContain("gemini-2.0-flash"); expect(ai).not.toContain(":generateContent?key=");
   });
+  it("uses Gemini 3.x thinking safely and gives its manual diagnostic enough time to answer", () => {
+    const ai=fs.readFileSync("src/lib/server/ai.ts","utf8");
+    const testHelper=ai.slice(ai.indexOf("testAiProvider(provider"),ai.indexOf("function providerChain"));
+    expect(testHelper).toContain('provider === "gemini" ? 15000 : 5000');
+    expect(testHelper).toContain('provider === "gemini" ? 128 : 16');
+    expect(testHelper).toContain('geminiThinkingLevel: "minimal"');
+    expect(ai).toContain('thinkingConfig:{thinkingLevel:request.geminiThinkingLevel??"low"}');
+    expect(ai).toContain('const isGemini3=/^gemini-3');
+    expect(ai).not.toContain('temperature:.2');
+    expect(ai).toContain('"Gemini request timed out."');
+    expect(ai).toContain('"Gemini returned no usable text."');
+  });
   it("renders AI and cached explanations through safe Markdown and KaTeX", () => {
     const renderer=fs.readFileSync("src/components/ai-response-markdown.tsx","utf8"); const review=fs.readFileSync("src/components/review.tsx","utf8"); const ai=fs.readFileSync("src/lib/server/ai.ts","utf8");
     expect(renderer).toContain("ReactMarkdown"); expect(renderer).toContain("remarkMath"); expect(renderer).toContain("rehypeKatex"); expect(renderer).toContain("skipHtml");
