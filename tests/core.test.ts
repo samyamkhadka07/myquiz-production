@@ -223,7 +223,9 @@ describe("functional separation and engagement contracts", () => {
     expect(page).not.toContain("Exam program");
   });
   it("offers persisted, distinct learning modes rather than decorative links", () => {
-    const source = fs.readFileSync("src/components/interactive-games.tsx", "utf8");
+    const source = fs
+      .readFileSync("src/components/interactive-games.tsx", "utf8")
+      .replace(/\r\n/g, "\n");
     for (const mode of [
       "RAPID_FIRE",
       "RAPID_RECALL",
