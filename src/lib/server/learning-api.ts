@@ -6,7 +6,6 @@ import { check } from "./data";
 import { ApiError, admin, staff, superAdmin } from "./auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scheduleReview } from "@/lib/flashcards/scheduler";
-import { dispatchJob } from "./dispatch";
 import { generateTutorResponse } from "./ai";
 import { processIngestionRun } from "./external-worker";
 import { attachMediaPreviews } from "./media-previews";
@@ -373,9 +372,7 @@ export async function learningApi(
     if (method === "GET") {
       let query = db
         .from("contributions")
-        .select(
-          "*,processing_jobs(id,status,last_error,updated_at),processing_artifacts(id,page_number,chunk_index,artifact_type,content,data)",
-        )
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
       if (id) query = query.eq("id", uuidSchema.parse(id));
@@ -386,16 +383,14 @@ export async function learningApi(
         .object({ size: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) })
         .strict()
         .parse(body);
-      const server = createAdminClient();
-      const job = check(
-        await server.rpc("finalize_contribution", {
+      const contributionId = check(
+        await createAdminClient().rpc("finalize_contribution", {
           p_id: uuidSchema.parse(id),
           p_user: profile.id,
           p_size: p.size,
         }),
       ) as string;
-      const runId = await dispatchJob(job);
-      return { data: { job_id: job, run_id: runId } };
+      return { data: { contribution_id: contributionId, status: "SUBMITTED_FOR_REVIEW" } };
     }
     const p = z
       .object({
@@ -478,28 +473,6 @@ export async function learningApi(
         }),
       ),
     };
-  }
-  if (resource === "processing") {
-    staff(profile);
-    if (method === "GET")
-      return {
-        data: check(
-          await db
-            .from("processing_jobs")
-            .select("*,contributions(original_filename,category,uploader_id)")
-            .order("created_at", { ascending: false })
-            .limit(100),
-        ),
-      };
-    if (operation === "run") {
-      const runId = await dispatchJob(uuidSchema.parse(id));
-      return { data: { run_id: runId } };
-    }
-    if (operation === "retry") {
-      check(await db.rpc("retry_job", { p_id: uuidSchema.parse(id) }));
-      const runId = await dispatchJob(uuidSchema.parse(id));
-      return { data: { run_id: runId } };
-    }
   }
   if (resource === "reports") {
     staff(profile);

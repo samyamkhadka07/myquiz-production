@@ -21,7 +21,6 @@ const navigation: AdminLink[] = [
   { label: "Reading Materials", href: "/admin/reading-materials", roles: allStaff },
   { label: "— Ingestion —", href: "/admin/contributions", roles: allStaff },
   { label: "Contributions", href: "/admin/contributions", roles: allStaff },
-  { label: "Document Processing", href: "/admin/processing", roles: allStaff },
   { label: "Staged Questions", href: "/admin/staged", roles: allStaff },
   { label: "CSV Import / Export", href: "/admin/csv", roles: admins },
   { label: "Duplicate Review", href: "/admin/duplicates", roles: allStaff },
