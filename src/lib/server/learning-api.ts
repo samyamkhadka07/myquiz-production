@@ -970,6 +970,22 @@ export async function learningApi(
         ),
       };
     }
+    if (operation === "reset") {
+      if (method !== "POST") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported student reset operation.");
+      const p = z.object({ reason: z.string().trim().min(3).max(1000) }).strict().parse(body);
+      const target = uuidSchema.parse(id);
+      return { data: check(await db.rpc("reset_student_data", { p_user: target, p_reason: p.reason })) };
+    }
+    if (operation === "recover") {
+      if (method !== "POST") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported student recovery operation.");
+      const p = z.object({ snapshot_id: uuidSchema, reason: z.string().trim().min(3).max(1000) }).strict().parse(body);
+      return { data: check(await db.rpc("restore_student_data", { p_snapshot: p.snapshot_id, p_reason: p.reason })) };
+    }
+    if (operation === "snapshots") {
+      if (method !== "GET") throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported student snapshot operation.");
+      const target = uuidSchema.parse(id);
+      return { data: check(await db.from("student_data_snapshots").select("id,user_id,reason,created_at,restored_at,restored_by").eq("user_id", target).order("created_at", { ascending: false }).limit(20)) };
+    }
     if (operation === "delete") {
       if (method !== "DELETE")
         throw new ApiError(405, "METHOD_NOT_ALLOWED", "Unsupported account deletion operation.");

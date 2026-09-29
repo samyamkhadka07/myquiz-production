@@ -236,6 +236,67 @@ export function UserLifecycle({ id, displayName, status }: { id: string; display
   }
   return <div className="toolbar"><span className={`pill ${status === "DEACTIVATED" ? "attention" : ""}`}>{status}</span><button className="button secondary" disabled={busy} onClick={() => void lifecycle(status === "ACTIVE" ? "DEACTIVATE" : "REACTIVATE")}>{status === "ACTIVE" ? "Deactivate account" : "Reactivate account"}</button><button className="button danger" disabled={busy} onClick={() => void remove()}>Permanently delete account</button><small role="status">{message}</small></div>;
 }
+
+type StudentSnapshot = { id: string; reason: string; created_at: string; restored_at: string | null };
+
+export function StudentDataLifecycle({ id, displayName }: { id: string; displayName: string }) {
+  const router = useRouter();
+  const [message, setMessage] = useState(""), [busy, setBusy] = useState(false);
+  const [snapshots, setSnapshots] = useState<StudentSnapshot[]>([]), [selected, setSelected] = useState("");
+
+  async function loadSnapshots() {
+    setBusy(true);
+    try {
+      const rows = await api<StudentSnapshot[]>(`users/${id}/snapshots`);
+      setSnapshots(rows);
+      setSelected((current) => current || rows.find((row) => !row.restored_at)?.id || "");
+      setMessage(rows.length ? "Recovery snapshots loaded." : "No recovery snapshots are available.");
+    } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function resetData() {
+    const reason = window.prompt("Reset reason (required):")?.trim();
+    if (!reason) return setMessage("A reset reason is required.");
+    if (!window.confirm(`Reset student data for ${displayName}? Login, identity, role, and account status are preserved. A recovery snapshot is created first.`)) return;
+    setBusy(true);
+    try {
+      const snapshotId = await api<string>(`users/${id}/reset`, "POST", { reason });
+      setMessage(`Student data reset. Recovery snapshot: ${snapshotId}`);
+      await loadSnapshots(); router.refresh();
+    } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function recoverData() {
+    if (!selected) return setMessage("Load and select an unused recovery snapshot first.");
+    const reason = window.prompt("Recovery reason (required):")?.trim();
+    if (!reason) return setMessage("A recovery reason is required.");
+    if (!window.confirm(`Recover ${displayName} from the selected snapshot? Current resettable student state will be replaced.`)) return;
+    setBusy(true);
+    try {
+      await api(`users/${id}/recover`, "POST", { snapshot_id: selected, reason });
+      setMessage("Student data recovered from the selected snapshot.");
+      await loadSnapshots(); router.refresh();
+    } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
+  }
+
+  return <div className="form">
+    <div className="toolbar">
+      <button className="button danger" disabled={busy} onClick={() => void resetData()}>Reset data</button>
+      <button className="button secondary" disabled={busy} onClick={() => void loadSnapshots()}>Load recovery snapshots</button>
+    </div>
+    {snapshots.length > 0 && <div className="toolbar">
+      <select value={selected} onChange={(e) => setSelected(e.target.value)} disabled={busy}>
+        <option value="">Select snapshot</option>
+        {snapshots.map((snapshot) => <option key={snapshot.id} value={snapshot.id} disabled={Boolean(snapshot.restored_at)}>
+          {new Date(snapshot.created_at).toLocaleString()} - {snapshot.reason}{snapshot.restored_at ? " (restored)" : ""}
+        </option>)}
+      </select>
+      <button className="button secondary" disabled={busy || !selected} onClick={() => void recoverData()}>Recover data</button>
+    </div>}
+    <small role="status">{message}</small>
+  </div>;
+}
+
 export function AdminRequestActions({ id }: { id: string }) {
   const router = useRouter();
   const [note, setNote] = useState(""),
