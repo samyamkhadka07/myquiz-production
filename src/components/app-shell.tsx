@@ -5,10 +5,12 @@ import { SideNavigation, type SideNavigationItem } from "@/components/side-navig
 import { MyQuizGuide } from "@/components/myquiz-guide";
 import type { Route } from "next";
 const navigation = [
+  ["— Study —", "#study"],
   ["Overview", "/dashboard"],
   ["Search", "/search"],
   ["Tests & practice", "/tests"],
   ["Mistake Center", "/mistakes"],
+  ["— Review —", "#review"],
   ["History", "/history"],
   ["Bookmarks", "/bookmarks"],
   ["Flashcards", "/flashcards"],
@@ -16,6 +18,7 @@ const navigation = [
   ["Leaderboard", "/leaderboard"],
   ["Achievements", "/achievements"],
   ["Learning games", "/games"],
+  ["— Account —", "#account"],
   ["Community", "/community"],
   ["Contributions", "/contributions"],
   ["Reading room", "/reading"],
@@ -31,15 +34,19 @@ export function AppShell({
   entitlement: { tier: "FREE" | "PREMIUM"; ends_at: string | null };
   children: React.ReactNode;
 }) {
-  const links: SideNavigationItem[] = navigation.map(([name, path]) => ({
-    kind: "link",
-    label: name,
-    href: path,
-    note:
-      entitlement.tier === "FREE" && ["Study plan", "Leaderboard", "Learning games"].includes(name)
-        ? "Premium options"
-        : undefined,
-  }));
+  const links: SideNavigationItem[] = navigation.map(([name, path]) =>
+    name.startsWith("—")
+      ? { kind: "group", label: name.replaceAll("—", "").trim() }
+      : {
+          kind: "link",
+          label: name,
+          href: path,
+          note:
+            entitlement.tier === "FREE" && ["Study plan", "Leaderboard", "Learning games"].includes(name)
+              ? "Premium"
+              : undefined,
+        },
+  );
   return (
     <div className="shell">
       <aside className="side">
