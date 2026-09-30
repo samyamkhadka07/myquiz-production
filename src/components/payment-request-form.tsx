@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/client-api";
 import type { PaymentMethod, SubscriptionPlan } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/client";
+import { PaymentQrImage } from "@/components/payment-qr-image";
 
 const receiptTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const receiptExtensions: Record<string, string> = {
@@ -108,9 +109,7 @@ export function PaymentRequestForm({
         <section className="payment-instructions">
           <h3>{method.name}</h3>
           {method.qr_url ? (
-            // Signed private-storage URLs intentionally bypass the public image optimizer.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={method.qr_url} alt={`${method.name} payment QR`} className="payment-qr" />
+            <PaymentQrImage src={method.qr_url} alt={`${method.name} payment QR`} />
           ) : method.qr_object_path ? (
             <p className="muted">
               This configured payment QR is temporarily unavailable. Do not pay or submit a
