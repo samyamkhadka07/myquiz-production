@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PlansPage() {
   const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   const result = await db
     .from("subscription_plans")
     .select("*")
@@ -20,8 +21,8 @@ export default async function PlansPage() {
         <Link href="/" className="brand">
           MY<span>QUIZ</span>
         </Link>
-        <Link href="/login" className="button secondary">
-          Sign in
+        <Link href={user ? ("/subscription" as Route) : "/login"} className="button secondary">
+          {user ? "My subscription" : "Sign in"}
         </Link>
       </header>
       <section className="section">
@@ -51,7 +52,10 @@ export default async function PlansPage() {
                 <li>{plan.ai_daily_limit} AI tutor requests per day</li>
               </ul>
               <p className="muted">{plan.marketing_text}</p>
-              <Link href={`/subscription?plan=${plan.id}` as Route} className="button">
+              <Link
+                href={user ? (`/subscription?plan=${plan.id}` as Route) : (`/login?next=${encodeURIComponent(`/subscription?plan=${plan.id}`)}` as Route)}
+                className="button"
+              >
                 {Number(plan.price_npr) === 0 ? "Start free" : "Choose plan"}
               </Link>
             </article>
