@@ -1802,3 +1802,27 @@ pre,code { overflow-wrap:anywhere; }
   .record-grid { grid-template-columns:1fr; }
   .myquiz-guide { right:.75rem; bottom:.75rem; }
 }
+
+.payment-qr-only {
+  display: grid;
+  place-items: center;
+  margin: 1rem auto;
+}
+.payment-qr-source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.payment-qr-only .payment-qr {
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  height: auto;
+  margin: 0 auto;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
