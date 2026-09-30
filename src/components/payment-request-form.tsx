@@ -5,6 +5,7 @@ import { api } from "@/lib/client-api";
 import type { PaymentMethod, SubscriptionPlan } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/client";
 import { PaymentQrImage } from "@/components/payment-qr-image";
+import { PaymentDemo } from "@/components/payment-demo";
 
 const receiptTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 const receiptExtensions: Record<string, string> = {
@@ -84,6 +85,7 @@ export function PaymentRequestForm({
       }}
     >
       <h2>Submit a payment for verification</h2>
+      <PaymentDemo methodName={method?.name} />
       {plan ? <p><strong>{plan.name}</strong> · NPR {Number(plan.price_npr).toLocaleString()} · {plan.duration_days ?? "No"} day{plan.duration_days === 1 ? "" : "s"}</p> : null}
       <label>
         Plan
@@ -137,6 +139,7 @@ export function PaymentRequestForm({
       ) : null}
       <label>
         Transaction/reference ID
+        <span className="field-help">Use the ID from the successful payment receipt/history entry shown by your payment provider—not your phone number, account number, OTP or MyQuiz request ID.</span>
         <input
           value={reference}
           onChange={(event) => setReference(event.target.value)}

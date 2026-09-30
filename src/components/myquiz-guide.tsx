@@ -1,35 +1,14 @@
 "use client";
 
 import Link from "next/link";
-
-const links = [
-  ["Tests & practice", "/tests", "Choose focused, subject or timed preparation."],
-  ["Mistake Center", "/mistakes", "Repair questions you previously missed."],
-  ["Flashcards", "/flashcards", "Review due cards using spaced repetition."],
-  ["Study plan", "/recommendations", "Follow your current priorities and target score."],
-  ["Leaderboard", "/leaderboard", "Share aggregate progress only when you opt in."],
-  ["Achievements", "/achievements", "Track learning milestones."],
-  ["Learning games", "/games", "Practice retrieval and correction without affecting test scores."],
-  ["Contributions", "/contributions", "Send source material for staff review; it never publishes automatically."],
-  ["Subscription", "/subscription", "Review access and submit a manual payment request."],
-] as const;
-
-export function MyQuizGuide() {
-  return (
-    <details className="myquiz-guide">
-      <summary aria-label="Open MyQuiz Guide">?</summary>
-      <section aria-label="MyQuiz Guide panel">
-        <p className="eyebrow">MyQuiz Guide</p>
-        <h2>What would you like to do?</h2>
-        <nav>
-          {links.map(([label, href, detail]) => (
-            <Link href={href} key={href}>
-              <strong>{label}</strong>
-              <span>{detail}</span>
-            </Link>
-          ))}
-        </nav>
-      </section>
-    </details>
-  );
+import { useEffect, useState } from "react";
+const steps = [
+["Dashboard","/dashboard","See readiness, recent activity, priorities and your next study action."],["Search","/search","Find published questions and learning content without browsing every subject."],["Tests & practice","/tests","Start focused, subject or timed practice and submit answers for scoring."],["Mistake Center","/mistakes","Revisit incorrect answers and turn weak areas into a repair queue."],["History","/history","Open previous attempts and review what you answered and how you performed."],["Bookmarks","/bookmarks","Save useful questions so you can return to them later."],["Flashcards","/flashcards","Review due cards with spaced repetition instead of rereading everything."],["Study plan","/recommendations","Use your target and performance data to prioritize what to study next."],["Leaderboard","/leaderboard","Opt in before sharing aggregate progress with other learners."],["Achievements","/achievements","See milestones earned from genuine learning activity."],["Learning games","/games","Practice retrieval in short game modes without changing formal test scores."],["Community","/community","Join learner discussions while keeping private attempt data private."],["Contributions","/contributions","Submit study material for staff review; contributions never publish automatically."],["Reading room","/reading","Open staff-published reading material linked to your preparation."],["Subscription","/subscription","Choose a plan, pay through a configured method and submit proof for staff verification."],["Profile","/profile","Review your account, exam target and learner preferences."]] as const;
+export function MyQuizGuide(){
+ const [tourOpen,setTourOpen]=useState(false); const [step,setStep]=useState(0);
+ useEffect(()=>{if(window.localStorage.getItem("myquiz-function-tour-v1")!=="done"){const id=window.setTimeout(()=>setTourOpen(true),0);return()=>window.clearTimeout(id);}},[]);
+ function finish(){window.localStorage.setItem("myquiz-function-tour-v1","done");setTourOpen(false);}
+ const current=steps[step]??steps[0]!;
+ return <><details className="myquiz-guide"><summary aria-label="Open MyQuiz Guide">?</summary><section aria-label="MyQuiz Guide panel"><p className="eyebrow">MyQuiz Guide</p><h2>Learn the website</h2><p className="muted">Replay the short feature tour whenever you need it.</p><button className="button" type="button" onClick={()=>{setStep(0);setTourOpen(true);}}>Start feature tour</button><nav>{steps.map(([label,href,detail])=><Link href={href} key={href}><strong>{label}</strong><span>{detail}</span></Link>)}</nav></section></details>
+ {tourOpen?<div className="demo-overlay" role="dialog" aria-modal="true" aria-labelledby="demo-title"><section className="demo-card"><p className="eyebrow">New-user demo · {step+1} of {steps.length}</p><h2 id="demo-title">{current[0]}</h2><p>{current[2]}</p><p className="muted">Open this feature to try it with your own account data.</p><div className="demo-actions"><button className="button secondary" type="button" disabled={step===0} onClick={()=>setStep(v=>Math.max(0,v-1))}>Back</button><Link className="button secondary" href={current[1]}>Open feature</Link>{step<steps.length-1?<button className="button" type="button" onClick={()=>setStep(v=>v+1)}>Next</button>:<button className="button" type="button" onClick={finish}>Finish</button>}</div><button className="demo-skip" type="button" onClick={finish}>Skip and do not show automatically again</button></section></div>:null}</>;
 }
