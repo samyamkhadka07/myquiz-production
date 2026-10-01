@@ -89,7 +89,22 @@ export function ContributionUpload({
         upload.current.start();
       });
       await api(`contributions/${contribution.id}/finalize`, "POST", { size: file.size });
-      setMessage("Original saved. Processing has started.");
+      setMessage("Original saved. Validating CSV…");
+      if (file.type === "text/csv") {
+        for (let step = 0; step < 8; step++) {
+          const result = await api<{ done: boolean; wait: number }>(
+            `contributions/${contribution.id}/process`,
+            "POST",
+            {},
+          );
+          if (result.done) break;
+          if (result.wait > 5000) {
+            throw new Error("The CSV was saved, but validation paused. Check the staged import result for the row-level error.");
+          }
+          await new Promise((resolve) => setTimeout(resolve, Math.max(1000, result.wait)));
+        }
+      }
+      setMessage(file.type === "text/csv" ? "CSV validation finished. Review the staged rows below." : "Original saved. Processing has started.");
       setProgress(null);
       form.reset();
       setSelectedFile(null);

@@ -9,7 +9,48 @@ export function exportCsv(questions:QuestionInput[],t:Taxonomy){return stringify
  const base={...q,schema_version:'1',text_encoding:'spreadsheet-safe-v1',option_explanations:JSON.stringify(q.option_explanations),provenance:JSON.stringify(q.provenance),subject_code:t.subjects.find(s=>s.id===q.subject_id)?.code??'',unit_code:t.units.find(u=>u.id===q.unit_id)?.code??'',topic_name:t.topics.find(p=>p.id===q.topic_id)?.name??'',program_code:t.programs.find(p=>p.id===q.exam_program_id)?.code??''};
  return Object.fromEntries(CSV_COLUMNS.map(k=>[k,protect(base[k as keyof typeof base])]));
 }),{header:true,columns:CSV_COLUMNS,quoted:true,record_delimiter:'\r\n'});}
+const friendlyHeaders=['Question','Option A','Explanation for A','Option B','Explanation for B','Option C','Explanation for C','Option D','Explanation for D','Correct answer','Source type','Solution / explanation','Subject','Unit','Topic','Program restriction','Difficulty','Cognitive level','source document','source url','source question number','source year','source page'];
+function parseAdminCsv(text:string,t:Taxonomy):CsvRow[]{
+ const records=parse(text,{bom:true,columns:true,skip_empty_lines:true,relax_column_count:false,max_record_size:131072}) as Record<string,string>[];
+ return records.map((row,index)=>{
+  const errors:string[]=[];
+  const norm=(v:string|undefined)=>String(v??'').trim();
+  const same=(a:unknown,b:unknown)=>String(a??'').trim().toLowerCase()===String(b??'').trim().toLowerCase();
+  const subject=t.subjects.find(s=>same(s.code,row.Subject)||same(s.name,row.Subject));
+  const unit=t.units.find(u=>u.subject_id===subject?.id&&(same(u.code,row.Unit)||same(u.name,row.Unit)));
+  const topic=t.topics.find(p=>p.unit_id===unit?.id&&same(p.name,row.Topic));
+  if(!subject)errors.push('Unknown Subject: '+norm(row.Subject));
+  if(!unit)errors.push('Unknown Unit for subject: '+norm(row.Unit));
+  if(norm(row.Topic)&&!topic)errors.push('Topic is not in the current taxonomy: '+norm(row.Topic));
+  const answer=norm(row['Correct answer']).toUpperCase();
+  const difficulty=norm(row.Difficulty).toUpperCase();
+  const cognitive=norm(row['Cognitive level']).toUpperCase();
+  const sourceType=norm(row['Source type']).toUpperCase();
+  const allowedSource=new Set(['MANUAL','PAST_PAPER','CSV','CONTRIBUTION','AI','EXTERNAL']);
+  const input={
+   question_text:norm(row.Question),option_a:norm(row['Option A']),option_b:norm(row['Option B']),option_c:norm(row['Option C']),option_d:norm(row['Option D']),
+   correct_answer:['A','B','C','D'].includes(answer)?answer:null,
+   explanation:norm(row['Solution / explanation'])||null,
+   option_explanations:{A:norm(row['Explanation for A']),B:norm(row['Explanation for B']),C:norm(row['Explanation for C']),D:norm(row['Explanation for D'])},
+   subject_id:subject?.id,unit_id:unit?.id,topic_id:topic?.id??null,exam_program_id:null,
+   difficulty:['EASY','MEDIUM','HARD'].includes(difficulty)?difficulty:null,
+   cognitive_level:['RECALL','UNDERSTANDING','APPLICATION'].includes(cognitive)?cognitive:null,
+   source_type:allowedSource.has(sourceType)?sourceType:'CSV',
+   source_year:row['source year']?Number(row['source year']):null,
+   source_document:norm(row['source document'])||null,source_url:norm(row['source url'])||null,
+   source_page:row['source page']?Number(row['source page']):null,source_question_number:norm(row['source question number'])||null,
+   provenance:{import_format:'admin-question-csv',program_restriction:norm(row['Program restriction'])}
+  };
+  const result=questionSchema.safeParse(input);
+  if(!result.success)errors.push(...result.error.issues.map(x=>`${x.path.join('.')}: ${x.message}`));
+  if(!input.correct_answer)errors.push('Answer key missing: human verification required');
+  return {row:index+2,data:(result.success?result.data:input) as Partial<QuestionInput>,errors};
+ });
+}
 export function parseCanonicalCsv(text:string,t:Taxonomy):CsvRow[]{
+ const first=parse(text,{bom:true,to_line:1,relax_column_count:true}) as string[][];
+ const detectedHeaders=(first[0]??[]).map(String);
+ if(friendlyHeaders.every(h=>detectedHeaders.includes(h))) return parseAdminCsv(text,t);
  let headers:string[]=[];
  const records=parse(text,{bom:true,columns:(cols:string[])=>{headers=cols;if(new Set(cols).size!==cols.length)throw new Error('Duplicate CSV header');const unexpected=cols.filter(c=>!CSV_COLUMNS.includes(c as typeof CSV_COLUMNS[number]));if(unexpected.length)throw new Error(`Unknown columns: ${unexpected.join(', ')}`);if(!cols.includes('question_text'))throw new Error('Missing question_text header');return cols;},skip_empty_lines:true,relax_column_count:false,max_record_size:131072}) as Record<string,string>[];
  if(!headers.length)throw new Error('CSV header is missing');

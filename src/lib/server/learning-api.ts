@@ -10,7 +10,7 @@ import { generateTutorResponse, testAiProvider } from "./ai";
 import { processIngestionRun } from "./external-worker";
 import { attachMediaPreviews } from "./media-previews";
 import { generateActivityArchive, signedArchiveUrl } from "./activity-archives";
-import { dispatchJob } from "./dispatch";
+import { processOne } from "./document-worker";
 export async function learningApi(
   db: SupabaseClient,
   profile: Profile,
@@ -391,6 +391,18 @@ export async function learningApi(
       if (id) query = query.eq("id", uuidSchema.parse(id));
       return { data: check(await query) };
     }
+    if (operation === "process") {
+      admin(profile);
+      const adminDb = createAdminClient();
+      const job = check(
+        await adminDb
+          .from("processing_jobs")
+          .select("id")
+          .eq("contribution_id", uuidSchema.parse(id))
+          .single(),
+      ) as { id: string };
+      return { data: await processOne(job.id) };
+    }
     if (operation === "finalize") {
       const p = z
         .object({ size: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) })
@@ -404,15 +416,7 @@ export async function learningApi(
           p_size: p.size,
         }),
       ) as string;
-      const job = check(
-        await adminDb
-          .from("processing_jobs")
-          .select("id,contributions!inner(mime_type)")
-          .eq("contribution_id", contributionId)
-          .single(),
-      ) as { id: string; contributions: { mime_type: string } };
-      if (job.contributions.mime_type === "text/csv") await dispatchJob(job.id);
-      return { data: { contribution_id: contributionId, status: "PROCESSING_STARTED" } };
+      return { data: { contribution_id: contributionId, status: "QUEUED" } };
     }
     const p = z
       .object({
