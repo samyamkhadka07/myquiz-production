@@ -125,12 +125,12 @@ export function PaymentRequestForm({
           )}
           {method.display_name ? (
             <p>
-              <strong>Account:</strong> {method.display_name}
+              <strong>{method.code === "MOBILE_BANKING" ? "Account holder" : "Account"}:</strong> {method.display_name}
             </p>
           ) : null}
           {method.account_identifier ? (
             <p>
-              <strong>Identifier:</strong> {method.account_identifier}
+              <strong>{method.code === "MOBILE_BANKING" ? "Account number" : "Identifier"}:</strong> {method.account_identifier}
               <button type="button" className="button secondary" onClick={() => void navigator.clipboard.writeText(method.account_identifier!)}>Copy</button>
             </p>
           ) : null}
