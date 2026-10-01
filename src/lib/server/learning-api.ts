@@ -10,6 +10,7 @@ import { generateTutorResponse, testAiProvider } from "./ai";
 import { processIngestionRun } from "./external-worker";
 import { attachMediaPreviews } from "./media-previews";
 import { generateActivityArchive, signedArchiveUrl } from "./activity-archives";
+import { dispatchJob } from "./dispatch";
 export async function learningApi(
   db: SupabaseClient,
   profile: Profile,
@@ -395,14 +396,23 @@ export async function learningApi(
         .object({ size: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) })
         .strict()
         .parse(body);
+      const adminDb = createAdminClient();
       const contributionId = check(
-        await createAdminClient().rpc("finalize_contribution", {
+        await adminDb.rpc("finalize_contribution", {
           p_id: uuidSchema.parse(id),
           p_user: profile.id,
           p_size: p.size,
         }),
       ) as string;
-      return { data: { contribution_id: contributionId, status: "SUBMITTED_FOR_REVIEW" } };
+      const job = check(
+        await adminDb
+          .from("processing_jobs")
+          .select("id,contributions!inner(mime_type)")
+          .eq("contribution_id", contributionId)
+          .single(),
+      ) as { id: string; contributions: { mime_type: string } };
+      if (job.contributions.mime_type === "text/csv") await dispatchJob(job.id);
+      return { data: { contribution_id: contributionId, status: "PROCESSING_STARTED" } };
     }
     const p = z
       .object({
