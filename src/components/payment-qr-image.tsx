@@ -11,10 +11,17 @@ export function PaymentQrImage({ src, alt }: { src: string; alt: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    const previousOutput = canvasRef.current;
+    if (previousOutput) {
+      previousOutput.width = 0;
+      previousOutput.height = 0;
+    }
+
     function cropToQr() {
       const image = imageRef.current;
       const output = canvasRef.current;
       if (!image || !output || !image.naturalWidth || !image.naturalHeight) return;
+      if (image.currentSrc !== src && image.src !== src) return;
       try {
         const scan = document.createElement("canvas");
         scan.width = image.naturalWidth;

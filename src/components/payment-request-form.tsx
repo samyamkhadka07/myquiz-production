@@ -111,7 +111,7 @@ export function PaymentRequestForm({
         <section className="payment-instructions">
           <h3>{method.name}</h3>
           {method.qr_url ? (
-            <PaymentQrImage src={method.qr_url} alt={`${method.name} payment QR`} />
+            <PaymentQrImage key={method.id} src={method.qr_url} alt={`${method.name} payment QR`} />
           ) : method.qr_object_path ? (
             <p className="muted">
               This configured payment QR is temporarily unavailable. Do not pay or submit a
