@@ -17,7 +17,23 @@ function parseAdminCsv(text:string,t:Taxonomy):CsvRow[]{
   const norm=(v:string|undefined)=>String(v??'').trim();
   const same=(a:unknown,b:unknown)=>String(a??'').trim().toLowerCase()===String(b??'').trim().toLowerCase();
   const subject=t.subjects.find(s=>same(s.code,row.Subject)||same(s.name,row.Subject));
-  const unit=t.units.find(u=>u.subject_id===subject?.id&&(same(u.code,row.Unit)||same(u.name,row.Unit)));
+  const unitAliases:Record<string,string>={
+   'general characteristics and classification of protozoa to chordata':'Animal Diversity and Classification',
+   'general characteristics and classification of protozoa to chordates':'Animal Diversity and Classification',
+   'biology, origin and evolution of life':'Evolutionary Biology',
+   'plasmodium, earthworm and frog':'Study of Selected Animals',
+   'human biology and human diseases':'Human Biology and Physiology',
+   'animal tissues':'Animal Tissues and Histology',
+   'environmental pollution, adaptation and animal behavior, application of zoology':'Biota, Environment and Conservation',
+   'basic component of life and biodiversity':'Basic Components of Life',
+   'ecology and environment':'Ecology & Vegetation',
+   'cell biology and genetics':'Genetics',
+   'anatomy and physiology':'Plant Physiology',
+   'developmental and applied botany':'Applied Botany',
+   'general and physical chemistry':'Physical Chemistry',
+  };
+  const rawUnit=norm(row.Unit),alias=unitAliases[rawUnit.toLowerCase()];
+  const unit=t.units.find(u=>u.subject_id===subject?.id&&(same(u.code,rawUnit)||same(u.name,rawUnit)||Boolean(alias&&same(u.name,alias))));
   const topic=t.topics.find(p=>p.unit_id===unit?.id&&same(p.name,row.Topic));
   if(!subject)errors.push('Unknown Subject: '+norm(row.Subject));
   if(!unit)errors.push('Unknown Unit for subject: '+norm(row.Unit));
@@ -39,7 +55,7 @@ function parseAdminCsv(text:string,t:Taxonomy):CsvRow[]{
    source_year:row['source year']?Number(row['source year']):null,
    source_document:norm(row['source document'])||null,source_url:norm(row['source url'])||null,
    source_page:row['source page']?Number(row['source page']):null,source_question_number:norm(row['source question number'])||null,
-   provenance:{import_format:'admin-question-csv',program_restriction:norm(row['Program restriction'])}
+   provenance:{import_format:'admin-question-csv',program_restriction:norm(row['Program restriction']),source_subject:norm(row.Subject),source_unit:rawUnit,source_topic:norm(row.Topic)}
   };
   const result=questionSchema.safeParse(input);
   if(!result.success)errors.push(...result.error.issues.map(x=>`${x.path.join('.')}: ${x.message}`));
