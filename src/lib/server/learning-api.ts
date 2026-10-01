@@ -473,6 +473,25 @@ export async function learningApi(
   }
   if (resource === "staged") {
     staff(profile);
+    if (id === "bulk" && method === "POST") {
+      const p = z.object({
+        ids: z.array(uuidSchema).min(1).max(500),
+        action: z.enum(["IMPORT", "IMPORT_VERIFY", "IMPORT_PUBLISH", "REJECT", "NEEDS_REVISION"]),
+      }).strict().parse(body);
+      const processed: string[] = [], skipped: Array<{ id: string; reason: string }> = [];
+      for (const stagedId of [...new Set(p.ids)]) {
+        const item = await db.from("staged_items").select("question_data").eq("id", stagedId).single();
+        if (item.error) { skipped.push({ id: stagedId, reason: item.error.message }); continue; }
+        const result = await db.rpc("review_staged_item", {
+          p_id: stagedId,
+          p_action: p.action,
+          p_data: ["REJECT"].includes(p.action) ? null : item.data.question_data,
+        });
+        if (result.error) skipped.push({ id: stagedId, reason: result.error.message });
+        else processed.push(stagedId);
+      }
+      return { data: { processed, skipped } };
+    }
     if (method === "GET")
       return {
         data: check(

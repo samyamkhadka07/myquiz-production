@@ -30,7 +30,7 @@ export function QuestionReviewQueue({
   mode,
 }: {
   initial: Question[];
-  mode: "verification" | "publication";
+  mode: "verification" | "publication" | "published";
 }) {
   const [rows, setRows] = useState(initial),
     [search, setSearch] = useState(""),
@@ -51,16 +51,23 @@ export function QuestionReviewQueue({
       ),
     [rows, search, source],
   );
-  const action = mode === "verification" ? "VERIFY" : "PUBLISH";
+  const action = mode === "verification" ? "VERIFY" : mode === "publication" ? "PUBLISH" : "ARCHIVE";
   async function apply(ids: string[], next = action) {
+    if (!ids.length) return;
+    if (!window.confirm(`Apply ${next.replaceAll("_", " ").toLowerCase()} to ${ids.length} question${ids.length === 1 ? "" : "s"}? Invalid or ineligible questions will be skipped, not forced through.`)) return;
     setBusy(true);
     setMessage("");
     try {
-      for (const id of ids) await api(`questions/${id}/transition`, "POST", { action: next });
-      setRows((current) => current.filter((row) => !ids.includes(row.id)));
+      const result = await api<{ processed: string[]; skipped: Array<{ id: string; reason: string }> }>(
+        "questions/bulk",
+        "POST",
+        { ids, action: next },
+      );
+      setRows((current) => current.filter((row) => !result.processed.includes(row.id)));
       setSelected(new Set());
+      const skipped = result.skipped.length;
       setMessage(
-        `${ids.length} question${ids.length === 1 ? "" : "s"} ${next.toLowerCase()}ed successfully.`,
+        `${result.processed.length} processed successfully${skipped ? `; ${skipped} skipped. ${result.skipped.slice(0, 3).map((item) => item.reason).join(" | ")}` : "."}`,
       );
     } catch (error) {
       setMessage((error as Error).message);
@@ -93,24 +100,22 @@ export function QuestionReviewQueue({
           <strong>{filtered.length}</strong>
         </div>
       </section>
-      {selected.size > 0 && (
-        <section className="bulk-bar">
-          <strong>{selected.size} selected</strong>
+      <section className="bulk-bar">
+        <strong>{selected.size} selected · {filtered.length} visible</strong>
+        <button className="button secondary" disabled={busy || !filtered.length} onClick={() => setSelected(new Set(filtered.map((row) => row.id)))}>
+          Select all visible
+        </button>
+        <button className="button" disabled={busy || !filtered.length} onClick={() => void apply(filtered.map((row) => row.id))}>
+          {mode === "verification" ? "Verify all visible" : mode === "publication" ? "Publish all visible" : "Archive all visible"}
+        </button>
+        {selected.size > 0 && <>
           <button className="button" disabled={busy} onClick={() => void apply([...selected])}>
-            {mode === "verification" ? "Verify selected" : "Publish selected"}
+            {mode === "verification" ? "Verify selected" : mode === "publication" ? "Publish selected" : "Archive selected"}
           </button>
-          <button
-            className="button secondary"
-            disabled={busy}
-            onClick={() => void apply([...selected], "ARCHIVE")}
-          >
-            Archive selected
-          </button>
-          <button className="text-link" onClick={() => setSelected(new Set())}>
-            Clear
-          </button>
-        </section>
-      )}
+          {mode !== "published" && <button className="button secondary" disabled={busy} onClick={() => void apply([...selected], "ARCHIVE")}>Archive selected</button>}
+          <button className="text-link" onClick={() => setSelected(new Set())}>Clear</button>
+        </>}
+      </section>
       <p
         role="status"
         className={message.includes("successfully") ? "success" : message ? "error" : ""}
@@ -206,10 +211,10 @@ export function QuestionReviewQueue({
               <div className="toolbar">
                 <button
                   className="button"
-                  disabled={busy || warnings.length > 0}
+                  disabled={busy || (mode !== "published" && warnings.length > 0)}
                   onClick={() => void apply([question.id])}
                 >
-                  {mode === "verification" ? "Verify academic content" : "Publish to student tests"}
+                  {mode === "verification" ? "Verify academic content" : mode === "publication" ? "Publish to student tests" : "Archive published question"}
                 </button>
                 <Link href={`/admin/questions?edit=${question.id}`} className="button secondary">
                   Open in editor

@@ -58,6 +58,33 @@ export function ActionButtons({
     </div>
   );
 }
+export function StagedBulkActions({ ids }: { ids: string[] }) {
+  const router = useRouter();
+  const [selected, setSelected] = useState(new Set(ids));
+  const [busy, setBusy] = useState(false), [message, setMessage] = useState("");
+  async function apply(action: "IMPORT" | "IMPORT_VERIFY" | "IMPORT_PUBLISH" | "REJECT") {
+    const targets=[...selected];
+    if(!targets.length) return;
+    if(!window.confirm(`Apply ${action.replaceAll("_"," ").toLowerCase()} to ${targets.length} staged question${targets.length===1?"":"s"}? Invalid items will be skipped.`)) return;
+    setBusy(true); setMessage("");
+    try {
+      const result=await api<{processed:string[];skipped:Array<{id:string;reason:string}>}>("staged/bulk","POST",{ids:targets,action});
+      setSelected(current=>new Set([...current].filter(id=>!result.processed.includes(id))));
+      setMessage(`${result.processed.length} processed${result.skipped.length?`; ${result.skipped.length} skipped. ${result.skipped.slice(0,3).map(x=>x.reason).join(" | ")}`:" successfully."}`);
+      router.refresh();
+    } catch(e){setMessage((e as Error).message);} finally {setBusy(false);}
+  }
+  return <section className="bulk-bar">
+    <strong>{selected.size} of {ids.length} staged questions selected</strong>
+    <button className="button secondary" disabled={busy} onClick={()=>setSelected(new Set(ids))}>Select all</button>
+    <button className="button" disabled={busy||!selected.size} onClick={()=>void apply("IMPORT")}>Approve all to question bank</button>
+    <button className="button" disabled={busy||!selected.size} onClick={()=>void apply("IMPORT_VERIFY")}>Approve + verify all eligible</button>
+    <button className="button" disabled={busy||!selected.size} onClick={()=>void apply("IMPORT_PUBLISH")}>Approve + publish all eligible</button>
+    <button className="button secondary" disabled={busy||!selected.size} onClick={()=>void apply("REJECT")}>Reject selected</button>
+    <button className="text-link" disabled={busy} onClick={()=>setSelected(new Set())}>Clear</button>
+    <small role="status">{message}</small>
+  </section>;
+}
 export function StagedEditor({ id, initial }: { id: string; initial: Record<string, unknown> }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initial),

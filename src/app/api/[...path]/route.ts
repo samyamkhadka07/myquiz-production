@@ -140,7 +140,19 @@ async function handle(request: Request, { params }: { params: Promise<{ path: st
       );
     } else if (resource === "questions") {
       staff(profile);
-      if (operation === "versions" && method === "GET") {
+      if (id === "bulk" && method === "POST") {
+        const p = z.object({
+          ids: z.array(uuidSchema).min(1).max(500),
+          action: z.enum(["REVIEW", "VERIFY", "PUBLISH", "ARCHIVE"]),
+        }).strict().parse(body);
+        const processed: string[] = [], skipped: Array<{ id: string; reason: string }> = [];
+        for (const questionId of [...new Set(p.ids)]) {
+          const result = await db.rpc("transition_question", { p_id: questionId, p_action: p.action });
+          if (result.error) skipped.push({ id: questionId, reason: result.error.message });
+          else processed.push(questionId);
+        }
+        data = { processed, skipped };
+      } else if (operation === "versions" && method === "GET") {
         data = check(
           await db
             .from("question_versions")

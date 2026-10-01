@@ -1,6 +1,6 @@
 import { requirePage } from "@/lib/server/auth";
 import { check } from "@/lib/server/data";
-import { StagedEditor } from "@/components/admin-workflow-actions";
+import { StagedBulkActions, StagedEditor } from "@/components/admin-workflow-actions";
 export default async function Page() {
   const { db } = await requirePage(true);
   const rows = check(
@@ -35,6 +35,7 @@ export default async function Page() {
           </div>
         </article>
       </section>
+      {rows.length > 0 && <StagedBulkActions ids={rows.map((row) => String(row.id))} />}
       {rows.map((r) => {
         const errors = Array.isArray(r.validation_errors) ? r.validation_errors : [];
         return (

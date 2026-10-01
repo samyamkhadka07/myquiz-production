@@ -14,6 +14,7 @@ const navigation: AdminLink[] = [
   { label: "Question Management", href: "/admin/questions", roles: allStaff },
   { label: "Verification Queue", href: "/admin/questions/verification", roles: allStaff },
   { label: "Publication Queue", href: "/admin/questions/publication", roles: allStaff },
+  { label: "Published Questions", href: "/admin/questions/published", roles: allStaff },
   { label: "MEC Taxonomy", href: "/admin/taxonomy", roles: admins },
   { label: "Exam Blueprints", href: "/admin/blueprints", roles: admins },
   { label: "Mnemonics", href: "/admin/mnemonics", roles: admins },
