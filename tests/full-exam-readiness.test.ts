@@ -22,6 +22,21 @@ describe("200-mark exam readiness", () => {
     expect(calculateFullExamReadiness(blueprint, allocations, bank, "MBBS"))
       .toMatchObject({ feasible: false, assignable: 3 });
   });
+  it("detects a Hall-capacity gap even when overall unit and cognitive counts appear sufficient", () => {
+    const specialBlueprint = { question_count: 4, cognitive_distribution: { RECALL: 25, UNDERSTANDING: 75, APPLICATION: 0 } };
+    const specialAllocations = [
+      { unit_id: "A", question_count: 1 },
+      { unit_id: "B", question_count: 1 },
+      { unit_id: "C", question_count: 2 },
+    ];
+    const bank = [
+      q("A", "RECALL"), q("B", "RECALL"), q("C", "RECALL"),
+      q("C", "UNDERSTANDING"), q("C", "UNDERSTANDING"), q("C", "UNDERSTANDING"),
+    ];
+    // Only C supplies understanding, but its unit quota is two questions.
+    expect(calculateFullExamReadiness(specialBlueprint, specialAllocations, bank, "MBBS"))
+      .toMatchObject({ feasible: false, assignable: 3 });
+  });
   it("excludes questions restricted to other programs and unrelated units", () => {
     const bank = [q("B1","RECALL","BDS"),q("B1","UNDERSTANDING"),q("Z1","RECALL"),q("Z1","UNDERSTANDING"),q("P1","RECALL")];
     expect(calculateFullExamReadiness(blueprint, allocations, bank, "MBBS"))
