@@ -85,8 +85,8 @@ export function calculateFullExamReadiness(
     }
     for (let v = sink; v !== source; v = parents[v]!) {
       const u = parents[v]!;
-      capacity[u]![v] -= augment;
-      capacity[v]![u] += augment;
+      capacity[u]![v] = capacity[u]![v]! - augment;
+      capacity[v]![u] = capacity[v]![u]! + augment;
     }
     assignable += augment;
   }
