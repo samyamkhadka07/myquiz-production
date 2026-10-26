@@ -82,6 +82,12 @@ export function Quiz({ initial }: { initial: AttemptDetail }) {
   const answered = detail.questions.filter((q) => q.selected_answer !== null).length;
   return (
     <>
+      {detail.attempt.scoring_policy.provisional && (
+        <section className="card section" role="status">
+          <strong>Provisional practice — not an officially verified exam</strong>
+          <p>Some questions and answer keys are provisional study materials. This 200-question practice follows the Group I subject totals but may not meet every syllabus-unit or cognitive quota. Your score is for practice, not an official MEC assessment.</p>
+        </section>
+      )}
       <div className="top">
         <div>
           <p className="eyebrow">{detail.attempt.mode.toLowerCase()} test</p>
