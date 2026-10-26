@@ -70,7 +70,7 @@ export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetai
     <section>
       <div className="top review-heading">
         <div>
-          <p className="eyebrow">Learn from every option</p>
+          <p className="eyebrow">Review your verified answer key</p>
           <h2>Detailed answer review</h2>
         </div>
         <label>
@@ -165,13 +165,6 @@ export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetai
                               : "Alternative option"}
                         </span>
                       </div>
-                      <p>
-                        <strong>
-                          {correct ? "Why this is correct" : "Why this is not correct"}:
-                        </strong>{" "}
-                        {q.option_explanations?.[k] ||
-                          "A separate verified option explanation is not available yet."}
-                      </p>
                     </article>
                   );
                 })}
@@ -181,10 +174,8 @@ export function Review({ detail, saved, aiCapabilities }: { detail: AttemptDetai
                   q.is_correct ? "success learning-explanation" : "error learning-explanation"
                 }
               >
-                <strong>
-                  {q.is_correct ? "Why your answer works" : "What to correct in your thinking"}
-                </strong>
-                <p>{q.explanation}</p>
+                <strong>Answer key reference · why the correct answer is correct</strong>
+                <p>{q.explanation?.trim() || q.option_explanations?.[q.correct_answer ?? ""] || "The correct answer is verified; an explanation has not been supplied."}</p>
               </section>
               {alternate[q.question_id] && (
                 <section className="ai-explanation section">
