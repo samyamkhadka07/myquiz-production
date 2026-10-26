@@ -20,13 +20,14 @@ begin
     if active.expires_at <= clock_timestamp() then perform public.complete_attempt(active.id);
     else raise exception 'Finish or resume your active attempt' using errcode='22023',detail=active.id::text;end if;
   end if;
-  select eb.*,g.code into b,grp from public.exam_blueprints eb
+  select eb.* into b from public.exam_blueprints eb
     join public.exam_programs p on p.exam_group_id=eb.exam_group_id
     join public.exam_groups g on g.id=p.exam_group_id
     where p.id=p_program and eb.published and g.active
       and eb.effective_from<=current_date and (eb.effective_to is null or eb.effective_to>=current_date)
     order by eb.version desc limit 1;
   if b.id is null then raise exception 'Published exam blueprint unavailable' using errcode='22023';end if;
+  select g.code into grp from public.exam_groups g where g.id=b.exam_group_id;
   if grp<>'I' then raise exception 'Temporary provisional pool covers Group I only; this program requires its own complete academic question bank' using errcode='22023';end if;
   if p_mode='FULL' then
     if p_subject is not null or p_topic is not null then raise exception 'Full exams cannot have subject/topic filters' using errcode='22023';end if;
