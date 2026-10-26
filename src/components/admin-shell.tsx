@@ -23,6 +23,7 @@ const navigation: AdminLink[] = [
   { label: "— Ingestion —", href: "/admin/contributions", roles: allStaff },
   { label: "Contributions", href: "/admin/contributions", roles: allStaff },
   { label: "Staged Questions", href: "/admin/staged", roles: allStaff },
+  { label: "Revision Answer Drafts", href: "/admin/revision-prompts", roles: allStaff },
   { label: "CSV Import / Export", href: "/admin/csv", roles: admins },
   { label: "Duplicate Review", href: "/admin/duplicates", roles: allStaff },
   { label: "External Sources", href: "/admin/sources", roles: admins },
