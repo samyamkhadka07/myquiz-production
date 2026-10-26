@@ -100,7 +100,7 @@ export type Attempt = {
   started_at: string;
   expires_at: string;
   completed_at: string | null;
-  scoring_policy: { correct: number; incorrect: number; unanswered: number };
+  scoring_policy: { correct: number; incorrect: number; unanswered: number; provisional?: boolean; provisional_kind?: string };
 };
 export type AttemptQuestion = {
   attempt_id: string;
